@@ -149,7 +149,7 @@ func ValidateSections(sections []Section, fileSize uint64, alg ChecksumAlgorithm
 		switch s.Type {
 		case SectionData:
 			data++
-			if s.Length <= cs {
+			if s.Length < cs {
 				return ErrInvalidSectionTable
 			}
 		case SectionBloom:

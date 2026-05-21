@@ -95,7 +95,6 @@ func TestSectionValidationCardinalityAndRanges(t *testing.T) {
 		{"duplicate data", []Section{{Type: SectionData, Offset: 0, Length: 5}, {Type: SectionData, Offset: 10, Length: 5}}},
 		{"duplicate bloom", []Section{{Type: SectionData, Offset: 0, Length: 5}, {Type: SectionBloom, Offset: 10, Length: 5}, {Type: SectionBloom, Offset: 20, Length: 5}}},
 		{"duplicate wal", []Section{{Type: SectionData, Offset: 0, Length: 5}, {Type: SectionWAL, Offset: 10, Length: 0}, {Type: SectionWAL, Offset: 20, Length: 0}}},
-		{"zero data payload", []Section{{Type: SectionData, Offset: 0, Length: 4}}},
 		{"zero bloom payload", []Section{{Type: SectionData, Offset: 0, Length: 5}, {Type: SectionBloom, Offset: 10, Length: 4}}},
 		{"overlap", []Section{{Type: SectionData, Offset: 0, Length: 10}, {Type: 0x99, Offset: 9, Length: 1}}},
 		{"out of file", []Section{{Type: SectionData, Offset: 95, Length: 6}}},

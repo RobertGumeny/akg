@@ -89,17 +89,17 @@ Before adding exported API surface or large store behavior:
 
 ### Ordinary open
 
-- [ ] Clean compacted file opens to current logical state.
-- [ ] File with committed WAL applies mutations through the last valid `COMMIT`.
-- [ ] File with no valid `COMMIT` applies no WAL mutations.
-- [ ] Trailing uncommitted WAL records are ignored.
-- [ ] Trailing malformed WAL bytes after the last valid `COMMIT` are ignored as uncommitted tail only if the WAL helper semantics permit it.
-- [ ] Malformed committed WAL causes open failure.
-- [ ] Bad container/header/section checksum causes open failure.
-- [ ] Malformed known sections cause open failure.
+- [x] Clean compacted file opens to current logical state.
+- [x] File with committed WAL applies mutations through the last valid `COMMIT`.
+- [x] File with no valid `COMMIT` applies no WAL mutations.
+- [x] Trailing uncommitted WAL records are ignored.
+- [x] Trailing malformed WAL bytes after the last valid `COMMIT` are ignored as uncommitted tail only if the WAL helper semantics permit it.
+- [x] Malformed committed WAL causes open failure.
+- [x] Bad container/header/section checksum causes open failure.
+- [x] Malformed known sections cause open failure.
 - [ ] Unknown structurally valid sections remain tolerated.
-- [ ] Next WAL sequence number after reopen is greater than every existing record sequence.
-- [ ] WAL entry/byte counters are recomputed or persisted accurately enough for threshold checks.
+- [x] Next WAL sequence number after reopen is greater than every existing record sequence.
+- [x] WAL entry/byte counters are recomputed or persisted accurately enough for threshold checks.
 
 ## Level 5 — Commit and compaction validation
 

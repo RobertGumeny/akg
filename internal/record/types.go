@@ -37,6 +37,13 @@ type Edge struct {
 	Version    Version
 }
 
+// NodePut identifies a node upsert WAL payload, pairing node content with
+// key-space identity. The ID remains separate from the canonical node payload.
+type NodePut struct {
+	ID   NodeID
+	Node Node
+}
+
 // NodeDelete identifies a node delete WAL payload.
 type NodeDelete struct {
 	Type string

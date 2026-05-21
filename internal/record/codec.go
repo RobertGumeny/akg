@@ -145,6 +145,26 @@ func DecodeEdgePayload(b []byte) (Edge, error) {
 	return edge, nil
 }
 
+func DecodeNodePutPayload(b []byte) (NodePut, error) {
+	node, err := DecodeNodePayload(b)
+	if err != nil {
+		return NodePut{}, err
+	}
+	v, n, err := decodeMsgpack(b)
+	if err != nil || n != len(b) {
+		return NodePut{}, ErrInvalidPayload
+	}
+	m, ok := v.(map[string]any)
+	if !ok {
+		return NodePut{}, ErrInvalidPayload
+	}
+	id, ok := m["id"].(string)
+	if !ok || id == "" {
+		return NodePut{}, ErrMissingRequiredField
+	}
+	return NodePut{ID: NodeID(id), Node: node}, nil
+}
+
 func EncodeNodeDeletePayload(d NodeDelete) ([]byte, error) {
 	if err := d.ValidateForWrite(); err != nil {
 		return nil, err
