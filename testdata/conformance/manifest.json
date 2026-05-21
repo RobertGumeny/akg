@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "fixtures": [
+    {
+      "path": "m1-data-bloom-wal.akg",
+      "purpose": "Whole-container format fixture containing Data, Bloom, and WAL sections for binary round-trip coverage.",
+      "expected_result": "accept",
+      "validation_scope": "format"
+    },
+    {
+      "path": "m2-empty-create.akg",
+      "purpose": "Empty graph produced by the create path.",
+      "expected_result": "accept",
+      "validation_scope": "store",
+      "store_expectation": {"nodes": 0, "edges": 0, "has_uncompacted_wal": false, "next_wal_sequence": 1}
+    },
+    {
+      "path": "m2-minimal-node.akg",
+      "purpose": "Compacted graph with one minimal node.",
+      "expected_result": "accept",
+      "validation_scope": "store",
+      "store_expectation": {"nodes": 1, "edges": 0, "has_uncompacted_wal": false, "next_wal_sequence": 1}
+    },
+    {
+      "path": "m2-full-node.akg",
+      "purpose": "Compacted graph with one populated node including body, tags, and meta.",
+      "expected_result": "accept",
+      "validation_scope": "store",
+      "store_expectation": {"nodes": 1, "edges": 0, "has_uncompacted_wal": false, "next_wal_sequence": 1}
+    },
+    {
+      "path": "m2-single-edge.akg",
+      "purpose": "Compacted graph with two nodes and one edge.",
+      "expected_result": "accept",
+      "validation_scope": "store",
+      "store_expectation": {"nodes": 2, "edges": 1, "has_uncompacted_wal": false, "next_wal_sequence": 1}
+    },
+    {
+      "path": "m2-small-graph.akg",
+      "purpose": "Compacted small graph with mixed node types, tags, and edges.",
+      "expected_result": "accept",
+      "validation_scope": "store",
+      "store_expectation": {"nodes": 3, "edges": 2, "has_uncompacted_wal": false, "next_wal_sequence": 1}
+    },
+    {
+      "path": "m2-committed-wal-replay.akg",
+      "purpose": "Base Data plus committed WAL that ordinary open must replay.",
+      "expected_result": "accept",
+      "validation_scope": "store",
+      "store_expectation": {"nodes": 2, "edges": 1, "has_uncompacted_wal": true, "next_wal_sequence": 10}
+    },
+    {
+      "path": "m2-uncommitted-wal-tail.akg",
+      "purpose": "Committed WAL followed by trailing uncommitted records/bytes that ordinary open must ignore.",
+      "expected_result": "accept",
+      "validation_scope": "store",
+      "store_expectation": {"nodes": 2, "edges": 1, "has_uncompacted_wal": true, "next_wal_sequence": 11}
+    },
+    {
+      "path": "m2-compacted.akg",
+      "purpose": "Compacted file with live Data/Bloom and no carried-forward WAL.",
+      "expected_result": "accept",
+      "validation_scope": "store",
+      "store_expectation": {"nodes": 1, "edges": 0, "has_uncompacted_wal": false, "next_wal_sequence": 1, "absent_node": {"type": "note", "id": "old"}}
+    },
+    {
+      "path": "m2-deletes-before-compaction.akg",
+      "purpose": "WAL history with logical deletes before the final committed state.",
+      "expected_result": "accept",
+      "validation_scope": "store",
+      "store_expectation": {"nodes": 1, "edges": 0, "has_uncompacted_wal": true, "next_wal_sequence": 8}
+    },
+    {
+      "path": "m2-reject-malformed-committed-wal.akg",
+      "purpose": "Malformed committed WAL payload that ordinary open must reject.",
+      "expected_result": "reject",
+      "expected_error_category": "invalid_wal_payload",
+      "validation_scope": "store"
+    },
+    {
+      "path": "m2-reject-derived-index-mismatch.akg",
+      "purpose": "Data primary/derived index mismatch that ordinary open must reject.",
+      "expected_result": "reject",
+      "expected_error_category": "derived_index_mismatch",
+      "validation_scope": "store"
+    }
+  ]
+}

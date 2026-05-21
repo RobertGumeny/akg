@@ -1,238 +1,248 @@
-# Milestone 2 Tasks
+# Milestone 3 Tasks
 
 Source documents:
 
-- `docs/spec/`
-- `docs/akg-go-sdk-execution-tracker.md`
+- `docs/spec/01-data-model.md` through `docs/spec/07-error-handling.md`
+- `docs/API.md`
 - `docs/akg-reference-implementation-plan.md`
 - `docs/akg-comprehensive-test-plan.md`
+- `docs/akg-go-sdk-execution-tracker.md`
+- `testdata/conformance/README.md`
 
-Archived Milestone 1 task plan: `docs/archive/milestone-1-tasks-2026-05-20.md`
+Archived milestone plans:
 
-## Milestone 2 Goal
+- Milestone 1 tasks: `docs/archive/milestone-1-tasks-2026-05-20.md`
+- Milestone 1 validation: `docs/archive/milestone-1-validation-2026-05-20.md`
+- Milestone 2 tasks: `docs/archive/milestone-2-tasks-2026-05-20.md`
+- Milestone 2 validation: `docs/archive/milestone-2-validation-2026-05-20.md`
 
-Milestone 2 builds on the completed Milestone 1 binary/container primitives by adding the first logical store layer: authoritative in-memory state, live-key materialization, ordinary open with committed-WAL replay, commit durability behavior, and explicit compaction.
+## Milestone 3 Goal
 
-The implementation should remain small and spec-shaped. Do not build query planning, traversal beyond minimal exact/list helpers, merge, recovery/salvage, background services, or product SDK abstractions.
+Milestone 3 hardens AKG v1 toward a release candidate. The repo should become the AKG core/open-source home, not merely a Go package: versioned spec, release-quality docs, reference implementation, conformance corpus, and clear boundaries for future SDKs/examples.
 
-## Scope Rules
+The Milestone 3 focus is **v1 hardening, conformance, and release-candidate preparation**. It is not memory-file ingestion and not a higher-level product SDK milestone.
 
-- Authoritative mutable state is **nodes + edges only**.
-- `ei:`, `t:`, `ts:`, and Bloom are derived from live state when materializing files.
-- Data sections contain only current live state and required derived index keys; no tombstones.
-- Ordinary open is strict and fail-closed, but applies committed WAL through the last valid `COMMIT` and ignores trailing uncommitted WAL records.
-- Ordinary commit appends WAL mutation records plus `COMMIT`, fsyncs the required durable state, and leaves WAL in place until compaction.
-- Compaction is an explicit whole-file rewrite via atomic replacement; it rebuilds live Data/Bloom and discards prior WAL.
-- Design any public API intentionally and minimally. Do not accidentally export broad SDK concepts.
+## Strategic Scope Rules
 
-## Task 1 — Implement authoritative logical state and mutation semantics
+- Keep AKG core focused on the file format, spec, reference implementation, and conformance corpus.
+- Treat the Go implementation as a canonical minimal reference implementation and conformance oracle.
+- Do not require downstream SDKs to import the reference implementation directly.
+- Keep SDK/product concepts, including memory-file ingestion, above the format layer in future SDKs or examples.
+- Do not add a query engine, planner, graph traversal language, merge system, background service, or multi-writer behavior.
+- Freeze or minimize the public API in `akg.go`; prefer internal hardening over new exports.
 
-Create real `internal/state` behavior for current logical nodes and edges.
+## Task 1 — Add a machine-readable conformance manifest
 
-### Scope
-
-- Represent nodes by `(type, id)` identity, with node ID separate from payload.
-- Represent edges by `(from_node, relation, to_node)` identity.
-- Implement apply helpers for:
-  - `PutNode`
-  - `PutEdge`
-  - `DeleteNode`
-  - `DeleteEdge`
-- Enforce strict delete-not-found behavior.
-- Preserve dangling-edge tolerance; do not enforce referential integrity or cascade deletes.
-- Apply writer-owned field behavior for created/updated timestamps and versions at the state/write boundary.
-- Generate 16-character random hex node IDs when a caller omits an ID.
-- Validate duplicate tags, maximum 32 tags, and key-component constraints before accepting writes.
-
-### Acceptance criteria
-
-- Node upsert by `(type, id)` works and increments version on mutation.
-- Edge upsert by `(from_node, relation, to_node)` works and increments version on mutation.
-- Generated node IDs are 16 lowercase hex characters and satisfy key constraints.
-- Caller-provided invalid IDs are rejected.
-- Duplicate tags, uppercase tags, tags with spaces, malformed tags, and more than 32 tags are rejected.
-- Deleting an existing node/edge succeeds; deleting a missing node/edge returns a not-found error.
-- Dangling edges are accepted.
-- Tests prove type change is identity change, not an in-place node mutation.
-
-## Task 2 — Materialize live state into sorted Data entries and derived indexes
-
-Create `internal/store` helpers that turn authoritative state into the AKG live key set.
+Create a manifest for `testdata/conformance/` that describes every fixture and its expected behavior.
 
 ### Scope
 
-- Emit primary node entries:
-  - `n:{type}:{id}` → node payload
-- Emit primary edge entries:
-  - `e:{from}:{relation}:{to}` → edge payload
-- Emit derived inbound edge entries:
-  - `ei:{to}:{relation}:{from}` → empty value
-- Emit derived tag entries:
-  - `t:{tag}:{node_id}` → empty value
-- Emit derived temporal entries:
-  - `ts:{updated_at}:n:{type}:{id}` → empty value
-  - `ts:{updated_at}:e:{from}:{relation}:{to}` → empty value
-- Sort entries by raw bytewise key order.
-- Reject duplicate materialized keys.
-- Drop unknown MessagePack fields on rewrite by re-encoding through canonical record structs.
+- Add a manifest file, likely `testdata/conformance/manifest.json` or `manifest.yaml`.
+- Include fixture path, purpose, expected result (`accept` or `reject`), and expected error category for rejection fixtures.
+- Include enough metadata for other implementations to run the corpus without reading Go tests.
+- Update `internal/store/conformance_test.go` to consume the manifest or verify that the manifest and test cases remain in sync.
+- Update `testdata/conformance/README.md` with manifest format and usage.
 
 ### Acceptance criteria
 
-- Materialization is deterministic for the same logical state.
-- Output entries are bytewise sorted and accepted by Milestone 1 Data-section decoders.
-- Derived keys are regenerated from authoritative nodes/edges and are not stored as mutable state.
-- Empty-value index entries use `value_len = 0` after Data encoding.
-- Deleted/superseded records do not appear in materialized output.
-- Tests cover node, edge, inbound, tag, and temporal key generation.
+- Every `testdata/conformance/*.akg` fixture is represented exactly once in the manifest.
+- Accept/reject expectations are explicit and machine-readable.
+- Go conformance tests fail if a fixture is missing from the manifest or the manifest references a missing fixture.
+- The README explains how SDK authors and alternate implementations should use the manifest.
 
-## Task 3 — Hydrate logical state from Data sections
+## Task 2 — Make fixture generation reproducible and documented
 
-Implement the reverse path from decoded Data entries to authoritative current state.
+Ensure conformance fixtures can be regenerated or audited intentionally.
 
 ### Scope
 
-- Load node primary entries from `n:` keys and decode node payloads.
-- Load edge primary entries from `e:` keys and decode edge payloads.
-- Validate key/payload identity consistency where the payload repeats identity fields.
-- Validate required derived index entries are present and correct, or document and test any intentionally deferred validation.
-- Treat malformed known keys/payloads as ordinary-open validation failures.
-- Ignore structurally valid unknown future keys only if doing so is explicitly safe and documented.
+- Identify current fixture generation path and document it.
+- Add a small generator command, test helper, or documented `go test` flow if fixtures are generated from code.
+- Make generated fixture bytes deterministic where practical.
+- Document which fixtures are hand-corrupted and how they were corrupted.
+- Provide a safe update workflow that prevents accidental silent fixture changes.
 
 ### Acceptance criteria
 
-- A materialize → hydrate → materialize cycle preserves logical state.
-- Missing or malformed primary payloads are rejected.
-- Edge key identity and edge payload identity mismatches are rejected.
-- Required index-key omissions or inconsistencies are either rejected or explicitly documented as deferred before implementation proceeds beyond Milestone 2.
-- Unknown MessagePack fields in payloads are tolerated on read and dropped after rewrite.
+- A contributor can regenerate or audit fixtures from documented commands.
+- Generated fixtures are stable across repeated local runs.
+- Intentionally corrupt fixtures are clearly labeled and reproducible enough for review.
+- Fixture update instructions live in `testdata/conformance/README.md` or an adjacent document.
 
-## Task 4 — Implement ordinary create/open/validate behavior
+## Task 3 — Expand rejection fixtures for v1 fail-closed behavior
 
-Add the first file-level store open path using the Milestone 1 container, Data, Bloom, and WAL primitives.
+Add rejection fixtures that exercise important format and validation failures.
+
+### Required rejection cases
+
+- Wrong magic bytes.
+- Unsupported major version.
+- Bad header checksum.
+- Bad section checksum.
+- Duplicate sections where v1 requires uniqueness.
+- Overlapping sections or invalid section ranges.
+- Malformed Bloom section.
+- Invalid WAL opcode.
+- Invalid WAL payloads for each mutation type where practical.
+- Malformed committed WAL that must fail ordinary open.
+- Invalid Data/derived-key consistency failures not already covered.
+
+### Acceptance criteria
+
+- Each rejection fixture has a manifest entry and README description.
+- Tests assert rejection through the public validation/open path, not only through low-level decoders.
+- Error categories are stable enough for conformance consumers, even if exact error strings remain implementation-specific.
+
+## Task 4 — Audit v1 spec MUST/SHOULD requirements
+
+Create a traceability audit from `docs/spec/01-data-model.md` through `docs/spec/07-error-handling.md` to implementation, tests, fixtures, or documented deferrals.
 
 ### Scope
 
-- Create a new AKG file with an empty live Data section and deterministic Bloom state.
-- Open an existing file by:
-  1. decoding and validating the container,
-  2. decoding the Data section into authoritative state,
-  3. replaying committed WAL records through the last valid `COMMIT`,
-  4. ignoring trailing uncommitted WAL records.
-- Reject corrupt containers, malformed known sections, checksum failures, malformed committed WAL, and invalid WAL payloads.
-- Track the next WAL sequence number so reopened files never reuse sequence numbers.
-- Track uncompacted WAL entry count and byte count for threshold decisions.
+- Extract every normative `MUST`, `MUST NOT`, `SHOULD`, and `SHOULD NOT` requirement.
+- Map each requirement to one of:
+  - implemented and tested,
+  - covered by conformance fixture,
+  - documentation-only requirement,
+  - intentionally deferred or out of scope for v1 RC.
+- Fix obvious gaps in implementation/tests/fixtures discovered by the audit.
+- Clarify ambiguous spec language before adding broad behavior.
 
 ### Acceptance criteria
 
-- Opening a clean compacted file exposes its live logical state.
-- Opening a file with committed WAL applies committed mutations automatically.
-- Opening a file with no valid `COMMIT` applies no WAL mutations.
-- Opening a file with trailing uncommitted WAL ignores the trailing records.
-- Opening a file with malformed committed WAL rejects the file.
-- Sequence-number and WAL-counter behavior is tested across reopen.
-- `Validate(path)`-style behavior verifies format/state consistency without mutating logical content.
+- A traceability document exists, for example `docs/spec/v1-requirements-audit.md`.
+- No v1 `MUST` lacks either implementation/test coverage or an explicit release-blocking issue.
+- Any changed spec wording remains compatible with existing valid fixtures or is called out clearly.
 
-## Task 5 — Implement ordinary commit and WAL lifecycle behavior
+## Task 5 — Decide and document minimal read-helper stance
 
-Implement the write path that was intentionally deferred from Milestone 1.
+Clarify what the core reference API should expose for reads.
 
 ### Scope
 
-- Buffer or stage logical mutations until commit according to the chosen minimal store design.
-- On `Commit()`:
-  1. append WAL mutation records,
-  2. append `COMMIT`,
-  3. fsync the file state required for durable recovery,
-  4. leave committed WAL in place.
-- Ensure clean close commits outstanding mutations unless already committed.
-- Recompute or persist WAL counters needed for automatic flush thresholds.
-- Implement internal threshold detection for:
-  - `>= 1,000` uncompacted WAL entries,
-  - `>= 10 MB` uncompacted WAL data.
-- Keep automatic flush behavior internal; do not expose a public flush API.
+- Review current exact lookup and list helpers in `akg.go`/`docs/API.md`.
+- Decide whether Milestone 3 keeps exact/list only or adds small helpers for tags, outbound edges, and inbound edges.
+- Avoid query engine, planner, traversal language, or SDK convenience sprawl.
+- Document why any helper belongs in core rather than in an SDK/example layer.
 
 ### Acceptance criteria
 
-- A committed mutation survives close/reopen through ordinary WAL replay.
-- An uncommitted mutation is not applied after reopen.
-- Multiple committed batches replay in sequence order through the last `COMMIT`.
-- WAL sequence numbers are monotonic and distinct across sessions.
-- Committed WAL remains present until compaction.
-- Threshold detection is covered by tests, even if the actual threshold action is minimal in Milestone 2.
+- `docs/API.md` states the v1 public read-helper policy.
+- `akg.go` exposes no accidental broad query surface.
+- Any newly added helper has focused tests and maps directly to existing v1 derived keys/state.
+- If no helpers are added, the decision is explicit and documented.
 
-## Task 6 — Implement explicit compaction
+## Task 6 — Freeze and minimize public API for v1 RC
 
-Add explicit whole-file rewrite compaction.
+Prepare the root Go package for release-candidate stability.
 
 ### Scope
 
-- Perform ordinary open semantics to obtain current live state.
-- Materialize only current live keys.
-- Rebuild Bloom from the live key set using fixed v1 parameters.
-- Write a fresh AKG file with a fresh section table.
-- Discard prior WAL contents.
-- Atomically rename the compacted file over the original.
+- Audit exported identifiers in `akg.go` and any public subpackages.
+- Remove, unexport, or mark experimental anything not required for v1 core usage.
+- Ensure exported errors/options are intentional and documented.
+- Confirm public API does not expose WAL internals, mutable derived indexes, recovery-by-default, merge, query language, public flush, or product SDK concepts.
 
 ### Acceptance criteria
 
-- Compaction preserves logical nodes and edges.
-- Compaction drops WAL history and tombstones.
-- Compaction regenerates `ei:`, `t:`, `ts:`, and Bloom from live state.
-- The compacted file validates and reopens without WAL replay.
-- Crash-safety behavior is documented and the atomic rename path is tested where practical.
+- `docs/API.md` matches the actual exported API.
+- Public API tests cover create/open/validate, mutation, commit/close, compaction, and allowed reads.
+- The release-candidate API boundary is clear enough for downstream SDK authors.
 
-## Task 7 — Define the intentionally minimal Phase 1 API/CLI boundary
+## Task 7 — Dogfood the v1 lifecycle with a tiny real example
 
-Only after internal store behavior is tested, expose the smallest useful API and CLI hooks.
+Test the reference implementation as a user would, without turning Milestone 3 into SDK/product work.
 
 ### Scope
 
-- Decide package name and exported API shape intentionally (`sdk` or `akg`, per tracker).
-- Keep public surface limited to Phase 1 behavior such as:
-  - open/create/validate,
-  - put/delete node/edge,
-  - commit,
-  - compact,
-  - exact lookup and minimal list helpers.
-- Do not expose raw WAL internals, mutable derived indexes, recovery-by-default, merge, query language, or public flush.
-- Extend `cmd/akg` only for small validation/inspection/compaction commands.
+- Add or document a tiny lifecycle example that:
+  - creates an AKG file,
+  - adds a few realistic nodes, edges, and tags,
+  - commits,
+  - reopens,
+  - reads records back through the public API,
+  - compacts,
+  - validates the result.
+- Prefer an `examples/` program, a documented walkthrough, or a focused integration test that exercises only core primitives.
+- Use the example as an API/docs usability probe: note confusing names, missing lifecycle docs, or overly broad/narrow helpers.
+- Keep memory-file ingestion, agent workflows, and product SDK behavior out of this example.
 
 ### Acceptance criteria
 
-- Public API review is documented before exports are added.
-- API tests prove reads expose only current logical state.
-- CLI validation fails clearly on corrupt files and succeeds on valid files.
-- CLI inspection does not accidentally present tombstones or stale WAL records as current state.
+- A contributor can run or follow the lifecycle example from a clean checkout.
+- The example uses only the documented public API and CLI/core behavior.
+- Any usability findings are fed back into `docs/API.md`, release docs, or narrowly scoped API cleanup.
+- The example remains a core AKG lifecycle demonstration, not a memory ingestion prototype.
 
-## Out of Scope for Milestone 2
+## Task 8 — Add release-quality core documentation
 
-- Query engine or planner.
-- General graph traversal language.
-- Merge implementation.
-- Persistent deletion log after compaction.
+Make the repository understandable as the AKG core project.
+
+### Scope
+
+Add or update docs covering:
+
+- What AKG is and is not.
+- Format lifecycle example: create, mutate, commit, reopen, compact, validate.
+- Conformance corpus usage for alternative implementations.
+- SDK author guidance: what to build above core and what not to put in the file format.
+- Embedding AKG in an SDK or product as an example architecture, without making ingestion part of core.
+- Repository layer boundaries: spec vs conformance vs reference implementation vs SDKs vs examples.
+
+### Acceptance criteria
+
+- New contributors can identify the spec, conformance corpus, reference implementation, and API docs quickly.
+- Docs explicitly state that memory-file ingestion belongs in SDKs/examples, not AKG core.
+- Docs present the reference implementation as canonical/minimal, not as the only acceptable downstream architecture.
+
+## Task 9 — Clarify repository structure for future growth
+
+Prepare the repo layout and docs for future official/community SDKs and examples without implementing them prematurely.
+
+### Scope
+
+- Decide whether to add placeholder directories or just document future areas.
+- Clarify naming and ownership expectations for possible future `sdks/`, `examples/`, or `docs/guides/` areas.
+- Ensure current Go package remains clearly the reference implementation.
+- Avoid adding product-specific SDK code in Milestone 3.
+
+### Acceptance criteria
+
+- Repository boundary documentation exists and is linked from primary docs.
+- Future SDK/example areas are described without becoming release blockers.
+- No memory ingestion or product harness code is added to AKG core.
+
+## Out of Scope for Milestone 3
+
+- Memory-file ingestion.
+- Product SDK behavior or agent memory workflow design.
+- Query engine, planner, traversal language, or general graph analytics.
+- Merge implementation and conflict resolution.
 - Automatic salvage/recovery during ordinary open.
-- Pi SDK harness or agent usability tests, except as future planning.
-- Background services or multi-writer behavior.
+- Background services, daemon behavior, or multi-writer support.
+- Large API expansion beyond the minimal v1 core.
 
 ## Recommended Implementation Order
 
-1. `internal/state` data structures, identity types, and mutation tests.
-2. `internal/store` materialization to sorted Data entries and derived key tests.
-3. Hydration from Data entries back into state.
-4. File create/open/validate using existing format/WAL decoders.
-5. Commit/reopen tests for WAL durability behavior.
-6. Explicit compaction tests.
-7. Minimal API/CLI review and implementation.
+1. Add conformance manifest and manifest/test sync checks.
+2. Document or implement reproducible fixture generation.
+3. Add rejection fixtures and update conformance tests/README.
+4. Perform the spec MUST/SHOULD traceability audit and close release-blocking gaps.
+5. Review and freeze the public API/read-helper stance.
+6. Dogfood the public API with a tiny lifecycle example and feed back usability findings.
+7. Add release-quality repository, conformance, lifecycle, and SDK-author docs.
+8. Run full validation and update `docs/VALIDATION.md` checkboxes only when directly covered.
 
-## Milestone 2 Definition of Done
+## Milestone 3 Definition of Done
 
-Milestone 2 is complete when:
+Milestone 3 is complete when:
 
-- all tasks above have passing tests or documented deferrals,
-- `go test ./...` passes,
-- ordinary open applies committed WAL and ignores trailing uncommitted WAL,
-- commit leaves WAL in place until compaction,
-- compaction rewrites only live state and discards old WAL,
-- reads expose only current logical nodes/edges,
-- derived keys and Bloom are regenerated from live state,
-- no broad public SDK/API is introduced accidentally.
+- `go test -count=1 ./...` passes;
+- conformance fixtures have a machine-readable manifest;
+- fixture generation/update workflow is documented and reproducible enough for review;
+- rejection fixtures cover the listed v1 failure classes;
+- spec requirements are audited against implementation/tests/fixtures;
+- the public API is intentionally minimal and documented for v1 RC;
+- a tiny lifecycle example proves the public API/docs can be used as a real core format workflow;
+- release-quality docs explain AKG core, conformance, lifecycle usage, SDK boundaries, and repo structure;
+- no memory ingestion or product SDK scope has entered AKG core.

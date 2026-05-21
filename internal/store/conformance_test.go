@@ -1,54 +1,85 @@
 package store
 
 import (
+	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/RobertGumeny/akg-format/internal/format"
+	"github.com/RobertGumeny/akg-format/internal/record"
 )
 
-func TestMilestone2ConformanceFixturesOpen(t *testing.T) {
-	cases := []struct {
-		name      string
-		nodes     int
-		edges     int
-		wantWAL   bool
-		nextSeq   int
-		absentKey string
-	}{
-		{name: "m2-empty-create.akg", nodes: 0, edges: 0, nextSeq: 1},
-		{name: "m2-minimal-node.akg", nodes: 1, edges: 0, nextSeq: 1},
-		{name: "m2-full-node.akg", nodes: 1, edges: 0, nextSeq: 1},
-		{name: "m2-single-edge.akg", nodes: 2, edges: 1, nextSeq: 1},
-		{name: "m2-small-graph.akg", nodes: 3, edges: 2, nextSeq: 1},
-		{name: "m2-committed-wal-replay.akg", nodes: 2, edges: 1, wantWAL: true, nextSeq: 10},
-		{name: "m2-uncommitted-wal-tail.akg", nodes: 2, edges: 1, wantWAL: true, nextSeq: 11},
-		{name: "m2-compacted.akg", nodes: 1, edges: 0, nextSeq: 1, absentKey: "n:note:old"},
-		{name: "m2-deletes-before-compaction.akg", nodes: 1, edges: 0, wantWAL: true, nextSeq: 8},
+func TestConformanceManifestSync(t *testing.T) {
+	manifest := loadConformanceManifest(t)
+	seen := map[string]bool{}
+	for _, fixture := range manifest.Fixtures {
+		if fixture.Path == "" {
+			t.Fatal("manifest fixture has empty path")
+		}
+		if fixture.Purpose == "" {
+			t.Fatalf("manifest fixture %q has empty purpose", fixture.Path)
+		}
+		if fixture.ExpectedResult != "accept" && fixture.ExpectedResult != "reject" {
+			t.Fatalf("manifest fixture %q result = %q, want accept or reject", fixture.Path, fixture.ExpectedResult)
+		}
+		if fixture.ExpectedResult == "reject" && fixture.ExpectedErrorCategory == "" {
+			t.Fatalf("manifest rejection fixture %q has empty expected_error_category", fixture.Path)
+		}
+		if seen[fixture.Path] {
+			t.Fatalf("manifest fixture %q appears more than once", fixture.Path)
+		}
+		seen[fixture.Path] = true
+		if _, err := os.Stat(conformancePath(fixture.Path)); err != nil {
+			t.Fatalf("manifest references missing fixture %q: %v", fixture.Path, err)
+		}
 	}
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			st, err := Open(conformancePath(tc.name))
+
+	matches, err := filepath.Glob(conformancePath("*.akg"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, match := range matches {
+		name := filepath.Base(match)
+		if !seen[name] {
+			t.Fatalf("fixture %q is missing from manifest", name)
+		}
+	}
+	if len(seen) != len(matches) {
+		t.Fatalf("manifest has %d fixtures, filesystem has %d .akg fixtures", len(seen), len(matches))
+	}
+}
+
+func TestMilestone2ConformanceFixturesOpen(t *testing.T) {
+	for _, tc := range loadConformanceManifest(t).Fixtures {
+		if tc.ValidationScope != "store" || tc.ExpectedResult != "accept" {
+			continue
+		}
+		t.Run(tc.Path, func(t *testing.T) {
+			if tc.StoreExpectation == nil {
+				t.Fatalf("store accept fixture %q is missing store_expectation", tc.Path)
+			}
+			st, err := Open(conformancePath(tc.Path))
 			if err != nil {
 				t.Fatalf("Open: %v", err)
 			}
-			if got := len(st.State().Nodes()); got != tc.nodes {
-				t.Fatalf("nodes = %d, want %d", got, tc.nodes)
+			if got := len(st.State().Nodes()); got != tc.StoreExpectation.Nodes {
+				t.Fatalf("nodes = %d, want %d", got, tc.StoreExpectation.Nodes)
 			}
-			if got := len(st.State().Edges()); got != tc.edges {
-				t.Fatalf("edges = %d, want %d", got, tc.edges)
+			if got := len(st.State().Edges()); got != tc.StoreExpectation.Edges {
+				t.Fatalf("edges = %d, want %d", got, tc.StoreExpectation.Edges)
 			}
-			if int(st.NextWALSequence()) != tc.nextSeq {
-				t.Fatalf("next WAL sequence = %d, want %d", st.NextWALSequence(), tc.nextSeq)
+			if int(st.NextWALSequence()) != tc.StoreExpectation.NextWALSequence {
+				t.Fatalf("next WAL sequence = %d, want %d", st.NextWALSequence(), tc.StoreExpectation.NextWALSequence)
 			}
-			if tc.wantWAL == (st.UncompactedWALEntries() == 0) {
-				t.Fatalf("WAL entry presence = %t, want %t", st.UncompactedWALEntries() != 0, tc.wantWAL)
+			if tc.StoreExpectation.HasUncompactedWAL == (st.UncompactedWALEntries() == 0) {
+				t.Fatalf("WAL entry presence = %t, want %t", st.UncompactedWALEntries() != 0, tc.StoreExpectation.HasUncompactedWAL)
 			}
-			if tc.absentKey != "" {
-				if _, ok := st.State().GetNode("note", "old"); ok {
-					t.Fatalf("deleted node from %s survived open", tc.absentKey)
+			if tc.StoreExpectation.AbsentNode != nil {
+				absent := tc.StoreExpectation.AbsentNode
+				if _, ok := st.State().GetNode(absent.Type, record.NodeID(absent.ID)); ok {
+					t.Fatalf("deleted node n:%s:%s survived open", absent.Type, absent.ID)
 				}
 			}
 		})
@@ -56,21 +87,17 @@ func TestMilestone2ConformanceFixturesOpen(t *testing.T) {
 }
 
 func TestMilestone2ConformanceRejectionFixtures(t *testing.T) {
-	cases := []struct {
-		name string
-		want error
-	}{
-		{name: "m2-reject-malformed-committed-wal.akg"},
-		{name: "m2-reject-derived-index-mismatch.akg", want: ErrDerivedIndexMismatch},
-	}
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			_, err := Open(conformancePath(tc.name))
+	for _, tc := range loadConformanceManifest(t).Fixtures {
+		if tc.ValidationScope != "store" || tc.ExpectedResult != "reject" {
+			continue
+		}
+		t.Run(tc.Path, func(t *testing.T) {
+			_, err := Open(conformancePath(tc.Path))
 			if err == nil {
 				t.Fatal("Open succeeded, want rejection")
 			}
-			if tc.want != nil && !errors.Is(err, tc.want) {
-				t.Fatalf("Open error = %v, want %v", err, tc.want)
+			if want := conformanceErrorCategory(tc.ExpectedErrorCategory); want != nil && !errors.Is(err, want) {
+				t.Fatalf("Open error = %v, want category %q (%v)", err, tc.ExpectedErrorCategory, want)
 			}
 		})
 	}
@@ -101,6 +128,58 @@ func TestStoreOpenToleratesUnknownStructurallyValidSection(t *testing.T) {
 
 func conformancePath(name string) string {
 	return filepath.Join("..", "..", "testdata", "conformance", name)
+}
+
+func loadConformanceManifest(t *testing.T) conformanceManifest {
+	t.Helper()
+	data, err := os.ReadFile(conformancePath("manifest.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var manifest conformanceManifest
+	if err := json.Unmarshal(data, &manifest); err != nil {
+		t.Fatal(err)
+	}
+	if manifest.Version != 1 {
+		t.Fatalf("manifest version = %d, want 1", manifest.Version)
+	}
+	return manifest
+}
+
+func conformanceErrorCategory(category string) error {
+	switch category {
+	case "derived_index_mismatch":
+		return ErrDerivedIndexMismatch
+	default:
+		return nil
+	}
+}
+
+type conformanceManifest struct {
+	Version  int                  `json:"version"`
+	Fixtures []conformanceFixture `json:"fixtures"`
+}
+
+type conformanceFixture struct {
+	Path                  string                  `json:"path"`
+	Purpose               string                  `json:"purpose"`
+	ExpectedResult        string                  `json:"expected_result"`
+	ExpectedErrorCategory string                  `json:"expected_error_category"`
+	ValidationScope       string                  `json:"validation_scope"`
+	StoreExpectation      *conformanceStoreExpect `json:"store_expectation"`
+}
+
+type conformanceStoreExpect struct {
+	Nodes             int                    `json:"nodes"`
+	Edges             int                    `json:"edges"`
+	HasUncompactedWAL bool                   `json:"has_uncompacted_wal"`
+	NextWALSequence   int                    `json:"next_wal_sequence"`
+	AbsentNode        *conformanceAbsentNode `json:"absent_node"`
+}
+
+type conformanceAbsentNode struct {
+	Type string `json:"type"`
+	ID   string `json:"id"`
 }
 
 type testSection struct {
