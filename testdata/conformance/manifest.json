@@ -14,7 +14,12 @@
       "purpose": "Empty graph produced by the create path.",
       "expected_result": "accept",
       "validation_scope": "store",
-      "store_expectation": {"nodes": 0, "edges": 0, "has_uncompacted_wal": false, "next_wal_sequence": 1},
+      "store_expectation": {
+        "nodes": 0,
+        "edges": 0,
+        "has_uncompacted_wal": false,
+        "next_wal_sequence": 1
+      },
       "sha256": "6b0c5e4579200b71b55f813f72d885be1811a94cd746dafc74753ee7d909b841",
       "generated_by": "Go reference implementation fixture workflow documented in README.md"
     },
@@ -23,7 +28,12 @@
       "purpose": "Compacted graph with one minimal node.",
       "expected_result": "accept",
       "validation_scope": "store",
-      "store_expectation": {"nodes": 1, "edges": 0, "has_uncompacted_wal": false, "next_wal_sequence": 1},
+      "store_expectation": {
+        "nodes": 1,
+        "edges": 0,
+        "has_uncompacted_wal": false,
+        "next_wal_sequence": 1
+      },
       "sha256": "95ad0c6578bf4aca490fea6f21ff92528f48c5fc339450d655095a46aa93b336",
       "generated_by": "Go reference implementation fixture workflow documented in README.md"
     },
@@ -32,7 +42,12 @@
       "purpose": "Compacted graph with one populated node including body, tags, and meta.",
       "expected_result": "accept",
       "validation_scope": "store",
-      "store_expectation": {"nodes": 1, "edges": 0, "has_uncompacted_wal": false, "next_wal_sequence": 1},
+      "store_expectation": {
+        "nodes": 1,
+        "edges": 0,
+        "has_uncompacted_wal": false,
+        "next_wal_sequence": 1
+      },
       "sha256": "d6473bd807896ea1e32aff4a9b353e4fe12b4e21287a35ec6babf2ebec99a7e5",
       "generated_by": "Go reference implementation fixture workflow documented in README.md"
     },
@@ -41,7 +56,12 @@
       "purpose": "Compacted graph with two nodes and one edge.",
       "expected_result": "accept",
       "validation_scope": "store",
-      "store_expectation": {"nodes": 2, "edges": 1, "has_uncompacted_wal": false, "next_wal_sequence": 1},
+      "store_expectation": {
+        "nodes": 2,
+        "edges": 1,
+        "has_uncompacted_wal": false,
+        "next_wal_sequence": 1
+      },
       "sha256": "763ef1a28e9a31d10dd0f3d9a0e2a24df7a1f4e42d4f25b9bab273ea93327186",
       "generated_by": "Go reference implementation fixture workflow documented in README.md"
     },
@@ -50,7 +70,12 @@
       "purpose": "Compacted small graph with mixed node types, tags, and edges.",
       "expected_result": "accept",
       "validation_scope": "store",
-      "store_expectation": {"nodes": 3, "edges": 2, "has_uncompacted_wal": false, "next_wal_sequence": 1},
+      "store_expectation": {
+        "nodes": 3,
+        "edges": 2,
+        "has_uncompacted_wal": false,
+        "next_wal_sequence": 1
+      },
       "sha256": "d93897b49cae1cb5956b961ff81ba1a4e9c615df7488f665c4a38452df6025ce",
       "generated_by": "Go reference implementation fixture workflow documented in README.md"
     },
@@ -59,7 +84,12 @@
       "purpose": "Base Data plus committed WAL that ordinary open must replay.",
       "expected_result": "accept",
       "validation_scope": "store",
-      "store_expectation": {"nodes": 2, "edges": 1, "has_uncompacted_wal": true, "next_wal_sequence": 10},
+      "store_expectation": {
+        "nodes": 2,
+        "edges": 1,
+        "has_uncompacted_wal": true,
+        "next_wal_sequence": 10
+      },
       "sha256": "75ce3417767f331f9a3a9985352abd69c7a3ca97d13b3e30a7c2c936de022aca",
       "generated_by": "Go reference implementation fixture workflow documented in README.md"
     },
@@ -68,7 +98,12 @@
       "purpose": "Committed WAL followed by trailing uncommitted records/bytes that ordinary open must ignore.",
       "expected_result": "accept",
       "validation_scope": "store",
-      "store_expectation": {"nodes": 2, "edges": 1, "has_uncompacted_wal": true, "next_wal_sequence": 11},
+      "store_expectation": {
+        "nodes": 2,
+        "edges": 1,
+        "has_uncompacted_wal": true,
+        "next_wal_sequence": 11
+      },
       "sha256": "c7c522412f2e4593896059cc784cae5bca4d59243432e5adeeb71debe0134f6b",
       "generated_by": "Go reference implementation fixture workflow documented in README.md"
     },
@@ -77,7 +112,16 @@
       "purpose": "Compacted file with live Data/Bloom and no carried-forward WAL.",
       "expected_result": "accept",
       "validation_scope": "store",
-      "store_expectation": {"nodes": 1, "edges": 0, "has_uncompacted_wal": false, "next_wal_sequence": 1, "absent_node": {"type": "note", "id": "old"}},
+      "store_expectation": {
+        "nodes": 1,
+        "edges": 0,
+        "has_uncompacted_wal": false,
+        "next_wal_sequence": 1,
+        "absent_node": {
+          "type": "note",
+          "id": "old"
+        }
+      },
       "sha256": "27de132485734e2bdaa8d13417fef980702a3f8ee3367dec4009fddf44352307",
       "generated_by": "Go reference implementation fixture workflow documented in README.md"
     },
@@ -86,15 +130,20 @@
       "purpose": "WAL history with logical deletes before the final committed state.",
       "expected_result": "accept",
       "validation_scope": "store",
-      "store_expectation": {"nodes": 1, "edges": 0, "has_uncompacted_wal": true, "next_wal_sequence": 8},
+      "store_expectation": {
+        "nodes": 1,
+        "edges": 0,
+        "has_uncompacted_wal": true,
+        "next_wal_sequence": 8
+      },
       "sha256": "972e6e3803bad27c03b82a4867cb255033dc85a45402fe49223c53398f94e206",
       "generated_by": "Go reference implementation fixture workflow documented in README.md"
     },
     {
       "path": "m2-reject-malformed-committed-wal.akg",
-      "purpose": "Malformed committed WAL payload that ordinary open must reject.",
+      "purpose": "Malformed committed WAL record that ordinary open must reject.",
       "expected_result": "reject",
-      "expected_error_category": "invalid_wal_payload",
+      "expected_error_category": "invalid_wal_record",
       "validation_scope": "store",
       "sha256": "953b4fc951de071311f9b5853e0e8ef4d7bb94eaa5db2e7b83a2f0464cf27f05",
       "corruption": "Generated from an empty valid store container with a committed PUT_EDGE WAL record, then one byte in the committed WAL record is flipped so ordinary open rejects before salvage."
@@ -107,6 +156,141 @@
       "validation_scope": "store",
       "sha256": "c826acfd849224a7fbda070ebaa5805cd18087f90907b3a151ceca6c54c9993e",
       "corruption": "Generated from a valid small graph Data section, then a derived index key is changed/removed so the authoritative primary records no longer match regenerated derived keys."
+    },
+    {
+      "path": "m3-reject-wrong-magic.akg",
+      "purpose": "Wrong magic bytes in the container header must fail ordinary open.",
+      "expected_result": "reject",
+      "expected_error_category": "invalid_header",
+      "validation_scope": "store",
+      "sha256": "b118421669d833e1dd1b3a203a1582a1fb8662fc0a12276cebc06a096e9c60b3",
+      "corruption": "Generated from a valid empty store container, then the first magic byte is flipped."
+    },
+    {
+      "path": "m3-reject-unsupported-major-version.akg",
+      "purpose": "Unsupported major version must fail closed even when the header checksum is internally consistent.",
+      "expected_result": "reject",
+      "expected_error_category": "invalid_header",
+      "validation_scope": "store",
+      "sha256": "15ed9a447b52d9122128dc667a6f694cc9bba47e3a04dc6e8addc5e099a02776",
+      "corruption": "Generated with a v2 header using the deterministic container encoder."
+    },
+    {
+      "path": "m3-reject-bad-header-checksum.akg",
+      "purpose": "Bad header checksum must fail before section decoding.",
+      "expected_result": "reject",
+      "expected_error_category": "checksum_mismatch",
+      "validation_scope": "store",
+      "sha256": "07d40d988b78c251aec5fae5f094df7be976af0d77cf179a39dcfe518c094ff7",
+      "corruption": "Generated from a valid empty store container, then one header checksum byte is flipped."
+    },
+    {
+      "path": "m3-reject-bad-section-checksum.akg",
+      "purpose": "Bad section checksum must fail ordinary open.",
+      "expected_result": "reject",
+      "expected_error_category": "checksum_mismatch",
+      "validation_scope": "store",
+      "sha256": "45e80609def411436af0070f7bca8466834c2dde5f88c79efd8edc749cb7a214",
+      "corruption": "Generated from a valid empty store container, then one trailing section checksum byte is flipped."
+    },
+    {
+      "path": "m3-reject-duplicate-data-sections.akg",
+      "purpose": "Duplicate Data sections are invalid because v1 requires exactly one Data section.",
+      "expected_result": "reject",
+      "expected_error_category": "invalid_section_table",
+      "validation_scope": "store",
+      "sha256": "3a89502572aa8ec6a79a9183b4a55a13e9b5c353d9f66d094bffec0fff31c9ea",
+      "corruption": "Generated as a structurally encoded container with two Data section table entries."
+    },
+    {
+      "path": "m3-reject-overlapping-sections.akg",
+      "purpose": "Overlapping Data and Bloom section ranges must be rejected.",
+      "expected_result": "reject",
+      "expected_error_category": "invalid_section_ranges",
+      "validation_scope": "store",
+      "sha256": "2aed77276cd1a321b48e5c209343552825db9b8ee54665764b19fcfb27200699",
+      "corruption": "Generated with valid section payload bytes but overlapping section table offsets."
+    },
+    {
+      "path": "m3-reject-malformed-bloom.akg",
+      "purpose": "Malformed Bloom payload must fail ordinary store open.",
+      "expected_result": "reject",
+      "expected_error_category": "invalid_bloom_section",
+      "validation_scope": "store",
+      "sha256": "eb461b6ccd1f702f255546ad2253e9c49fc93f99d4e91998c6774f2a0e8da573",
+      "corruption": "Generated with a one-byte Bloom payload that cannot satisfy v1 Bloom shape checks."
+    },
+    {
+      "path": "m3-reject-invalid-wal-opcode.akg",
+      "purpose": "Unknown WAL opcode must be rejected before replay.",
+      "expected_result": "reject",
+      "expected_error_category": "unknown_wal_operation",
+      "validation_scope": "store",
+      "sha256": "264c0035a5dbd1a20abbca563bbfa9455c38ac81d7bf4bbb6bef5822d345459c",
+      "corruption": "Generated with a WAL record carrying opcode 0xff and a valid record checksum."
+    },
+    {
+      "path": "m3-reject-invalid-wal-put-node-payload.akg",
+      "purpose": "Committed PUT_NODE WAL record with malformed payload must be rejected.",
+      "expected_result": "reject",
+      "expected_error_category": "invalid_wal_payload",
+      "validation_scope": "store",
+      "sha256": "62fe57b764123e879f7542725a323bf707af489d73356763f74f769ef6391e13",
+      "corruption": "Generated with an invalid MessagePack payload for a committed PUT_NODE record."
+    },
+    {
+      "path": "m3-reject-invalid-wal-delete-node-payload.akg",
+      "purpose": "Committed DELETE_NODE WAL record with malformed payload must be rejected.",
+      "expected_result": "reject",
+      "expected_error_category": "invalid_wal_payload",
+      "validation_scope": "store",
+      "sha256": "a717e3220ab3184694c7a1c210fefba6b6a7a94beed97252e5b4a3a6e4780180",
+      "corruption": "Generated with an invalid MessagePack payload for a committed DELETE_NODE record."
+    },
+    {
+      "path": "m3-reject-invalid-wal-put-edge-payload.akg",
+      "purpose": "Committed PUT_EDGE WAL record with malformed payload must be rejected.",
+      "expected_result": "reject",
+      "expected_error_category": "invalid_wal_payload",
+      "validation_scope": "store",
+      "sha256": "e4dfed37993f749fa9f56301e9631f6610a8a0d5ecf0b7aebbf48a0f0696dbf4",
+      "corruption": "Generated with an invalid MessagePack payload for a committed PUT_EDGE record."
+    },
+    {
+      "path": "m3-reject-invalid-wal-delete-edge-payload.akg",
+      "purpose": "Committed DELETE_EDGE WAL record with malformed payload must be rejected.",
+      "expected_result": "reject",
+      "expected_error_category": "invalid_wal_payload",
+      "validation_scope": "store",
+      "sha256": "6e455cc7693d31e48405a9bae12ddfbfd264337d24211aa80b4adb1ca515ea20",
+      "corruption": "Generated with an invalid MessagePack payload for a committed DELETE_EDGE record."
+    },
+    {
+      "path": "m3-reject-malformed-committed-wal-checksum.akg",
+      "purpose": "Malformed committed WAL record checksum must fail ordinary open rather than being salvaged.",
+      "expected_result": "reject",
+      "expected_error_category": "wal_checksum_mismatch",
+      "validation_scope": "store",
+      "sha256": "68b4eecb418e1ccc902eda06515a6722b7fac51afabe0942ef1c40cf6e9b4d7b",
+      "corruption": "Generated from a committed WAL batch, then one byte in the first committed record is flipped."
+    },
+    {
+      "path": "m3-reject-invalid-node-data-payload.akg",
+      "purpose": "Primary Data node key with malformed node payload must fail hydration.",
+      "expected_result": "reject",
+      "expected_error_category": "invalid_data_payload",
+      "validation_scope": "store",
+      "sha256": "b0838014911ea94e3dcebed7d795a6e58b6f076c65b15619e2ebcaa46914e903",
+      "corruption": "Generated with a primary node Data key whose value is invalid MessagePack, with Bloom regenerated for the damaged Data keys."
+    },
+    {
+      "path": "m3-reject-missing-derived-tag-index.akg",
+      "purpose": "Node Data with a tag but missing the required tag-derived key must fail derived-key consistency checks.",
+      "expected_result": "reject",
+      "expected_error_category": "derived_index_mismatch",
+      "validation_scope": "store",
+      "sha256": "efb8be8652d8b307d3a7e75d674fcb9b94ef21d49fd376de0956a2111c0c8fc5",
+      "corruption": "Generated from canonical node Data entries, then the required tag-derived index entry is omitted while Bloom matches the remaining keys."
     }
   ]
 }

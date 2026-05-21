@@ -11,6 +11,7 @@ import (
 
 	"github.com/RobertGumeny/akg-format/internal/format"
 	"github.com/RobertGumeny/akg-format/internal/record"
+	"github.com/RobertGumeny/akg-format/internal/wal"
 )
 
 func TestConformanceManifestSync(t *testing.T) {
@@ -164,8 +165,26 @@ func loadConformanceManifest(t *testing.T) conformanceManifest {
 
 func conformanceErrorCategory(category string) error {
 	switch category {
+	case "checksum_mismatch":
+		return format.ErrChecksumMismatch
 	case "derived_index_mismatch":
 		return ErrDerivedIndexMismatch
+	case "invalid_bloom_section":
+		return format.ErrInvalidBloomSection
+	case "invalid_data_payload", "invalid_wal_payload":
+		return record.ErrInvalidPayload
+	case "invalid_wal_record":
+		return wal.ErrInvalidRecord
+	case "invalid_header":
+		return format.ErrInvalidHeader
+	case "invalid_section_ranges":
+		return format.ErrInvalidSectionRanges
+	case "invalid_section_table":
+		return format.ErrInvalidSectionTable
+	case "unknown_wal_operation":
+		return wal.ErrUnknownOperation
+	case "wal_checksum_mismatch":
+		return wal.ErrChecksumMismatch
 	default:
 		return nil
 	}
