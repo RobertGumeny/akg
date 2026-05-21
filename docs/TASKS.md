@@ -184,7 +184,7 @@ Add or update docs covering:
 
 - What AKG is and is not.
 - Format lifecycle example: create, mutate, commit, reopen, compact, validate.
-- Conformance corpus usage for alternative implementations.
+- Conformance test usage for alternative SDK implementations.
 - SDK author guidance: what to build above core and what not to put in the file format.
 - Embedding AKG in an SDK or product as an example architecture, without making ingestion part of core.
 - Repository layer boundaries: spec vs conformance vs reference implementation vs SDKs vs examples.
@@ -194,6 +194,8 @@ Add or update docs covering:
 - New contributors can identify the spec, conformance corpus, reference implementation, and API docs quickly.
 - Docs explicitly state that memory-file ingestion belongs in SDKs/examples, not AKG core.
 - Docs present the reference implementation as canonical/minimal, not as the only acceptable downstream architecture.
+- Docs are human readable, not overly technical or dense. The spec can be the hyper-technical bit, but README files and regular documentation should be accessible and targeted at users who want to write or use an SDK to implement AKG in their project.
+- Docs should follow the same graph pattern, split concepts into logical documents and link them to one another. Let's use markdown documentation with YAML frontmatter so they are easy to render.
 
 ## Task 9 — Clarify repository structure for future growth
 

@@ -1,3 +1,8 @@
+---
+title: AKG v1 public API
+status: release-candidate docs
+---
+
 # AKG v1 Public API
 
 The root Go package intentionally exposes the smallest useful boundary for the

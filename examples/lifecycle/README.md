@@ -14,6 +14,19 @@ the documented root package API to:
 4. read records back with exact lookups and whole-state lists;
 5. compact and validate the result.
 
+## What this example does not show
+
+This example demonstrates the AKG file lifecycle, not agent context retrieval.
+The file header and internal indexes help AKG readers find and validate sections,
+keys, nodes, edges, and derived state. They are not an agent-facing table of
+contents or ranking system.
+
+An SDK or product can build retrieval behavior above core using AKG nodes, edges,
+tags, metadata, and whole-state reads. For example, an SDK might add tag lookup,
+inbound/outbound edge traversal, cached indexes, semantic search, recency rules,
+or task-specific memory selection. Those policies are intentionally outside this
+minimal lifecycle example and outside AKG core.
+
 Run it from a clean checkout:
 
 ```sh

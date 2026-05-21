@@ -1,3 +1,8 @@
+---
+title: AKG v1 specification introduction
+status: v1 draft
+---
+
 # Introduction
 
 AKG is a structured, single-file knowledge graph format for AI agents. It defines a portable binary representation for graph-shaped working memory: nodes that capture durable facts or artifacts, edges that capture explicit relationships between them, and the file structures required to store, validate, and recover that data reliably.
