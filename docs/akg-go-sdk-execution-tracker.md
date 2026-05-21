@@ -75,10 +75,10 @@ Definition of done for this milestone:
 
 ## Next 3–5 Tasks
 
-1. Implement `internal/store` materialization from state to sorted Data entries with regenerated `ei:`, `t:`, `ts:`, and Bloom inputs.
-2. Implement hydration from Data entries back to authoritative state, including payload/key consistency checks and materialize/hydrate round-trip tests.
-3. Implement file create/open/validate using existing format and WAL primitives, including committed-WAL replay, ignored uncommitted tails, next-sequence tracking, and WAL threshold counters.
-4. Implement ordinary commit and explicit compaction, then perform the minimal public API/CLI review before adding exported surface.
+1. Implement hydration from Data entries back to authoritative state, including payload/key consistency checks and materialize/hydrate round-trip tests.
+2. Implement file create/open/validate using existing format and WAL primitives, including committed-WAL replay, ignored uncommitted tails, next-sequence tracking, and WAL threshold counters.
+3. Implement ordinary commit and explicit compaction, then perform the minimal public API/CLI review before adding exported surface.
+4. Add fixture-backed conformance files once create/open/compact behavior exists.
 
 ## Test / Conformance Checkpoints
 
@@ -127,6 +127,7 @@ Key invariant:
 
 ## Recent Completions
 
+- Completed Milestone 2 Task 2: `internal/store` now materializes authoritative `internal/state` live nodes and edges into sorted AKG Data entries, regenerating `n:`, `e:`, `ei:`, `t:`, and self-describing `ts:` keys, using empty values for derived indexes, rejecting duplicate materialized keys, and re-encoding node/edge payloads through canonical record encoders. Focused tests cover determinism, sorted output, Data-section decoder acceptance, empty derived values, duplicate derived-key rejection, and omitted deleted/superseded records. `go test ./...` passes.
 - Updated `docs/spec/01-data-model.md` and `docs/spec/04-key-layout.md` to lock the Task 1 decision that node identity is `(type,id)`, node IDs are unique within a type key space rather than globally, and changing type is identity change.
 - Completed Milestone 2 Task 1: `internal/state` now holds authoritative live nodes and edges only, supports `PutNode`, `PutEdge`, `DeleteNode`, and `DeleteEdge`, generates 16-character lowercase hex node IDs, enforces key/tag validation, writer-owned timestamps/versions, strict delete-not-found behavior, dangling-edge tolerance, and `(type,id)` identity semantics. `go test ./...` passes.
 - Archived completed Milestone 1 planning docs to `docs/archive/milestone-1-validation-2026-05-20.md` and `docs/archive/milestone-1-tasks-2026-05-20.md`.
@@ -153,7 +154,7 @@ Key invariant:
 
 ## Handoff Seed
 
-Next session should start with Milestone 2 Task 2: materializing authoritative state into sorted Data entries and derived index keys.
+Next session should start with Milestone 2 Task 3: hydrating authoritative state from Data entries.
 
 Suggested next-session prompt:
-> Continue from `docs/TASKS.md` and `docs/VALIDATION.md`. Implement Milestone 2 Task 2 only: `internal/store` materialization from `internal/state` authoritative nodes/edges into sorted AKG Data entries, regenerating `n:`, `e:`, `ei:`, `t:`, and self-describing `ts:` keys, rejecting duplicate materialized keys, using empty values for derived indexes, and re-encoding records canonically. Keep API internal, add focused tests first, run `gofmt` and `go test ./...`, then update the tracker/checklists before handing off.
+> Continue from `docs/TASKS.md` and `docs/VALIDATION.md`. Implement Milestone 2 Task 3 only: hydrate decoded Data entries back into `internal/state`, decode primary `n:` and `e:` payloads, validate key/payload identity consistency, decide and document/enforce required derived-index validation for this milestone, test materialize -> hydrate -> materialize equivalence including unknown MessagePack fields dropped after rewrite, run `gofmt` and `go test ./...`, then update tracker/checklists.

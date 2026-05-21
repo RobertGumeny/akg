@@ -63,16 +63,16 @@ Before adding exported API surface or large store behavior:
 
 ### Materialization
 
-- [ ] Live nodes produce `n:{type}:{id}` entries with node payload values.
-- [ ] Live edges produce `e:{from}:{relation}:{to}` entries with edge payload values.
-- [ ] Live edges produce `ei:{to}:{relation}:{from}` empty-value entries.
-- [ ] Node tags produce `t:{tag}:{node_id}` empty-value entries.
-- [ ] Nodes produce `ts:{updated_at}:n:{type}:{id}` empty-value entries.
-- [ ] Edges produce `ts:{updated_at}:e:{from}:{relation}:{to}` empty-value entries.
-- [ ] Materialized entries are sorted by raw bytewise key order.
-- [ ] Duplicate materialized keys are rejected.
-- [ ] Deleted/superseded records do not appear in materialized output.
-- [ ] Unknown MessagePack fields are dropped on rewrite.
+- [x] Live nodes produce `n:{type}:{id}` entries with node payload values.
+- [x] Live edges produce `e:{from}:{relation}:{to}` entries with edge payload values.
+- [x] Live edges produce `ei:{to}:{relation}:{from}` empty-value entries.
+- [x] Node tags produce `t:{tag}:{node_id}` empty-value entries.
+- [x] Nodes produce `ts:{updated_at}:n:{type}:{id}` empty-value entries.
+- [x] Edges produce `ts:{updated_at}:e:{from}:{relation}:{to}` empty-value entries.
+- [x] Materialized entries are sorted by raw bytewise key order.
+- [x] Duplicate materialized keys are rejected.
+- [x] Deleted/superseded records do not appear in materialized output.
+- [ ] Unknown MessagePack fields are dropped on rewrite (full read/rewrite coverage belongs with Task 3 hydration; Task 2 materialization re-encodes from canonical typed records only).
 
 ## Level 4 — Hydration/open/replay validation
 
