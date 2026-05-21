@@ -18,6 +18,12 @@ The public API is limited to:
 - current-state reads: `GetNode`, `GetEdge`, `ListNodes`, `ListEdges`;
 - simple public value types: `Node`, `NodeRecord`, and `Edge`.
 
+`Create` creates and opens a new AKG file. `Open` uses ordinary strict
+validation/open semantics. `Validate` checks that a file opens under those
+ordinary semantics. `Commit` durably appends pending mutations, `Close` commits
+outstanding mutations, and both package-level `Compact` and `(*Store).Compact`
+perform explicit compaction without exposing flush or recovery controls.
+
 Reads return only the current live nodes and edges. They hide internal storage
 records, indexes, write logs, deleted records, and older replaced versions.
 

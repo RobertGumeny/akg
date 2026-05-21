@@ -78,6 +78,113 @@ func TestPublicAPIReadHelpersStayMinimal(t *testing.T) {
 	}
 }
 
+func TestPublicAPIValidateCreateCommitOpen(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "lifecycle.akg")
+	st, err := akg.Create(path)
+	if err != nil {
+		t.Fatalf("Create: %v", err)
+	}
+	if err := akg.Validate(path); err != nil {
+		t.Fatalf("Validate empty file: %v", err)
+	}
+	if _, err := st.PutNode("a", akg.Node{Type: "note", Title: "A"}); err != nil {
+		t.Fatalf("PutNode: %v", err)
+	}
+	if err := st.Commit(); err != nil {
+		t.Fatalf("Commit: %v", err)
+	}
+	if err := akg.Validate(path); err != nil {
+		t.Fatalf("Validate committed file: %v", err)
+	}
+
+	reopened, err := akg.Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	if node, ok := reopened.GetNode("note", "a"); !ok || node.Node.Title != "A" {
+		t.Fatalf("GetNode = %#v, %v", node, ok)
+	}
+}
+
+func TestPublicAPIEdgeReadsAndDelete(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "edges.akg")
+	st, err := akg.Create(path)
+	if err != nil {
+		t.Fatalf("Create: %v", err)
+	}
+	if _, err := st.PutNode("a", akg.Node{Type: "note", Title: "A"}); err != nil {
+		t.Fatalf("PutNode a: %v", err)
+	}
+	if _, err := st.PutNode("b", akg.Node{Type: "note", Title: "B"}); err != nil {
+		t.Fatalf("PutNode b: %v", err)
+	}
+	if _, err := st.PutEdge(akg.Edge{FromNode: "a", Relation: "links", ToNode: "b"}); err != nil {
+		t.Fatalf("PutEdge: %v", err)
+	}
+	if err := st.Commit(); err != nil {
+		t.Fatalf("Commit: %v", err)
+	}
+
+	reopened, err := akg.Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	if edge, ok := reopened.GetEdge("a", "links", "b"); !ok || edge.Relation != "links" {
+		t.Fatalf("GetEdge = %#v, %v", edge, ok)
+	}
+	if edges := reopened.ListEdges(); len(edges) != 1 {
+		t.Fatalf("ListEdges = %#v, want one edge", edges)
+	}
+	if err := reopened.DeleteEdge("a", "links", "b"); err != nil {
+		t.Fatalf("DeleteEdge: %v", err)
+	}
+	if err := reopened.Commit(); err != nil {
+		t.Fatalf("Commit delete: %v", err)
+	}
+
+	deleted, err := akg.Open(path)
+	if err != nil {
+		t.Fatalf("Open after delete: %v", err)
+	}
+	if _, ok := deleted.GetEdge("a", "links", "b"); ok {
+		t.Fatalf("deleted edge is visible")
+	}
+	if edges := deleted.ListEdges(); len(edges) != 0 {
+		t.Fatalf("ListEdges after delete = %#v, want no edges", edges)
+	}
+}
+
+func TestPublicAPICloseCommitsPendingMutations(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "close.akg")
+	st, err := akg.Create(path)
+	if err != nil {
+		t.Fatalf("Create: %v", err)
+	}
+	if _, err := st.PutNode("a", akg.Node{Type: "note", Title: "A"}); err != nil {
+		t.Fatalf("PutNode a: %v", err)
+	}
+	if _, err := st.PutNode("b", akg.Node{Type: "note", Title: "B"}); err != nil {
+		t.Fatalf("PutNode b: %v", err)
+	}
+	if err := st.DeleteNode("note", "b"); err != nil {
+		t.Fatalf("DeleteNode b: %v", err)
+	}
+	if err := st.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+
+	reopened, err := akg.Open(path)
+	if err != nil {
+		t.Fatalf("Open after Close: %v", err)
+	}
+	if _, ok := reopened.GetNode("note", "b"); ok {
+		t.Fatalf("deleted node is visible after Close")
+	}
+	if nodes := reopened.ListNodes(); len(nodes) != 1 {
+		t.Fatalf("ListNodes after Close = %#v, want one node", nodes)
+	}
+}
+
 func TestPublicAPICompactPreservesCurrentState(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "compact.akg")
 	st, err := akg.Create(path)
@@ -94,7 +201,13 @@ func TestPublicAPICompactPreservesCurrentState(t *testing.T) {
 		t.Fatal(err)
 	}
 	if err := st.Compact(); err != nil {
+		t.Fatalf("Store.Compact: %v", err)
+	}
+	if err := akg.Compact(path); err != nil {
 		t.Fatalf("Compact: %v", err)
+	}
+	if err := akg.Validate(path); err != nil {
+		t.Fatalf("Validate compacted file: %v", err)
 	}
 	reopened, err := akg.Open(path)
 	if err != nil {
