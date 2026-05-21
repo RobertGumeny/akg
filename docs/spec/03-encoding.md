@@ -12,7 +12,7 @@ A conformant writer must encode node and edge payloads as maps. A positional arr
 
 ## String Encoding
 
-All strings in AKG payloads are UTF-8 encoded. This includes, but is not limited to, node `type`, node `title`, node `body`, edge `relation`, tag values, `meta` map keys, and string values nested within `meta`.
+All strings in AKG payloads are UTF-8 encoded. This includes, but is not limited to, node `type`, node `title`, node `body`, edge `relation`, tag values, `meta` map keys, and string values nested within `meta`. A reader must reject a payload containing any MessagePack string value or map key that is not valid UTF-8.
 
 ## Timestamps
 

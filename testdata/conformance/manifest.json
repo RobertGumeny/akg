@@ -239,6 +239,15 @@
       "corruption": "Generated with an invalid MessagePack payload for a committed PUT_NODE record."
     },
     {
+      "path": "m3-reject-invalid-wal-put-node-utf8-payload.akg",
+      "purpose": "Committed PUT_NODE WAL record with invalid UTF-8 in a nested node meta string must be rejected.",
+      "expected_result": "reject",
+      "expected_error_category": "invalid_wal_payload",
+      "validation_scope": "store",
+      "sha256": "6871323a94bd96edce7c5cd76e14ea7d6201bb0ae5d554785d8067fe92bb471a",
+      "corruption": "Generated with a syntactically valid MessagePack node payload containing invalid UTF-8 in nested meta."
+    },
+    {
       "path": "m3-reject-invalid-wal-delete-node-payload.akg",
       "purpose": "Committed DELETE_NODE WAL record with malformed payload must be rejected.",
       "expected_result": "reject",
@@ -275,6 +284,24 @@
       "corruption": "Generated from a committed WAL batch, then one byte in the first committed record is flipped."
     },
     {
+      "path": "m3-reject-duplicate-wal-sequence.akg",
+      "purpose": "Committed WAL prefix with duplicate sequence numbers must be rejected.",
+      "expected_result": "reject",
+      "expected_error_category": "invalid_wal_record",
+      "validation_scope": "store",
+      "sha256": "d1972b7856a087d2fabceb9721f67ed04a533c815be496af431e58993dba4fe6",
+      "corruption": "Generated with a committed WAL batch whose COMMIT record reuses the preceding mutation sequence number."
+    },
+    {
+      "path": "m3-reject-decreasing-wal-sequence.akg",
+      "purpose": "Committed WAL prefix with decreasing sequence numbers must be rejected.",
+      "expected_result": "reject",
+      "expected_error_category": "invalid_wal_record",
+      "validation_scope": "store",
+      "sha256": "c8a1b931a0b5b34eae88e9b0795e1b4971637c114e1203732c9f306e15e07a71",
+      "corruption": "Generated with a committed WAL batch whose COMMIT record sequence number is lower than the preceding mutation sequence number."
+    },
+    {
       "path": "m3-reject-invalid-node-data-payload.akg",
       "purpose": "Primary Data node key with malformed node payload must fail hydration.",
       "expected_result": "reject",
@@ -282,6 +309,15 @@
       "validation_scope": "store",
       "sha256": "b0838014911ea94e3dcebed7d795a6e58b6f076c65b15619e2ebcaa46914e903",
       "corruption": "Generated with a primary node Data key whose value is invalid MessagePack, with Bloom regenerated for the damaged Data keys."
+    },
+    {
+      "path": "m3-reject-invalid-node-data-utf8-payload.akg",
+      "purpose": "Primary Data node key with invalid UTF-8 in a nested meta string must fail hydration.",
+      "expected_result": "reject",
+      "expected_error_category": "invalid_data_payload",
+      "validation_scope": "store",
+      "sha256": "e887f53b03fdc196ae9a07c013b1e95129507c65104a45e661d4bfb9ee0d273e",
+      "corruption": "Generated with a syntactically valid MessagePack node payload containing invalid UTF-8 in nested meta, with Bloom regenerated for the Data keys."
     },
     {
       "path": "m3-reject-missing-derived-tag-index.akg",

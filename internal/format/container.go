@@ -50,6 +50,9 @@ func EncodeHeader(h Header) ([]byte, error) {
 	if h.ChecksumAlgorithm == 0 {
 		h.ChecksumAlgorithm = ChecksumCRC32
 	}
+	if h.ChecksumAlgorithm != ChecksumCRC32 {
+		return nil, ErrInvalidHeader
+	}
 	buf := make([]byte, HeaderSize)
 	copy(buf[0:4], magic[:])
 	buf[4] = h.Major
@@ -180,8 +183,8 @@ func ValidateSections(sections []Section, fileSize uint64, alg ChecksumAlgorithm
 	return nil
 }
 
-// Checksum appends/checksums container section payloads. Milestone 1 implements
-// the v1 default CRC32 checksum algorithm.
+// Checksum returns the AKG v1 section checksum for payload. AKG v1 requires
+// CRC32; SHA-256 and BLAKE3 algorithm IDs are reserved for future versions.
 func Checksum(payload []byte, alg ChecksumAlgorithm) ([]byte, error) {
 	if alg != ChecksumCRC32 {
 		return nil, ErrInvalidSectionTable
@@ -195,10 +198,6 @@ func checksumSize(alg ChecksumAlgorithm) int {
 	switch alg {
 	case ChecksumCRC32:
 		return 4
-	case ChecksumSHA256:
-		return 32
-	case ChecksumBLAKE3:
-		return 32
 	default:
 		return 0
 	}

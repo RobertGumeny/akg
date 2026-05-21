@@ -120,6 +120,62 @@ func TestOpenRejectsMalformedCommittedWALAndInvalidPayload(t *testing.T) {
 	}
 }
 
+func TestOpenRejectsCommittedWALWithNonIncreasingSequence(t *testing.T) {
+	base := state.New()
+	payload := nodePutPayload("n1", record.Node{Type: "note", Title: "A", CreatedAt: 1, UpdatedAt: 1, Version: 1})
+
+	for _, tc := range []struct {
+		name    string
+		records []wal.Record
+	}{
+		{
+			name: "duplicate",
+			records: []wal.Record{
+				{Sequence: 1, Operation: wal.OpPutNode, Payload: payload},
+				{Sequence: 1, Operation: wal.OpCommit},
+			},
+		},
+		{
+			name: "decreasing",
+			records: []wal.Record{
+				{Sequence: 2, Operation: wal.OpPutNode, Payload: payload},
+				{Sequence: 1, Operation: wal.OpCommit},
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			path := tempPath(t)
+			writeStoreFile(t, path, base, mustWAL(t, tc.records))
+			if _, err := Open(path); !errors.Is(err, wal.ErrInvalidRecord) {
+				t.Fatalf("Open error = %v, want %v", err, wal.ErrInvalidRecord)
+			}
+		})
+	}
+}
+
+func TestOpenIgnoresNonIncreasingSequenceInUncommittedTail(t *testing.T) {
+	path := tempPath(t)
+	base := state.New()
+	committed := nodePutPayload("n1", record.Node{Type: "note", Title: "A", CreatedAt: 1, UpdatedAt: 1, Version: 1})
+	uncommitted := nodePutPayload("n2", record.Node{Type: "note", Title: "B", CreatedAt: 2, UpdatedAt: 2, Version: 1})
+	writeStoreFile(t, path, base, mustWAL(t, []wal.Record{
+		{Sequence: 1, Operation: wal.OpPutNode, Payload: committed},
+		{Sequence: 2, Operation: wal.OpCommit},
+		{Sequence: 2, Operation: wal.OpPutNode, Payload: uncommitted},
+	}))
+
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	if _, ok := st.State().GetNode("note", "n1"); !ok {
+		t.Fatalf("committed WAL node was not replayed")
+	}
+	if _, ok := st.State().GetNode("note", "n2"); ok {
+		t.Fatalf("trailing uncommitted WAL node was replayed")
+	}
+}
+
 func TestCommitPersistsMutationViaWALReplay(t *testing.T) {
 	path := tempPath(t)
 	st, err := Create(path)

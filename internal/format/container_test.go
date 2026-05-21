@@ -60,6 +60,21 @@ func TestHeaderDecodeRejectsLevel4Corruption(t *testing.T) {
 	if _, err := DecodeHeader(reserved); !errors.Is(err, ErrInvalidHeader) {
 		t.Fatalf("reserved err = %v", err)
 	}
+
+	reservedChecksumAlgorithm := append([]byte(nil), buf...)
+	reservedChecksumAlgorithm[6] = byte(ChecksumSHA256)
+	binary.LittleEndian.PutUint32(reservedChecksumAlgorithm[55:59], headerChecksum(reservedChecksumAlgorithm))
+	if _, err := DecodeHeader(reservedChecksumAlgorithm); !errors.Is(err, ErrInvalidHeader) {
+		t.Fatalf("reserved checksum algorithm err = %v", err)
+	}
+}
+
+func TestEncodeHeaderRejectsReservedChecksumAlgorithms(t *testing.T) {
+	for _, alg := range []ChecksumAlgorithm{ChecksumSHA256, ChecksumBLAKE3} {
+		if _, err := EncodeHeader(Header{Major: CurrentMajor, ChecksumAlgorithm: alg}); !errors.Is(err, ErrInvalidHeader) {
+			t.Fatalf("EncodeHeader(%#02x) err = %v, want ErrInvalidHeader", uint8(alg), err)
+		}
+	}
 }
 
 func TestSectionTableEncodeDecodeLittleEndian(t *testing.T) {
@@ -171,6 +186,18 @@ func TestDecodeContainerRejectsLevel4SectionTableCorruption(t *testing.T) {
 			t.Fatalf("data payload changed")
 		}
 	})
+}
+
+func TestSectionChecksumRejectsReservedAlgorithms(t *testing.T) {
+	payload := []byte("payload")
+	for _, alg := range []ChecksumAlgorithm{ChecksumSHA256, ChecksumBLAKE3} {
+		if _, err := EncodeSection(payload, alg); !errors.Is(err, ErrInvalidSectionTable) {
+			t.Fatalf("EncodeSection(%#02x) err = %v, want ErrInvalidSectionTable", uint8(alg), err)
+		}
+		if _, err := DecodeSection(append(payload, make([]byte, 32)...), alg); !errors.Is(err, ErrInvalidSectionTable) {
+			t.Fatalf("DecodeSection(%#02x) err = %v, want ErrInvalidSectionTable", uint8(alg), err)
+		}
+	}
 }
 
 func TestSectionChecksumRoundTrip(t *testing.T) {

@@ -376,7 +376,12 @@ func inspectWAL(payload []byte) (walInfo, error) {
 	}
 	info.appendBytes = lastCommitEnd
 	info.appendEntries = lastCommit + 1
-	for _, r := range all[:lastCommit+1] {
+	var prev wal.SequenceNumber
+	for i, r := range all[:lastCommit+1] {
+		if i > 0 && r.Sequence <= prev {
+			return walInfo{}, wal.ErrInvalidRecord
+		}
+		prev = r.Sequence
 		if err := wal.ValidatePayload(r); err != nil {
 			return walInfo{}, err
 		}

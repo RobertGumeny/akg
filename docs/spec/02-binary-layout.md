@@ -47,15 +47,18 @@ Unsupported-major-version rejection is mandatory. Silent best-effort parsing is 
 
 ## Checksum Algorithm Identifier
 
-The checksum algorithm byte in the header identifies the checksum scheme used by the file.
+The checksum algorithm byte in the header identifies the section checksum scheme used by the file.
 
-The following values are defined:
+AKG v1 defines one required checksum algorithm:
 
 - `0x01` — CRC32
-- `0x02` — SHA-256
-- `0x03` — BLAKE3
 
-CRC32 is the default algorithm for AKG v1 files.
+AKG v1 writers must write `0x01`. AKG v1 readers must reject files that declare any other checksum algorithm value.
+
+The following values are reserved for future compatibility and are not valid AKG v1 checksum algorithms:
+
+- `0x02` — reserved for a future SHA-256 checksum scheme
+- `0x03` — reserved for a future BLAKE3 checksum scheme
 
 ## Checksum Scope and Failure Policy
 
@@ -64,9 +67,9 @@ AKG uses checksums at two levels:
 - the header is checksummed independently
 - each section is checksummed independently
 
-The header checksum covers the header with the checksum field itself excluded from the calculation.
+The header checksum is always a 4-byte little-endian CRC32 checksum. It covers the header with the checksum field itself excluded from the calculation.
 
-Each section consists of payload bytes followed immediately on disk by that section's checksum bytes. The section checksum covers the payload bytes only, using the checksum algorithm declared in the header. The `length` field in the section table includes both the payload and the trailing checksum bytes, so a reader that needs the payload alone must subtract the checksum size implied by the selected algorithm.
+Each section consists of payload bytes followed immediately on disk by that section's checksum bytes. In AKG v1, the section checksum is a 4-byte little-endian CRC32 checksum over the payload bytes only. The `length` field in the section table includes both the payload and the trailing checksum bytes, so a reader that needs the payload alone must subtract the checksum size implied by the selected algorithm.
 
 A checksum failure in either the header or any section is a file integrity failure. A conformant reader must reject the file on any such failure.
 

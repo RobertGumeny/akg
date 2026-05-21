@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"math"
 	"sort"
+	"unicode/utf8"
 )
 
 // EncodeNodePayload encodes a node as a deterministic MessagePack map for WAL/data payloads.
@@ -239,6 +240,9 @@ func appendMsgpack(out *[]byte, v any) error {
 			*out = append(*out, 0xc2)
 		}
 	case string:
+		if !utf8.ValidString(x) {
+			return ErrInvalidPayload
+		}
 		appendStr(out, x)
 	case uint64:
 		*out = append(*out, 0xcf)
@@ -269,6 +273,9 @@ func appendMsgpack(out *[]byte, v any) error {
 		}
 		sort.Strings(keys)
 		for _, k := range keys {
+			if !utf8.ValidString(k) {
+				return ErrInvalidPayload
+			}
 			appendStr(out, k)
 			if err := appendMsgpack(out, x[k]); err != nil {
 				return err
@@ -320,7 +327,11 @@ func decodeMsgpack(b []byte) (any, int, error) {
 		if len(b) < 1+l {
 			return nil, 0, ErrInvalidPayload
 		}
-		return string(b[1 : 1+l]), 1 + l, nil
+		s := string(b[1 : 1+l])
+		if !utf8.ValidString(s) {
+			return nil, 0, ErrInvalidPayload
+		}
+		return s, 1 + l, nil
 	}
 	if c >= 0x90 && c <= 0x9f {
 		return decodeArray(b, 1, int(c&0x0f))
@@ -368,7 +379,11 @@ func decodeMsgpack(b []byte) (any, int, error) {
 		if len(b) < 2+l {
 			return nil, 0, ErrInvalidPayload
 		}
-		return string(b[2 : 2+l]), 2 + l, nil
+		s := string(b[2 : 2+l])
+		if !utf8.ValidString(s) {
+			return nil, 0, ErrInvalidPayload
+		}
+		return s, 2 + l, nil
 	case 0xdb:
 		if len(b) < 5 {
 			return nil, 0, ErrInvalidPayload
@@ -377,7 +392,11 @@ func decodeMsgpack(b []byte) (any, int, error) {
 		if len(b) < 5+l {
 			return nil, 0, ErrInvalidPayload
 		}
-		return string(b[5 : 5+l]), 5 + l, nil
+		s := string(b[5 : 5+l])
+		if !utf8.ValidString(s) {
+			return nil, 0, ErrInvalidPayload
+		}
+		return s, 5 + l, nil
 	case 0xdc:
 		if len(b) < 3 {
 			return nil, 0, ErrInvalidPayload

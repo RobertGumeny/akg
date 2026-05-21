@@ -11,12 +11,7 @@ Status values:
 
 ## Release-blocking gaps found
 
-| ID | Requirement | Finding | Required v1 RC resolution |
-| --- | --- | --- | --- |
-| `M3-AUDIT-GAP-001` | `05-wal.md`: a conformant writer must trigger a flush at 1,000 uncompacted WAL entries or 10 MB of WAL data. | `internal/store/file.go` defines threshold constants and has threshold tests, but no automatic flush path currently invokes them. Public API docs also state there is no public flush control. | Either implement the internal automatic flush behavior without adding public API, or revise the spec before v1 RC to defer/rename this requirement. |
-| `M3-AUDIT-GAP-002` | `05-wal.md`: WAL replay is ordered by record sequence; writers must assign distinct, never-reused sequence numbers. | Writers continue sequence numbers across sessions and tests cover that path. Ordinary open currently replays committed records in physical WAL order and does not reject duplicate or decreasing sequence numbers in externally-authored WAL fixtures. | Add sequence-order validation/replay semantics and conformance coverage, or clarify the spec that the on-disk WAL order is authoritative and sequence numbers are writer-owned diagnostics. |
-| `M3-AUDIT-GAP-003` | `03-encoding.md`: all payload strings are UTF-8. | Key components are UTF-8 validated, but MessagePack string decoding currently accepts Go strings without explicit UTF-8 validation for payload fields and nested `meta` strings. | Add explicit UTF-8 validation for payload strings, including practical nested `meta` coverage, or narrow the spec before v1 RC. |
-| `M3-AUDIT-GAP-004` | `02-binary-layout.md`: checksum algorithm IDs define CRC32, SHA-256, and BLAKE3, and sections use the header-declared algorithm. | The reference implementation writes CRC32 and rejects non-CRC32 sections; tests and fixtures cover CRC32 only. | Either implement all declared algorithms or clarify that v1 RC requires CRC32 and reserves the other IDs for future compatibility. |
+None.
 
 ## 01-data-model.md
 
@@ -34,7 +29,7 @@ Status values:
 | `BL-002` | Wrong magic at offset 0 must be rejected immediately; readers must not heuristic-parse or recover. | Conformance fixture | `format.DecodeHeader`; `m3-reject-wrong-magic.akg`. |
 | `BL-003` | Header reserved bytes must be zero; writers must write zero; readers must not assign meaning to reserved bytes. | Implemented/tested | `format.EncodeHeader`, `format.DecodeHeader`; `internal/format/container_test.go`. |
 | `BL-004` | Readers must reject a major version greater than implemented. | Conformance fixture | `format.DecodeHeader`; `m3-reject-unsupported-major-version.akg`. |
-| `BL-005` | Section length includes payload plus trailing checksum; readers must subtract checksum size. | Implemented/tested | `format.EncodeSection`, `format.DecodeSection`; container tests and all valid fixtures. |
+| `BL-005` | Section length includes payload plus trailing checksum; readers must subtract checksum size. AKG v1 section checksums are 4-byte little-endian CRC32; SHA-256/BLAKE3 IDs are reserved and rejected. | Implemented/tested | `format.EncodeHeader`, `format.DecodeHeader`, `format.EncodeSection`, `format.DecodeSection`; container tests and all valid fixtures. |
 | `BL-006` | Header or section checksum failure must reject; ordinary readers must fail closed. | Conformance fixture | `m3-reject-bad-header-checksum.akg`, `m3-reject-bad-section-checksum.akg`; `format.ErrChecksumMismatch`. |
 | `BL-007` | Unknown section types must be skipped if structurally valid and may appear multiple times. | Implemented/tested | `format.DecodeContainer`; `TestStoreOpenToleratesUnknownStructurallyValidSection`; container tests. |
 | `BL-008` | Readers must validate section bounds, overlap, cardinality, and zero-length rules. | Conformance fixture | `format.ValidateSections`; duplicate/overlap rejection fixtures in manifest. |
@@ -50,7 +45,7 @@ Status values:
 | `ENC-004` | Writers must encode edge payload fields `from_node`, `to_node`, `relation`, `created_at`, and `updated_at`. | Implemented/tested | `record.EncodeEdgePayload`; state/store tests. |
 | `ENC-005` | Readers must reject edge payloads missing required identity fields; optional fields get defaults. | Implemented/tested | `record.DecodeEdgePayload`; WAL payload rejection fixtures. |
 | `ENC-006` | Applying read defaults is normal behavior and must not be treated as an error. | Implemented/tested | `ApplyReadDefaults` methods and record tests. |
-| `ENC-007` | Payload strings must be UTF-8. | Release-blocking gap | `M3-AUDIT-GAP-003`. |
+| `ENC-007` | Payload strings must be UTF-8. | Implemented/tested / Conformance fixture | `record.decodeMsgpack` rejects invalid UTF-8 for all MessagePack string values and map keys, including nested `meta`; `record.encodeMsgpack` rejects invalid UTF-8 on write; `internal/record/codec_utf8_test.go`; UTF-8 rejection fixtures in manifest. |
 
 ## 04-key-layout.md
 
@@ -73,14 +68,14 @@ Status values:
 | `WAL-002` | After successful commit, enough WAL state must remain to recover committed mutations. | Implemented/tested | `store.Commit`, `store.Open`; committed-WAL replay fixtures/tests. |
 | `WAL-003` | Unknown WAL opcodes must reject. | Conformance fixture | `wal.DecodeRecord`; `m3-reject-invalid-wal-opcode.akg`. |
 | `WAL-004` | `COMMIT` records must have `length = 0` and empty payload. | Implemented/tested | `wal.EncodeRecord`, `wal.DecodeRecord`, `wal.ValidatePayload`; wal tests. |
-| `WAL-005` | Writers must assign distinct sequence numbers that are not reused/reset across sessions. | Implemented/tested / Release-blocking gap | Writer path covered by `TestMultipleCommittedBatchesReplayInSequenceAcrossSessions`; external WAL validation gap tracked by `M3-AUDIT-GAP-002`. |
+| `WAL-005` | Writers must assign distinct, strictly increasing sequence numbers that are not reused/reset across sessions; readers must reject duplicate or non-increasing sequence numbers in committed WAL prefixes. | Implemented/tested / Conformance fixture | Writer path covered by `TestMultipleCommittedBatchesReplayInSequenceAcrossSessions`; reader validation covered by `TestOpenRejectsCommittedWALWithNonIncreasingSequence` and duplicate/decreasing WAL sequence rejection fixtures. |
 | `WAL-006` | PUT/DELETE WAL payloads must match the specified MessagePack identity/payload shapes; unknown delete fields are tolerated. | Conformance fixture | `wal.ValidatePayload`, `record.Decode*`; invalid WAL payload fixtures. |
 | `WAL-007` | WAL readers must verify length, checksum, and known operation for every relevant record. | Conformance fixture | `wal.DecodeRecord`; malformed committed WAL and opcode fixtures. |
 | `WAL-008` | Ordinary open must reject invalid committed WAL and must not salvage automatically. | Conformance fixture | `store.inspectWAL`; malformed committed WAL fixtures. |
 | `WAL-009` | Ordinary open must replay through last valid `COMMIT` and ignore trailing uncommitted records. | Implemented/tested / Conformance fixture | `store.inspectWAL`, `replayWAL`; uncommitted-tail fixture and tests. |
 | `WAL-010` | WAL contents with no valid `COMMIT` are uncommitted and not applied. | Implemented/tested | `TestOpenWithNoValidCommitAppliesNoWALMutations`. |
 | `WAL-011` | Writers must not partially clear WAL before compaction. | Implemented/tested | `store.Commit` preserves WAL prefix through last commit; commit-discard-tail and compaction tests. |
-| `WAL-012` | Writer must trigger flush at 1,000 entries or 10 MB WAL. | Release-blocking gap | `M3-AUDIT-GAP-001`. |
+| `WAL-012` | Implementations must provide a policy that prevents unbounded pending mutation or WAL growth; exact flush policy is implementation-defined, with 1,000 entries or 10 MB recommended. | Documentation-only | `05-wal.md` now treats flush thresholds as writer-side policy rather than file-format conformance. |
 | `WAL-013` | `commit()` is the durability boundary; it appends mutation records and `COMMIT`, fsyncs durable state, and does not imply compaction. | Implemented/tested | `store.Commit`, `writeFileSync`; commit/reopen and compact tests. |
 | `WAL-014` | Clean close must automatically call `commit()` unless already committed. | Implemented/tested | `store.Close`; `TestCloseCommitsOutstandingMutation`. |
 
@@ -113,6 +108,6 @@ Status values:
 
 ## Notes for follow-up tasks
 
-- The release-blocking gaps above should be resolved before the Milestone 3 definition of done is claimed.
+- No release-blocking requirements gaps remain in this audit.
 - This audit intentionally does not add query, traversal, merge, background service, or multi-writer behavior.
 - Public API review remains Task 5/6 scope; this audit only records whether spec obligations are currently traceable.

@@ -55,7 +55,9 @@ WAL sequence numbers are monotonically increasing `uint64` values.
 
 A conformant writer must assign a distinct sequence number to every WAL record. Sequence numbers must never be reused and must never reset across sessions for the same file.
 
-Sequence numbers establish the total order of WAL operations.
+Physical record order in the WAL byte stream is authoritative for replay and commit-boundary semantics. Sequence numbers must be strictly increasing in that physical order. Readers must reject a committed WAL prefix containing duplicate or non-increasing sequence numbers.
+
+Sequence numbers validate physical append order; readers must not sort WAL records by sequence during ordinary replay.
 
 ## Payload Semantics
 
@@ -87,11 +89,11 @@ Because each record has an independent checksum, corruption of one record does n
 
 ## Replay Semantics
 
-WAL replay is ordered by record sequence.
+WAL replay follows physical record order in the WAL byte stream.
 
 Replay through the last valid `COMMIT` is part of ordinary open, not a special recovery-only mode.
 
-`COMMIT` records close committed batches. On ordinary open, the implementation must locate the last valid `COMMIT` record and replay all preceding records in sequence order up to and including that `COMMIT` boundary, excluding the `COMMIT` record's empty payload itself.
+`COMMIT` records close committed batches. On ordinary open, the implementation must locate the last valid `COMMIT` record and replay all preceding records in physical order up to and including that `COMMIT` boundary, excluding the `COMMIT` record's empty payload itself. The committed prefix must have strictly increasing sequence numbers.
 
 Any records that appear after the last valid `COMMIT` are uncommitted state. A conformant implementation must ignore them during ordinary open rather than apply them.
 
@@ -105,16 +107,20 @@ A conformant writer must not partially clear the WAL as individual mutations are
 
 During compaction, live data is rewritten into the new file and the old WAL is discarded entirely.
 
-## Automatic Flush Threshold
+## Automatic Flush Policy
 
-To prevent unbounded WAL growth, a conformant writer must trigger a flush when either of the following thresholds is reached:
+Implementations must provide a policy that prevents unbounded pending mutation or WAL growth.
 
-- 1,000 uncompacted WAL entries
-- 10 MB of WAL data
+The exact flush policy is implementation-defined and is not part of AKG file-format conformance. Implementations should document their policy for when pending mutations are committed, flushed, or otherwise made durable.
 
-The first threshold reached controls.
+The recommended safety thresholds are:
 
-This automatic flush is a safety valve. It is not a compaction trigger.
+- 1,000 pending or uncompacted WAL entries
+- 10 MB of pending or uncompacted WAL data
+
+The first threshold reached should control.
+
+This flush policy is a writer-side safety valve. It is not a compaction trigger.
 
 ## Durability Boundary
 

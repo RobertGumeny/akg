@@ -112,11 +112,15 @@ func writeTask3Rejections(dir string) error {
 	fixtures["m3-reject-malformed-bloom.akg"] = containerFromSections([]testSection{{typ: format.SectionData, payload: nil}, {typ: format.SectionBloom, payload: []byte{0x01}}, {typ: format.SectionWAL, zeroLength: true}})
 	fixtures["m3-reject-invalid-wal-opcode.akg"] = containerWithWAL(unknownOpcodeWAL())
 	fixtures["m3-reject-invalid-wal-put-node-payload.akg"] = containerWithWAL(committedWAL(wal.OpPutNode, []byte{0xc1}))
+	fixtures["m3-reject-invalid-wal-put-node-utf8-payload.akg"] = containerWithWAL(committedWAL(wal.OpPutNode, invalidUTF8NodePutPayload()))
 	fixtures["m3-reject-invalid-wal-delete-node-payload.akg"] = containerWithWAL(committedWAL(wal.OpDeleteNode, []byte{0xc1}))
 	fixtures["m3-reject-invalid-wal-put-edge-payload.akg"] = containerWithWAL(committedWAL(wal.OpPutEdge, []byte{0xc1}))
 	fixtures["m3-reject-invalid-wal-delete-edge-payload.akg"] = containerWithWAL(committedWAL(wal.OpDeleteEdge, []byte{0xc1}))
 	fixtures["m3-reject-malformed-committed-wal-checksum.akg"] = containerWithWAL(corrupt(committedWAL(wal.OpPutNode, validNodePutPayload()), 3, 0xff))
+	fixtures["m3-reject-duplicate-wal-sequence.akg"] = containerWithWAL(nonIncreasingSequenceWAL(1, 1))
+	fixtures["m3-reject-decreasing-wal-sequence.akg"] = containerWithWAL(nonIncreasingSequenceWAL(2, 1))
 	fixtures["m3-reject-invalid-node-data-payload.akg"] = containerFromDataEntries([]format.DataEntry{{Key: []byte("n:note:n1"), Value: []byte{0xc1}}})
+	fixtures["m3-reject-invalid-node-data-utf8-payload.akg"] = containerFromDataEntries([]format.DataEntry{{Key: []byte("n:note:n1"), Value: invalidUTF8NodePayload()}})
 	fixtures["m3-reject-missing-derived-tag-index.akg"] = missingDerivedTagContainer()
 
 	names := make([]string, 0, len(fixtures))
@@ -244,6 +248,23 @@ func validNodePutPayload() []byte {
 	return payload
 }
 
+func invalidUTF8NodePayload() []byte {
+	return []byte{0x83,
+		0xa4, 't', 'y', 'p', 'e', 0xa4, 'n', 'o', 't', 'e',
+		0xa5, 't', 'i', 't', 'l', 'e', 0xa2, 'o', 'k',
+		0xa4, 'm', 'e', 't', 'a', 0x81, 0xa1, 'k', 0x91, 0xa1, 0xff,
+	}
+}
+
+func invalidUTF8NodePutPayload() []byte {
+	return []byte{0x84,
+		0xa4, 't', 'y', 'p', 'e', 0xa4, 'n', 'o', 't', 'e',
+		0xa5, 't', 'i', 't', 'l', 'e', 0xa2, 'o', 'k',
+		0xa4, 'm', 'e', 't', 'a', 0x81, 0xa1, 'k', 0x91, 0xa1, 0xff,
+		0xa2, 'i', 'd', 0xa2, 'n', '1',
+	}
+}
+
 func committedWAL(op wal.Operation, payload []byte) []byte {
 	records := []wal.Record{{Sequence: 1, Operation: op, Payload: payload}, {Sequence: 2, Operation: wal.OpCommit}}
 	out, err := wal.EncodeRecords(records)
@@ -260,6 +281,15 @@ func unknownOpcodeWAL() []byte {
 	binary.LittleEndian.PutUint32(buf[9:13], 0)
 	binary.LittleEndian.PutUint32(buf[13:17], crc32.ChecksumIEEE(buf[:13]))
 	return buf
+}
+
+func nonIncreasingSequenceWAL(first, second wal.SequenceNumber) []byte {
+	records := []wal.Record{{Sequence: first, Operation: wal.OpPutNode, Payload: validNodePutPayload()}, {Sequence: second, Operation: wal.OpCommit}}
+	out, err := wal.EncodeRecords(records)
+	if err != nil {
+		panic(err)
+	}
+	return out
 }
 
 func mustSection(payload []byte) []byte {
