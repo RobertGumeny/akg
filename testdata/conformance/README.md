@@ -61,7 +61,7 @@ go run ./internal/cmd/conformance-fixtures -dir testdata/conformance -print-hash
 
 ## Updating a test file safely
 
-Changing one of these files is allowed, but it should never be accidental.
+Changing one of these files is allowed, but it should be rare and deliberate. Treat `.akg` files in this directory as reference specimens: if they change in a PR, reviewers should slow down and ask why.
 
 Use this workflow:
 
@@ -72,7 +72,7 @@ Use this workflow:
 5. Update the file’s `sha256` in `manifest.json` only after you understand why the bytes changed.
 6. If the file is intentionally broken, update its `corruption` note so the damage is easy to audit later.
 
-Please do not submit hash-only churn. A hash change without an explained file change is suspicious by design.
+Please do not submit hash-only churn. A hash change without an explained file change is suspicious by design. In reviews, any changed `.akg` file or changed manifest hash deserves extra attention, even if the tests pass.
 
 Generated valid files should be stable across repeated local runs. Fixture generation should avoid wall-clock timestamps and random IDs; timestamps, IDs, section ordering, Data key ordering, Bloom parameters, and WAL sequences should be fixed by the fixture workflow.
 
