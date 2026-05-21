@@ -206,12 +206,20 @@ Prepare the repo layout and docs for future official/community SDKs and examples
 - Decide whether to add placeholder directories or just document future areas.
 - Clarify naming and ownership expectations for possible future `sdks/`, `examples/`, or `docs/guides/` areas.
 - Ensure current Go package remains clearly the reference implementation.
+- After Milestone 3 completion, move the following internal/planning docs into `docs/archive/` before first GitHub publication:
+  - `docs/TASKS.md`
+  - `docs/VALIDATION.md`
+  - `docs/akg-comprehensive-test-plan.md`
+  - `docs/akg-go-sdk-execution-tracker.md`
+  - `docs/akg-reference-implementation-plan.md`
+  - `docs/spec/v1-requirements-audit.md`
 - Avoid adding product-specific SDK code in Milestone 3.
 
 ### Acceptance criteria
 
 - Repository boundary documentation exists and is linked from primary docs.
 - Future SDK/example areas are described without becoming release blockers.
+- Internal milestone/planning/audit docs listed in Task 9 scope are archived before first GitHub publication.
 - No memory ingestion or product harness code is added to AKG core.
 
 ## Out of Scope for Milestone 3

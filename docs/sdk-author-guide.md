@@ -6,7 +6,9 @@ status: release-candidate docs
 # AKG SDK author guide
 
 AKG core is the format layer. SDKs and products should build user-facing memory
-behavior above it instead of adding that behavior to the file format.
+behavior above it instead of adding that behavior to the file format. This is a
+boundary decision, not a claim that RAG, embeddings, vector search, or graph
+servers are bad fits for every agent system.
 
 ## A good SDK boundary
 
@@ -54,9 +56,9 @@ AKG core read/write/validate/compact
 ```
 
 In that shape, AKG core is the durable interchange layer. The SDK can choose how
-to create nodes and edges, how to search them, and how to present them to users.
-Another SDK can make different choices while still producing conformant `.akg`
-files.
+to create nodes and edges, how to search them, whether to pair them with RAG or
+vector indexes, and how to present them to users. Another SDK can make different
+choices while still producing conformant `.akg` files.
 
 ## Reference implementation relationship
 

@@ -6,6 +6,10 @@ status: release-candidate docs
 # AKG core
 
 AKG is a structured, single-file knowledge graph format for durable agent memory.
+Knowledge graphs already work well for agent context, but they are often trapped
+inside graph servers, framework-specific stores, or app-specific schemas. AKG
+makes the knowledge graph a portable file an agent can carry with it.
+
 This repository is the core/open-source home for the format: the v1 spec, the Go
 reference implementation, the conformance corpus, examples, and release-readiness
 docs.
@@ -16,7 +20,8 @@ and how implementations can prove they agree on the format.
 
 AKG core is **not** a product SDK, memory-file ingestion system, query engine,
 traversal language, merge service, vector database, background daemon, or
-multi-writer coordination layer. Those belong above the file format.
+multi-writer coordination layer. Those systems can be useful alongside AKG; they
+belong above the portable file format rather than inside it.
 
 ## Start here
 

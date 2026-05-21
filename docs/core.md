@@ -5,9 +5,14 @@ status: release-candidate docs
 
 # AKG core concepts
 
-AKG is a portable, single-file knowledge graph format. An AKG file stores a
-current graph state made of typed nodes, explicit edges, derived indexes, and a
-write-ahead log for committed mutations between compactions.
+AKG is a portable, single-file knowledge graph format. Knowledge graphs already
+work well for agent context, but they are often trapped inside graph servers,
+framework-specific stores, or app-specific schemas. AKG makes that graph a file
+an agent can carry across tools and hosts.
+
+An AKG file stores a current graph state made of typed nodes, explicit edges,
+derived indexes, and a write-ahead log for committed mutations between
+compactions.
 
 The goal is interoperability: one implementation can write an AKG file, another
 can validate it, and an SDK can build product behavior above it without inventing
@@ -28,13 +33,13 @@ AKG core covers:
 AKG core does not include:
 
 - memory-file ingestion or agent workflow policy;
-- vector search, ranking, embeddings, or semantic retrieval;
+- vector search, ranking, embeddings, or semantic retrieval pipelines;
 - a query planner, traversal language, or graph analytics layer;
 - merge/conflict resolution, multi-writer behavior, or background services;
 - product SDK conveniences that are not required to read and write the format.
 
-Those features can be valuable, but they should live in SDKs, applications, or
-examples above AKG core.
+Those features can be valuable and complementary, but they should live in SDKs,
+applications, indexes, or services above AKG core.
 
 ## Main project pieces
 

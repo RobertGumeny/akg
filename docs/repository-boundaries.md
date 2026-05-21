@@ -16,19 +16,18 @@ The spec is the detailed format contract. It is allowed to be technical. It
 defines data model, binary layout, encoding, key layout, WAL, compaction, and
 error-handling requirements.
 
-## Conformance corpus
+## Conformance tests
 
 Path: [`testdata/conformance`](../testdata/conformance/README.md)
 
-The corpus contains `.akg` fixtures plus `manifest.json`. It lets alternate
-implementations test accept/reject behavior without depending on Go test names or
-Go error strings.
+The conformance test collection contains `.akg` test fixtures plus a `manifest.json`. It lets alternate
+implementation SDKs test accept/reject behavior without depending on Go test names or Go error strings.
 
 ## Reference implementation
 
 Paths: [`akg.go`](../akg.go), [`internal`](../internal), [`cmd/akg`](../cmd/akg)
 
-The Go code is the canonical minimal reference implementation. The root package
+The Go code is a minimal reference implementation. The root package
 exposes the small public API documented in [API.md](API.md). Internals may be
 organized however the reference implementation needs, but they are not a public
 SDK contract.
@@ -38,7 +37,7 @@ SDK contract.
 Path: [`examples`](../examples)
 
 Examples should demonstrate core AKG lifecycle or format usage. They should not
-become product prototypes or memory ingestion systems during v1 RC hardening.
+become product prototypes or memory ingestion systems during v1 RC.
 
 ## Future SDKs
 
