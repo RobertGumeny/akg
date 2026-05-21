@@ -1,0 +1,138 @@
+# Write-Ahead Log
+
+AKG uses a write-ahead log (WAL) to provide crash safety for in-place file mutation. A conformant writer must append the corresponding WAL records before treating the associated logical mutation as part of durable file state.
+
+The WAL is represented as a section in the AKG file, as defined in Section 2. Its contents are an ordered sequence of WAL records.
+
+## Purpose
+
+The WAL exists to ensure that mutation intent is recorded before main data structures are considered durably updated.
+
+For node and edge writes, the writer-first ordering is:
+
+1. append WAL records
+2. reach a `COMMIT` record at the chosen durability boundary
+3. fsync on `commit()`
+4. treat the committed mutation set as durable
+
+A process crash before `commit()` may lose recent buffered work. A process crash after a successful `commit()` must leave enough WAL state for a conformant implementation to recover the committed logical mutations.
+
+## Operation Types
+
+AKG defines exactly five WAL operation types:
+
+- `PUT_NODE` = `0x01`
+- `DELETE_NODE` = `0x02`
+- `PUT_EDGE` = `0x03`
+- `DELETE_EDGE` = `0x04`
+- `COMMIT` = `0x05`
+
+`PUT_NODE` creates or updates a node. `PUT_EDGE` creates or updates an edge. AKG does not define separate update operations in the WAL; a mutation of an existing record is represented as another `PUT` carrying the new payload and incremented `version`.
+
+`DELETE_NODE` and `DELETE_EDGE` represent tombstoning of the corresponding logical record.
+
+`COMMIT` marks a consistency point in the WAL. Its payload is empty.
+
+A conformant reader that encounters an unknown WAL operation code must reject the WAL as non-conformant.
+
+## Record Structure
+
+Each WAL record has the following structure:
+
+- `sequence: uint64`
+- `operation: uint8`
+- `length: uint32`
+- `payload: bytes`
+- `checksum: uint32`
+
+All fixed-width integer fields in WAL records use little-endian encoding. The checksum is a CRC32 computed over `sequence`, `operation`, `length`, and `payload`.
+
+`payload` contains MessagePack-encoded data for node and edge operations. `COMMIT` records must have `length = 0` and an empty payload.
+
+## Sequence Numbers
+
+WAL sequence numbers are monotonically increasing `uint64` values.
+
+A conformant writer must assign a distinct sequence number to every WAL record. Sequence numbers must never be reused and must never reset across sessions for the same file.
+
+Sequence numbers establish the total order of WAL operations.
+
+## Payload Semantics
+
+For `PUT_NODE`, the payload must be a MessagePack node payload as defined in Sections 1 and 3.
+
+For `PUT_EDGE`, the payload must be a MessagePack edge payload as defined in Sections 1 and 3.
+
+For `DELETE_NODE`, the payload must be a MessagePack map containing the required identity fields `type: string` and `id: string`. Unknown extra fields are tolerated on read and ignored.
+
+For `DELETE_EDGE`, the payload must be a MessagePack map containing the required identity fields `from_node: string`, `relation: string`, and `to_node: string`. Unknown extra fields are tolerated on read and ignored.
+
+For `COMMIT`, the payload must be empty.
+
+Readers must decode WAL payloads using the same field rules, required fields, and default application rules used for ordinary node and edge payload decoding.
+
+## Length and Integrity Checks
+
+The `length` field gives the byte length of `payload`. It exists so that truncated or partially written records can be detected precisely.
+
+A conformant reader processing a WAL must verify all of the following for every record:
+
+- the remaining bytes are sufficient for the declared payload length and trailing checksum
+- the checksum matches the record contents
+- the operation code is defined by this specification
+
+If any of these checks fails, the WAL is invalid. Ordinary read or open behavior must reject the file rather than guessing at writer intent.
+
+Because each record has an independent checksum, corruption of one record does not change the validity rules for other records. Recovery tooling may salvage valid earlier records, but that behavior is outside normal read semantics. Ordinary open must not attempt salvage automatically.
+
+## Replay Semantics
+
+WAL replay is ordered by record sequence.
+
+Replay through the last valid `COMMIT` is part of ordinary open, not a special recovery-only mode.
+
+`COMMIT` records close committed batches. On ordinary open, the implementation must locate the last valid `COMMIT` record and replay all preceding records in sequence order up to and including that `COMMIT` boundary, excluding the `COMMIT` record's empty payload itself.
+
+Any records that appear after the last valid `COMMIT` are uncommitted state. A conformant implementation must ignore them during ordinary open rather than apply them.
+
+If no valid `COMMIT` record is present, the WAL contains no committed batch. A conformant implementation must treat the WAL contents as uncommitted state and decline to apply them during ordinary open.
+
+## Lifecycle
+
+The WAL accumulates between compactions.
+
+A conformant writer must not partially clear the WAL as individual mutations are absorbed into the main data section. Ordinary committed files may therefore contain a non-empty WAL. The WAL remains associated with the file until compaction writes a fresh compacted file.
+
+During compaction, live data is rewritten into the new file and the old WAL is discarded entirely.
+
+## Automatic Flush Threshold
+
+To prevent unbounded WAL growth, a conformant writer must trigger a flush when either of the following thresholds is reached:
+
+- 1,000 uncompacted WAL entries
+- 10 MB of WAL data
+
+The first threshold reached controls.
+
+This automatic flush is a safety valve. It is not a compaction trigger.
+
+## Durability Boundary
+
+`commit()` is the WAL durability boundary.
+
+A conformant writer may buffer writes in memory before `commit()`. On explicit `commit()`, it must append the corresponding mutation record or records, append `COMMIT`, and fsync the file state required for durable recovery of the committed batch. `commit()` does not imply immediate whole-file rewrite or compaction.
+
+A conformant implementation must call `commit()` automatically on clean close unless the current mutation set has already been committed.
+
+If the process terminates before `commit()`, recent buffered mutations may be lost. That loss is permitted. After a successful `commit()`, the committed mutation set must be recoverable from the file.
+
+## Lifecycle Example
+
+A typical AKG file lifecycle is:
+
+1. create a file with an empty Data section and empty or absent WAL
+2. append a `PUT_NODE` and `COMMIT`
+3. reopen the file and replay the committed WAL during ordinary open
+4. append another mutation but crash before `COMMIT`
+5. reopen and ignore the trailing uncommitted WAL tail
+6. run compaction to rewrite only current live state, rebuild the Bloom filter, and discard the old WAL
