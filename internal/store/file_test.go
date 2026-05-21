@@ -7,10 +7,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/earendil-works/akg/internal/format"
-	"github.com/earendil-works/akg/internal/record"
-	"github.com/earendil-works/akg/internal/state"
-	"github.com/earendil-works/akg/internal/wal"
+	"github.com/RobertGumeny/akg-format/internal/format"
+	"github.com/RobertGumeny/akg-format/internal/record"
+	"github.com/RobertGumeny/akg-format/internal/state"
+	"github.com/RobertGumeny/akg-format/internal/wal"
 )
 
 func TestCreateOpenValidateEmptyFile(t *testing.T) {

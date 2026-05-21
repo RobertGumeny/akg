@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/earendil-works/akg/internal/wal"
+	"github.com/RobertGumeny/akg-format/internal/wal"
 )
 
 const conformanceFixture = "m1-data-bloom-wal.akg"

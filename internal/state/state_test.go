@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/earendil-works/akg/internal/keys"
-	"github.com/earendil-works/akg/internal/record"
+	"github.com/RobertGumeny/akg-format/internal/keys"
+	"github.com/RobertGumeny/akg-format/internal/record"
 )
 
 func tickingClock(start record.TimestampMicros) func() record.TimestampMicros {

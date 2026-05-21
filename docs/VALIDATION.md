@@ -28,12 +28,12 @@ Expected result: all packages pass.
 
 Before adding exported API surface or large store behavior:
 
-- [ ] Re-read `docs/TASKS.md`.
+- [x] Re-read `docs/TASKS.md`.
 - [ ] Re-read `docs/spec/01-data-model.md` through `docs/spec/07-error-handling.md`.
-- [ ] Confirm Milestone 1 binary/container tests still pass unchanged.
-- [ ] Decide whether public API is needed for the current task; prefer internal implementation until behavior is locked.
-- [ ] Confirm no query engine, merge behavior, recovery-by-default, or public flush API is introduced.
-- [ ] Confirm any API exported in Milestone 2 is intentionally reviewed and minimal.
+- [x] Confirm Milestone 1 binary/container tests still pass unchanged.
+- [x] Decide whether public API is needed for the current task; prefer internal implementation until behavior is locked.
+- [x] Confirm no query engine, merge behavior, recovery-by-default, or public flush API is introduced.
+- [x] Confirm any API exported in Milestone 2 is intentionally reviewed and minimal.
 
 ## Level 3 — State and materialization validation
 
@@ -118,6 +118,16 @@ Before adding exported API surface or large store behavior:
 - [x] Internal threshold detection fires at `>= 10 MB` WAL data.
 - [x] No public flush API is exposed.
 
+### Public API and CLI
+
+- [x] Public API review is documented in `docs/API.md` before exports are added.
+- [x] Root `akg` package exposes only minimal Phase 1 create/open/validate, mutation, lookup/list, commit/close, and compaction APIs.
+- [x] Public API reads expose only current logical nodes and edges.
+- [x] Public API does not expose raw WAL internals, mutable derived indexes, recovery-by-default, merge, query language, or public flush.
+- [x] CLI `validate` succeeds on valid files and fails clearly on corrupt files.
+- [x] CLI `inspect` opens through ordinary store semantics and shows only current logical state.
+- [x] CLI `compact` runs explicit compaction and leaves a valid file.
+
 ### Compaction
 
 - [x] Compaction performs ordinary open semantics before rewriting.
@@ -170,11 +180,11 @@ Recommended sequence:
 
 Milestone 3 should not start until:
 
-- [ ] `go test ./...` passes.
+- [x] `go test ./...` passes.
 - [ ] State mutation semantics are complete and tested.
 - [ ] Materialize/hydrate round trips preserve logical state.
 - [ ] Ordinary open applies committed WAL and ignores trailing uncommitted WAL.
 - [ ] Commit durability behavior is tested across reopen.
 - [ ] Compaction preserves logical state and discards old WAL.
 - [ ] Fixtures cover committed WAL replay and compaction.
-- [ ] No accidental broad public SDK/API design has been introduced.
+- [x] No accidental broad public SDK/API design has been introduced.

@@ -7,7 +7,7 @@ import (
 	"hash/crc32"
 	"testing"
 
-	"github.com/earendil-works/akg/internal/record"
+	"github.com/RobertGumeny/akg-format/internal/record"
 )
 
 func TestWALRoundTripAllOperationsAndPayloadValidation(t *testing.T) {

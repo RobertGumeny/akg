@@ -3,7 +3,7 @@ package wal
 import (
 	"testing"
 
-	"github.com/earendil-works/akg/internal/record"
+	"github.com/RobertGumeny/akg-format/internal/record"
 )
 
 func FuzzDecodeRecord(f *testing.F) {

@@ -1,3 +1,3 @@
-module github.com/earendil-works/akg
+module github.com/RobertGumeny/akg-format
 
 go 1.22

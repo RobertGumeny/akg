@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/earendil-works/akg/internal/record"
+	"github.com/RobertGumeny/akg-format/internal/record"
 )
 
 func TestNodeKeyBuildParse(t *testing.T) {

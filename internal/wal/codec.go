@@ -6,7 +6,7 @@ import (
 	"errors"
 	"hash/crc32"
 
-	"github.com/earendil-works/akg/internal/record"
+	"github.com/RobertGumeny/akg-format/internal/record"
 )
 
 const recordHeaderSize = 13
