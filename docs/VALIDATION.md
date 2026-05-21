@@ -29,7 +29,7 @@ Expected result: all packages pass.
 Before adding exported API surface or large store behavior:
 
 - [x] Re-read `docs/TASKS.md`.
-- [ ] Re-read `docs/spec/01-data-model.md` through `docs/spec/07-error-handling.md`.
+- [x] Re-read `docs/spec/01-data-model.md` through `docs/spec/07-error-handling.md`.
 - [x] Confirm Milestone 1 binary/container tests still pass unchanged.
 - [x] Decide whether public API is needed for the current task; prefer internal implementation until behavior is locked.
 - [x] Confirm no query engine, merge behavior, recovery-by-default, or public flush API is introduced.
@@ -97,7 +97,7 @@ Before adding exported API surface or large store behavior:
 - [x] Malformed committed WAL causes open failure.
 - [x] Bad container/header/section checksum causes open failure.
 - [x] Malformed known sections cause open failure.
-- [ ] Unknown structurally valid sections remain tolerated.
+- [x] Unknown structurally valid sections remain tolerated.
 - [x] Next WAL sequence number after reopen is greater than every existing record sequence.
 - [x] WAL entry/byte counters are recomputed or persisted accurately enough for threshold checks.
 
@@ -148,17 +148,17 @@ at most a removable `.compact-*` temporary file may remain.
 
 Add or update fixtures under `testdata/conformance/` for:
 
-- [ ] empty graph created by Milestone 2 create path;
-- [ ] minimal node;
-- [ ] fully populated node;
-- [ ] single edge;
-- [ ] small realistic graph with tags and edges;
-- [ ] file with committed WAL requiring ordinary-open replay;
-- [ ] file with trailing uncommitted WAL ignored on open;
-- [ ] compacted file with no carried-forward WAL;
-- [ ] file involving logical deletes before compaction;
-- [ ] rejection fixture for malformed committed WAL;
-- [ ] rejection fixture for invalid Data/derived-key consistency if enforced in Milestone 2.
+- [x] empty graph created by Milestone 2 create path;
+- [x] minimal node;
+- [x] fully populated node;
+- [x] single edge;
+- [x] small realistic graph with tags and edges;
+- [x] file with committed WAL requiring ordinary-open replay;
+- [x] file with trailing uncommitted WAL ignored on open;
+- [x] compacted file with no carried-forward WAL;
+- [x] file involving logical deletes before compaction;
+- [x] rejection fixture for malformed committed WAL;
+- [x] rejection fixture for invalid Data/derived-key consistency if enforced in Milestone 2.
 
 ## Suggested Agent Workflow
 
@@ -181,10 +181,10 @@ Recommended sequence:
 Milestone 3 should not start until:
 
 - [x] `go test ./...` passes.
-- [ ] State mutation semantics are complete and tested.
-- [ ] Materialize/hydrate round trips preserve logical state.
-- [ ] Ordinary open applies committed WAL and ignores trailing uncommitted WAL.
-- [ ] Commit durability behavior is tested across reopen.
-- [ ] Compaction preserves logical state and discards old WAL.
-- [ ] Fixtures cover committed WAL replay and compaction.
+- [x] State mutation semantics are complete and tested.
+- [x] Materialize/hydrate round trips preserve logical state.
+- [x] Ordinary open applies committed WAL and ignores trailing uncommitted WAL.
+- [x] Commit durability behavior is tested across reopen.
+- [x] Compaction preserves logical state and discards old WAL.
+- [x] Fixtures cover committed WAL replay and compaction.
 - [x] No accidental broad public SDK/API design has been introduced.
