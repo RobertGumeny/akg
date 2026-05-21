@@ -1,6 +1,8 @@
 package store
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"os"
@@ -27,12 +29,26 @@ func TestConformanceManifestSync(t *testing.T) {
 		if fixture.ExpectedResult == "reject" && fixture.ExpectedErrorCategory == "" {
 			t.Fatalf("manifest rejection fixture %q has empty expected_error_category", fixture.Path)
 		}
+		if fixture.SHA256 == "" {
+			t.Fatalf("manifest fixture %q has empty sha256", fixture.Path)
+		}
+		if fixture.ExpectedResult == "accept" && fixture.GeneratedBy == "" {
+			t.Fatalf("manifest accept fixture %q has empty generated_by", fixture.Path)
+		}
+		if fixture.ExpectedResult == "reject" && fixture.Corruption == "" {
+			t.Fatalf("manifest rejection fixture %q has empty corruption", fixture.Path)
+		}
 		if seen[fixture.Path] {
 			t.Fatalf("manifest fixture %q appears more than once", fixture.Path)
 		}
 		seen[fixture.Path] = true
-		if _, err := os.Stat(conformancePath(fixture.Path)); err != nil {
+		data, err := os.ReadFile(conformancePath(fixture.Path))
+		if err != nil {
 			t.Fatalf("manifest references missing fixture %q: %v", fixture.Path, err)
+		}
+		sum := sha256.Sum256(data)
+		if got := hex.EncodeToString(sum[:]); got != fixture.SHA256 {
+			t.Fatalf("fixture %q sha256 = %s, want %s", fixture.Path, got, fixture.SHA256)
 		}
 	}
 
@@ -167,6 +183,9 @@ type conformanceFixture struct {
 	ExpectedErrorCategory string                  `json:"expected_error_category"`
 	ValidationScope       string                  `json:"validation_scope"`
 	StoreExpectation      *conformanceStoreExpect `json:"store_expectation"`
+	SHA256                string                  `json:"sha256"`
+	GeneratedBy           string                  `json:"generated_by"`
+	Corruption            string                  `json:"corruption"`
 }
 
 type conformanceStoreExpect struct {

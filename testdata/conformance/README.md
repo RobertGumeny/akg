@@ -1,57 +1,104 @@
-# AKG conformance fixtures
+# AKG test files
 
-This directory is the home for binary `.akg` conformance fixtures and golden files shared by the Go reference implementation tests.
+This directory contains small `.akg` files that other implementations can use to check whether they read AKG the same way the Go reference implementation does.
 
-## Manifest
+Think of each file as an example with an expected answer:
 
-`manifest.json` is the machine-readable index for this corpus. Every `*.akg` fixture in this directory MUST appear exactly once in the manifest, and the Go conformance tests fail if the manifest and filesystem drift.
+- **accept** means “a normal AKG reader should open this.”
+- **reject** means “a normal AKG reader should refuse this.”
 
-Top-level format:
+Some files are healthy examples. Some are intentionally broken. The broken ones are just as important: they make sure readers fail closed instead of silently accepting bad data.
+
+## Start here: `manifest.json`
+
+`manifest.json` is the table of contents for this directory. Every `.akg` file must appear there exactly once. The Go tests fail if a file is missing from the manifest, if the manifest points at a file that does not exist, or if the recorded hash no longer matches the file bytes.
+
+A minimal entry looks like this:
 
 ```json
 {
-  "version": 1,
-  "fixtures": [
-    {
-      "path": "fixture-name.akg",
-      "purpose": "Human-readable reason this fixture exists.",
-      "expected_result": "accept",
-      "validation_scope": "store"
-    }
-  ]
+  "path": "fixture-name.akg",
+  "purpose": "Human-readable reason this file exists.",
+  "expected_result": "accept",
+  "validation_scope": "store",
+  "sha256": "..."
 }
 ```
 
-Fixture fields:
+Fields:
 
-- `path` — fixture file name relative to this directory.
-- `purpose` — short description of the behavior covered.
+- `path` — file name, relative to this directory.
+- `purpose` — why this file exists.
 - `expected_result` — `accept` or `reject`.
-- `expected_error_category` — required for `reject` fixtures; stable category for conformance runners. Exact error strings are implementation-specific.
-- `validation_scope` — the intended validation level. `format` fixtures exercise binary container/section behavior; `store` fixtures exercise ordinary open/validation semantics.
-- `store_expectation` — optional Go reference metadata for accepted store fixtures, such as node/edge counts and WAL sequence expectations. Alternate implementations may use it as extra assertions but should treat `expected_result` and `expected_error_category` as the portable contract.
+- `expected_error_category` — required for `reject` files. Exact error strings can differ between implementations; this is the stable category to compare.
+- `validation_scope` — `format` for low-level container/section behavior, `store` for ordinary open/validation behavior.
+- `sha256` — hash of the exact file bytes. If the bytes change, this changes.
+- `generated_by` — for accepted files, notes the deterministic Go reference workflow that produced the file.
+- `corruption` — for rejected files, explains what was intentionally damaged.
+- `store_expectation` — optional extra checks used by the Go reference tests, such as node count, edge count, and WAL sequence expectations.
 
-Alternate implementations should load `manifest.json`, open each `path`, and assert that accepted fixtures pass ordinary validation while rejected fixtures fail in the named `expected_error_category` where a category is supplied. Do not depend on Go test names or exact Go error strings.
+If you are writing another AKG reader, the main loop is simple: load `manifest.json`, read each `path`, then check whether your reader accepts or rejects it as declared. Go test names and Go error messages can be useful clues while debugging, but they are not the cross-implementation contract. The stable contract is the manifest: `expected_result` plus `expected_error_category` for rejected files.
 
-## Milestone 1
+## Checking the files
 
-- `m1-data-bloom-wal.akg` — whole-container fixture containing Data, Bloom, and WAL sections for binary round-trip coverage.
+Run the focused checks:
 
-## Milestone 2
+```sh
+go test -count=1 ./internal/format ./internal/store
+go run ./internal/cmd/conformance-fixtures -dir testdata/conformance
+```
 
-Valid store/open fixtures:
+The helper command verifies two things:
 
-- `m2-empty-create.akg` — empty graph produced by the Milestone 2 create path.
-- `m2-minimal-node.akg` — compacted graph with one minimal node.
-- `m2-full-node.akg` — compacted graph with one populated node including body, tags, and meta.
-- `m2-single-edge.akg` — compacted graph with two nodes and one edge.
-- `m2-small-graph.akg` — compacted small graph with mixed node types, tags, and edges.
-- `m2-committed-wal-replay.akg` — base Data plus committed WAL that ordinary open must replay.
-- `m2-uncommitted-wal-tail.akg` — committed WAL followed by trailing uncommitted records/bytes ordinary open must ignore.
-- `m2-compacted.akg` — compacted file with live Data/Bloom and no carried-forward WAL.
-- `m2-deletes-before-compaction.akg` — WAL history with logical deletes before the final committed state.
+1. the bytes on disk still match the `sha256` values in `manifest.json`;
+2. `store`-scoped files still accept or reject as declared.
 
-Rejection fixtures:
+To print the current hashes while reviewing a change:
 
-- `m2-reject-malformed-committed-wal.akg` — malformed committed WAL must be rejected by ordinary open.
-- `m2-reject-derived-index-mismatch.akg` — Data primary/derived index mismatch must be rejected by ordinary open.
+```sh
+go run ./internal/cmd/conformance-fixtures -dir testdata/conformance -print-hashes
+```
+
+## Updating a test file safely
+
+Changing one of these files is allowed, but it should never be accidental.
+
+Use this workflow:
+
+1. Make the code or fixture change.
+2. Run the focused checks above.
+3. Run the full suite: `go test -count=1 ./...`.
+4. Review the fixture-byte change.
+5. Update the file’s `sha256` in `manifest.json` only after you understand why the bytes changed.
+6. If the file is intentionally broken, update its `corruption` note so the damage is easy to audit later.
+
+Please do not submit hash-only churn. A hash change without an explained file change is suspicious by design.
+
+Generated valid files should be stable across repeated local runs. Fixture generation should avoid wall-clock timestamps and random IDs; timestamps, IDs, section ordering, Data key ordering, Bloom parameters, and WAL sequences should be fixed by the fixture workflow.
+
+## Current files
+
+### Milestone 1
+
+- `m1-data-bloom-wal.akg` — a low-level container example with Data, Bloom, and WAL sections.
+
+### Milestone 2 accepted files
+
+These should open normally:
+
+- `m2-empty-create.akg` — an empty graph created by the reference implementation.
+- `m2-minimal-node.akg` — one minimal node after compaction.
+- `m2-full-node.akg` — one populated node with body, tags, and metadata.
+- `m2-single-edge.akg` — two nodes and one edge after compaction.
+- `m2-small-graph.akg` — a small graph with mixed node types, tags, and edges.
+- `m2-committed-wal-replay.akg` — base Data plus committed WAL records that ordinary open must replay.
+- `m2-uncommitted-wal-tail.akg` — committed WAL followed by uncommitted trailing bytes that ordinary open must ignore.
+- `m2-compacted.akg` — live Data/Bloom after compaction, with no carried-forward WAL.
+- `m2-deletes-before-compaction.akg` — WAL history with deletes before the final committed state.
+
+### Milestone 2 rejected files
+
+These are intentionally damaged and should not open normally:
+
+- `m2-reject-malformed-committed-wal.akg` — starts from a valid empty store plus a committed WAL batch, then flips a byte inside the committed WAL record. Ordinary open must reject it.
+- `m2-reject-derived-index-mismatch.akg` — starts from a valid graph, then damages the derived-index Data keys so they no longer match the primary node/edge records. Ordinary open must reject it.

@@ -5,84 +5,108 @@
       "path": "m1-data-bloom-wal.akg",
       "purpose": "Whole-container format fixture containing Data, Bloom, and WAL sections for binary round-trip coverage.",
       "expected_result": "accept",
-      "validation_scope": "format"
+      "validation_scope": "format",
+      "sha256": "bb2fc4d5c7e05e6d436a07b80dafda27060656a3def043d88704bd386a68cf0d",
+      "generated_by": "Go reference implementation fixture workflow documented in README.md"
     },
     {
       "path": "m2-empty-create.akg",
       "purpose": "Empty graph produced by the create path.",
       "expected_result": "accept",
       "validation_scope": "store",
-      "store_expectation": {"nodes": 0, "edges": 0, "has_uncompacted_wal": false, "next_wal_sequence": 1}
+      "store_expectation": {"nodes": 0, "edges": 0, "has_uncompacted_wal": false, "next_wal_sequence": 1},
+      "sha256": "6b0c5e4579200b71b55f813f72d885be1811a94cd746dafc74753ee7d909b841",
+      "generated_by": "Go reference implementation fixture workflow documented in README.md"
     },
     {
       "path": "m2-minimal-node.akg",
       "purpose": "Compacted graph with one minimal node.",
       "expected_result": "accept",
       "validation_scope": "store",
-      "store_expectation": {"nodes": 1, "edges": 0, "has_uncompacted_wal": false, "next_wal_sequence": 1}
+      "store_expectation": {"nodes": 1, "edges": 0, "has_uncompacted_wal": false, "next_wal_sequence": 1},
+      "sha256": "95ad0c6578bf4aca490fea6f21ff92528f48c5fc339450d655095a46aa93b336",
+      "generated_by": "Go reference implementation fixture workflow documented in README.md"
     },
     {
       "path": "m2-full-node.akg",
       "purpose": "Compacted graph with one populated node including body, tags, and meta.",
       "expected_result": "accept",
       "validation_scope": "store",
-      "store_expectation": {"nodes": 1, "edges": 0, "has_uncompacted_wal": false, "next_wal_sequence": 1}
+      "store_expectation": {"nodes": 1, "edges": 0, "has_uncompacted_wal": false, "next_wal_sequence": 1},
+      "sha256": "d6473bd807896ea1e32aff4a9b353e4fe12b4e21287a35ec6babf2ebec99a7e5",
+      "generated_by": "Go reference implementation fixture workflow documented in README.md"
     },
     {
       "path": "m2-single-edge.akg",
       "purpose": "Compacted graph with two nodes and one edge.",
       "expected_result": "accept",
       "validation_scope": "store",
-      "store_expectation": {"nodes": 2, "edges": 1, "has_uncompacted_wal": false, "next_wal_sequence": 1}
+      "store_expectation": {"nodes": 2, "edges": 1, "has_uncompacted_wal": false, "next_wal_sequence": 1},
+      "sha256": "763ef1a28e9a31d10dd0f3d9a0e2a24df7a1f4e42d4f25b9bab273ea93327186",
+      "generated_by": "Go reference implementation fixture workflow documented in README.md"
     },
     {
       "path": "m2-small-graph.akg",
       "purpose": "Compacted small graph with mixed node types, tags, and edges.",
       "expected_result": "accept",
       "validation_scope": "store",
-      "store_expectation": {"nodes": 3, "edges": 2, "has_uncompacted_wal": false, "next_wal_sequence": 1}
+      "store_expectation": {"nodes": 3, "edges": 2, "has_uncompacted_wal": false, "next_wal_sequence": 1},
+      "sha256": "d93897b49cae1cb5956b961ff81ba1a4e9c615df7488f665c4a38452df6025ce",
+      "generated_by": "Go reference implementation fixture workflow documented in README.md"
     },
     {
       "path": "m2-committed-wal-replay.akg",
       "purpose": "Base Data plus committed WAL that ordinary open must replay.",
       "expected_result": "accept",
       "validation_scope": "store",
-      "store_expectation": {"nodes": 2, "edges": 1, "has_uncompacted_wal": true, "next_wal_sequence": 10}
+      "store_expectation": {"nodes": 2, "edges": 1, "has_uncompacted_wal": true, "next_wal_sequence": 10},
+      "sha256": "75ce3417767f331f9a3a9985352abd69c7a3ca97d13b3e30a7c2c936de022aca",
+      "generated_by": "Go reference implementation fixture workflow documented in README.md"
     },
     {
       "path": "m2-uncommitted-wal-tail.akg",
       "purpose": "Committed WAL followed by trailing uncommitted records/bytes that ordinary open must ignore.",
       "expected_result": "accept",
       "validation_scope": "store",
-      "store_expectation": {"nodes": 2, "edges": 1, "has_uncompacted_wal": true, "next_wal_sequence": 11}
+      "store_expectation": {"nodes": 2, "edges": 1, "has_uncompacted_wal": true, "next_wal_sequence": 11},
+      "sha256": "c7c522412f2e4593896059cc784cae5bca4d59243432e5adeeb71debe0134f6b",
+      "generated_by": "Go reference implementation fixture workflow documented in README.md"
     },
     {
       "path": "m2-compacted.akg",
       "purpose": "Compacted file with live Data/Bloom and no carried-forward WAL.",
       "expected_result": "accept",
       "validation_scope": "store",
-      "store_expectation": {"nodes": 1, "edges": 0, "has_uncompacted_wal": false, "next_wal_sequence": 1, "absent_node": {"type": "note", "id": "old"}}
+      "store_expectation": {"nodes": 1, "edges": 0, "has_uncompacted_wal": false, "next_wal_sequence": 1, "absent_node": {"type": "note", "id": "old"}},
+      "sha256": "27de132485734e2bdaa8d13417fef980702a3f8ee3367dec4009fddf44352307",
+      "generated_by": "Go reference implementation fixture workflow documented in README.md"
     },
     {
       "path": "m2-deletes-before-compaction.akg",
       "purpose": "WAL history with logical deletes before the final committed state.",
       "expected_result": "accept",
       "validation_scope": "store",
-      "store_expectation": {"nodes": 1, "edges": 0, "has_uncompacted_wal": true, "next_wal_sequence": 8}
+      "store_expectation": {"nodes": 1, "edges": 0, "has_uncompacted_wal": true, "next_wal_sequence": 8},
+      "sha256": "972e6e3803bad27c03b82a4867cb255033dc85a45402fe49223c53398f94e206",
+      "generated_by": "Go reference implementation fixture workflow documented in README.md"
     },
     {
       "path": "m2-reject-malformed-committed-wal.akg",
       "purpose": "Malformed committed WAL payload that ordinary open must reject.",
       "expected_result": "reject",
       "expected_error_category": "invalid_wal_payload",
-      "validation_scope": "store"
+      "validation_scope": "store",
+      "sha256": "953b4fc951de071311f9b5853e0e8ef4d7bb94eaa5db2e7b83a2f0464cf27f05",
+      "corruption": "Generated from an empty valid store container with a committed PUT_EDGE WAL record, then one byte in the committed WAL record is flipped so ordinary open rejects before salvage."
     },
     {
       "path": "m2-reject-derived-index-mismatch.akg",
       "purpose": "Data primary/derived index mismatch that ordinary open must reject.",
       "expected_result": "reject",
       "expected_error_category": "derived_index_mismatch",
-      "validation_scope": "store"
+      "validation_scope": "store",
+      "sha256": "c826acfd849224a7fbda070ebaa5805cd18087f90907b3a151ceca6c54c9993e",
+      "corruption": "Generated from a valid small graph Data section, then a derived index key is changed/removed so the authoritative primary records no longer match regenerated derived keys."
     }
   ]
 }
