@@ -2,6 +2,7 @@ package akg_test
 
 import (
 	"path/filepath"
+	"reflect"
 	"testing"
 
 	"github.com/RobertGumeny/akg-format"
@@ -46,6 +47,34 @@ func TestPublicAPIExposesOnlyCurrentLogicalState(t *testing.T) {
 	}
 	if _, ok := reopened.GetNode("note", "n2"); ok {
 		t.Fatalf("deleted node is visible through public API")
+	}
+}
+
+func TestPublicAPIReadHelpersStayMinimal(t *testing.T) {
+	storeType := reflect.TypeOf((*akg.Store)(nil))
+	allowed := map[string]struct{}{
+		"Close":      {},
+		"Commit":     {},
+		"Compact":    {},
+		"DeleteEdge": {},
+		"DeleteNode": {},
+		"GetEdge":    {},
+		"GetNode":    {},
+		"ListEdges":  {},
+		"ListNodes":  {},
+		"PutEdge":    {},
+		"PutNode":    {},
+	}
+
+	for i := 0; i < storeType.NumMethod(); i++ {
+		method := storeType.Method(i).Name
+		if _, ok := allowed[method]; !ok {
+			t.Fatalf("unexpected exported Store method %q; v1 read helpers are exact lookup plus whole-state lists only", method)
+		}
+		delete(allowed, method)
+	}
+	if len(allowed) != 0 {
+		t.Fatalf("missing expected Store methods: %#v", allowed)
 	}
 }
 

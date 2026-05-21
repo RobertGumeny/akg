@@ -1,9 +1,10 @@
-// Package akg exposes the intentionally minimal Phase 1 API for AKG files.
+// Package akg exposes the intentionally minimal v1 reference API for AKG files.
 //
 // The public surface is limited to ordinary create/open/validate, current
-// logical node/edge mutation and lookup, commit, close, and explicit
-// compaction. WAL internals, derived index mutation, recovery/salvage, query
-// planning, traversal, merge, and flush controls remain internal.
+// logical node/edge mutation, exact lookup, whole-state listing, commit, close,
+// and explicit compaction. Tag lookup, inbound/outbound edge scans, WAL
+// internals, derived index mutation, recovery/salvage, query planning,
+// traversal, merge, and flush controls remain internal for v1.
 package akg
 
 import (
