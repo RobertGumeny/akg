@@ -196,6 +196,46 @@ func (s *Store) Close() error {
 	return s.Commit()
 }
 
+// Compact performs explicit whole-file compaction for path. It first opens the
+// file through ordinary strict semantics (including committed WAL replay), then
+// atomically replaces it with a fresh container containing only live Data,
+// regenerated Bloom, and an empty WAL. Crash safety relies on writing and
+// fsyncing a same-directory temporary file before os.Rename, then fsyncing the
+// directory after replacement; a crash may leave the old file or the new file,
+// plus at most a removable temporary file.
+func Compact(path string) error {
+	st, err := Open(path)
+	if err != nil {
+		return err
+	}
+	file, err := encodeCompactedFile(st.state)
+	if err != nil {
+		return err
+	}
+	return writeFileAtomic(path, file)
+}
+
+// Compact rewrites this store's file using explicit compaction. Outstanding
+// staged mutations are committed first so the compacted file preserves the
+// store's currently visible logical state.
+func (s *Store) Compact() error {
+	if s == nil {
+		return state.ErrInvalidInput
+	}
+	if err := s.Commit(); err != nil {
+		return err
+	}
+	if err := Compact(s.path); err != nil {
+		return err
+	}
+	reopened, err := Open(s.path)
+	if err != nil {
+		return err
+	}
+	*s = *reopened
+	return nil
+}
+
 // Create writes a new AKG file containing an empty Data section, deterministic
 // empty Bloom state, and an empty WAL section, then opens it through the same
 // validation path used for existing files.
@@ -347,6 +387,30 @@ func inspectWAL(payload []byte) (walInfo, error) {
 	return info, nil
 }
 
+func encodeCompactedFile(s *state.State) ([]byte, error) {
+	entries, err := MaterializeDataEntries(s)
+	if err != nil {
+		return nil, err
+	}
+	data, err := format.EncodeDataEntries(entries)
+	if err != nil {
+		return nil, err
+	}
+	keys := make([][]byte, len(entries))
+	for i, entry := range entries {
+		keys[i] = entry.Key
+	}
+	bloom, err := format.EncodeBloom(keys)
+	if err != nil {
+		return nil, err
+	}
+	file, _, err := format.EncodeContainer(format.Container{Data: data, Bloom: bloom, WAL: []byte{}})
+	if err != nil {
+		return nil, err
+	}
+	return file, nil
+}
+
 func writeFileSync(path string, data []byte) error {
 	f, err := os.OpenFile(path, os.O_WRONLY|os.O_TRUNC, 0)
 	if err != nil {
@@ -368,6 +432,52 @@ func writeFileSync(path string, data []byte) error {
 		return closeErr
 	}
 	if dir, err := os.Open(filepath.Dir(path)); err == nil {
+		_ = dir.Sync()
+		_ = dir.Close()
+	}
+	return nil
+}
+
+func writeFileAtomic(path string, data []byte) error {
+	dirPath := filepath.Dir(path)
+	base := filepath.Base(path)
+	mode := os.FileMode(0o666)
+	if info, err := os.Stat(path); err == nil {
+		mode = info.Mode().Perm()
+	}
+	tmp, err := os.CreateTemp(dirPath, "."+base+".compact-*")
+	if err != nil {
+		return err
+	}
+	tmpPath := tmp.Name()
+	defer os.Remove(tmpPath)
+	if err := tmp.Chmod(mode); err != nil {
+		_ = tmp.Close()
+		return err
+	}
+	n, writeErr := tmp.Write(data)
+	syncErr := tmp.Sync()
+	closeErr := tmp.Close()
+	if writeErr != nil {
+		return writeErr
+	}
+	if n != len(data) {
+		return errors.New("short file write")
+	}
+	if syncErr != nil {
+		return syncErr
+	}
+	if closeErr != nil {
+		return closeErr
+	}
+	if dir, err := os.Open(dirPath); err == nil {
+		_ = dir.Sync()
+		_ = dir.Close()
+	}
+	if err := os.Rename(tmpPath, path); err != nil {
+		return err
+	}
+	if dir, err := os.Open(dirPath); err == nil {
 		_ = dir.Sync()
 		_ = dir.Close()
 	}

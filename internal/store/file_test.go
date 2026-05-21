@@ -1,8 +1,10 @@
 package store
 
 import (
+	"bytes"
 	"errors"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/earendil-works/akg/internal/format"
@@ -291,6 +293,124 @@ func TestWALThresholdDetection(t *testing.T) {
 	}
 }
 
+func TestCompactPreservesLiveStateDropsWALAndRegeneratesDerivedData(t *testing.T) {
+	path := tempPath(t)
+	st, err := Create(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := st.PutNode("n1", record.Node{Type: "note", Title: "deleted", Tags: []string{"old"}}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := st.PutNode("n2", record.Node{Type: "note", Title: "live", Tags: []string{"topic"}}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := st.PutEdge(record.Edge{FromNode: "n1", Relation: "links", ToNode: "n2"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := st.Commit(); err != nil {
+		t.Fatal(err)
+	}
+	if err := st.DeleteEdge("n1", "links", "n2"); err != nil {
+		t.Fatal(err)
+	}
+	if err := st.DeleteNode("note", "n1"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := st.PutEdge(record.Edge{FromNode: "n2", Relation: "links", ToNode: "n3"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := st.Commit(); err != nil {
+		t.Fatal(err)
+	}
+	if len(readWALRecords(t, path)) == 0 {
+		t.Fatalf("expected WAL history before compaction")
+	}
+
+	if err := Compact(path); err != nil {
+		t.Fatalf("Compact: %v", err)
+	}
+	if err := Validate(path); err != nil {
+		t.Fatalf("Validate compacted file: %v", err)
+	}
+	container := readContainer(t, path)
+	if len(container.WAL) != 0 {
+		t.Fatalf("compaction kept WAL bytes: %d", len(container.WAL))
+	}
+	entries, err := format.DecodeDataEntries(container.Data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	keys := dataKeys(entries)
+	assertHasKey(t, keys, "n:note:n2")
+	assertHasKey(t, keys, "e:n2:links:n3")
+	assertHasKey(t, keys, "ei:n3:links:n2")
+	assertHasKey(t, keys, "t:topic:n2")
+	assertHasPrefix(t, keys, "ts:")
+	assertNoKey(t, keys, "n:note:n1")
+	assertNoKey(t, keys, "e:n1:links:n2")
+	assertNoKey(t, keys, "ei:n2:links:n1")
+	assertNoKey(t, keys, "t:old:n1")
+	if err := validateBloom(container.Bloom, entries); err != nil {
+		t.Fatalf("compacted Bloom was not regenerated from live keys: %v", err)
+	}
+	reopened, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open compacted: %v", err)
+	}
+	if _, ok := reopened.State().GetNode("note", "n2"); !ok {
+		t.Fatalf("live node missing after compact/reopen")
+	}
+	if _, ok := reopened.State().GetNode("note", "n1"); ok {
+		t.Fatalf("deleted node survived compaction")
+	}
+	if _, ok := reopened.State().GetEdge("n2", "links", "n3"); !ok {
+		t.Fatalf("live edge missing after compact/reopen")
+	}
+	if reopened.NextWALSequence() != 1 || reopened.UncompactedWALEntries() != 0 || reopened.UncompactedWALBytes() != 0 {
+		t.Fatalf("unexpected compacted WAL bookkeeping: next=%d entries=%d bytes=%d", reopened.NextWALSequence(), reopened.UncompactedWALEntries(), reopened.UncompactedWALBytes())
+	}
+}
+
+func TestStoreCompactCommitsPendingAndAtomicallyReplacesPath(t *testing.T) {
+	path := tempPath(t)
+	st, err := Create(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	before, err := os.Stat(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := st.PutNode("n1", record.Node{Type: "note", Title: "pending"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := st.Compact(); err != nil {
+		t.Fatalf("Store.Compact: %v", err)
+	}
+	after, err := os.Stat(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if after.Mode().Perm() != before.Mode().Perm() {
+		t.Fatalf("compacted mode = %v, want %v", after.Mode().Perm(), before.Mode().Perm())
+	}
+	if _, ok := st.State().GetNode("note", "n1"); !ok {
+		t.Fatalf("pending node not preserved by Store.Compact")
+	}
+	container := readContainer(t, path)
+	if len(container.WAL) != 0 {
+		t.Fatalf("Store.Compact kept WAL bytes: %d", len(container.WAL))
+	}
+	matches, err := filepath.Glob(filepath.Join(filepath.Dir(path), "."+filepath.Base(path)+".compact-*"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(matches) != 0 {
+		t.Fatalf("atomic compaction left temp files: %v", matches)
+	}
+}
+
 func TestOpenRejectsInvalidDataBloomAndContainer(t *testing.T) {
 	checksumPath := tempPath(t)
 	writeStoreFile(t, checksumPath, state.New(), nil)
@@ -354,6 +474,16 @@ func tempPath(t *testing.T) string {
 
 func readWALRecords(t *testing.T, path string) []wal.Record {
 	t.Helper()
+	container := readContainer(t, path)
+	records, err := wal.DecodeRecordsStrict(container.WAL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return records
+}
+
+func readContainer(t *testing.T, path string) format.Container {
+	t.Helper()
 	file, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
@@ -362,11 +492,44 @@ func readWALRecords(t *testing.T, path string) []wal.Record {
 	if err != nil {
 		t.Fatal(err)
 	}
-	records, err := wal.DecodeRecordsStrict(container.WAL)
-	if err != nil {
-		t.Fatal(err)
+	return container
+}
+
+func dataKeys(entries []format.DataEntry) [][]byte {
+	keys := make([][]byte, len(entries))
+	for i, entry := range entries {
+		keys[i] = entry.Key
 	}
-	return records
+	return keys
+}
+
+func assertHasKey(t *testing.T, keys [][]byte, want string) {
+	t.Helper()
+	for _, key := range keys {
+		if bytes.Equal(key, []byte(want)) {
+			return
+		}
+	}
+	t.Fatalf("missing key %q in %q", want, keys)
+}
+
+func assertNoKey(t *testing.T, keys [][]byte, want string) {
+	t.Helper()
+	for _, key := range keys {
+		if bytes.Equal(key, []byte(want)) {
+			t.Fatalf("unexpected key %q in %q", want, keys)
+		}
+	}
+}
+
+func assertHasPrefix(t *testing.T, keys [][]byte, prefix string) {
+	t.Helper()
+	for _, key := range keys {
+		if bytes.HasPrefix(key, []byte(prefix)) {
+			return
+		}
+	}
+	t.Fatalf("missing key with prefix %q in %q", prefix, keys)
 }
 
 func writeStoreFile(t *testing.T, path string, s *state.State, walPayload []byte) {

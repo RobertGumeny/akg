@@ -120,14 +120,19 @@ Before adding exported API surface or large store behavior:
 
 ### Compaction
 
-- [ ] Compaction performs ordinary open semantics before rewriting.
-- [ ] Compaction writes only current live nodes, edges, and derived index keys.
-- [ ] Compaction drops tombstones and superseded records.
-- [ ] Compaction rebuilds Bloom from the live key set.
-- [ ] Compaction discards prior WAL.
-- [ ] Compacted file validates and reopens without WAL replay dependency.
-- [ ] Compaction preserves logical graph state.
-- [ ] Atomic rename replacement path is tested where practical.
+- [x] Compaction performs ordinary open semantics before rewriting.
+- [x] Compaction writes only current live nodes, edges, and derived index keys.
+- [x] Compaction drops tombstones and superseded records.
+- [x] Compaction rebuilds Bloom from the live key set.
+- [x] Compaction discards prior WAL.
+- [x] Compacted file validates and reopens without WAL replay dependency.
+- [x] Compaction preserves logical graph state.
+- [x] Atomic rename replacement path is tested where practical.
+
+Crash-safety note: explicit compaction writes a same-directory temporary file,
+fsyncs it, renames it over the original path, then fsyncs the directory. A crash
+should leave either the old file or the new compacted file at the target path;
+at most a removable `.compact-*` temporary file may remain.
 
 ## Level 6 — Fixture/conformance expansion
 
