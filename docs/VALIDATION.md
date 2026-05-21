@@ -38,127 +38,127 @@ Expected result: all packages pass.
 
 Before implementing any new behavior:
 
-- [ ] Re-read `docs/TASKS.md`.
-- [ ] Re-read `docs/API.md`.
-- [ ] Re-read `docs/spec/01-data-model.md` through `docs/spec/07-error-handling.md` for relevant requirements.
-- [ ] Confirm the change belongs in AKG core, not in a future SDK/example layer.
-- [ ] Confirm no memory-file ingestion behavior is being added to core.
-- [ ] Confirm no query engine, traversal language, merge system, recovery-by-default, public flush, background service, or multi-writer behavior is introduced.
-- [ ] Confirm any public API change is intentional and documented.
+- [x] Re-read `docs/TASKS.md`.
+- [x] Re-read `docs/API.md`.
+- [x] Re-read the relevant v1 spec files: `docs/spec/01-data-model.md`, `docs/spec/02-binary-layout.md`, `docs/spec/03-encoding.md`, `docs/spec/04-key-layout.md`, `docs/spec/05-wal.md`, `docs/spec/06-compaction.md`, and `docs/spec/07-error-handling.md`.
+- [x] Confirm the change belongs in AKG core, not in a future SDK/example layer.
+- [x] Confirm no memory-file ingestion behavior is being added to core.
+- [x] Confirm no query engine, traversal language, merge system, recovery-by-default, public flush, background service, or multi-writer behavior is introduced.
+- [x] Confirm any public API change is intentional and documented.
 
 ## Level 3 — Conformance manifest validation
 
-- [ ] A machine-readable manifest exists under `testdata/conformance/`.
-- [ ] Every `testdata/conformance/*.akg` fixture appears exactly once in the manifest.
-- [ ] Every manifest fixture path exists.
-- [ ] Each manifest entry includes purpose/description.
-- [ ] Each manifest entry declares expected result: accept or reject.
-- [ ] Rejection entries include a stable error category or failure class.
-- [ ] Go conformance tests consume the manifest or check sync between manifest and test cases.
-- [ ] `testdata/conformance/README.md` documents the manifest schema and runner expectations.
-- [ ] The manifest is usable by non-Go implementations without reading Go test source.
+- [x] A machine-readable manifest exists under `testdata/conformance/`.
+- [x] Every `testdata/conformance/*.akg` fixture appears exactly once in the manifest.
+- [x] Every manifest fixture path exists.
+- [x] Each manifest entry includes purpose/description.
+- [x] Each manifest entry declares expected result: accept or reject.
+- [x] Rejection entries include a stable error category or failure class.
+- [x] Go conformance tests consume the manifest or check sync between manifest and test cases.
+- [x] `testdata/conformance/README.md` documents the manifest schema and runner expectations.
+- [x] The manifest is usable by non-Go implementations without reading Go test source.
 
 ## Level 4 — Fixture generation and corpus reproducibility
 
-- [ ] Fixture generation/update workflow is documented.
-- [ ] Generated valid fixtures are deterministic across repeated local runs where practical.
-- [ ] Hand-corrupted fixtures are labeled as such.
-- [ ] Corruption method for each rejection fixture is documented or encoded in a generator/helper.
-- [ ] The workflow protects against accidental silent fixture changes.
-- [ ] `testdata/conformance/README.md` explains when and how to update fixture bytes.
+- [x] Fixture generation/update workflow is documented.
+- [x] Generated valid fixtures are deterministic across repeated local runs where practical.
+- [x] Hand-corrupted fixtures are labeled as such.
+- [x] Corruption method for each rejection fixture is documented or encoded in a generator/helper.
+- [x] The workflow protects against accidental silent fixture changes.
+- [x] `testdata/conformance/README.md` explains when and how to update fixture bytes.
 
 ## Level 5 — Rejection fixture coverage
 
 Add or verify manifest-backed rejection fixtures for:
 
-- [ ] Wrong magic bytes.
-- [ ] Unsupported major version.
-- [ ] Bad header checksum.
-- [ ] Bad section checksum.
-- [ ] Duplicate sections where v1 requires uniqueness.
-- [ ] Overlapping sections or invalid section ranges.
-- [ ] Malformed Bloom section.
-- [ ] Invalid WAL opcode.
-- [ ] Invalid WAL payload for `PUT_NODE`.
-- [ ] Invalid WAL payload for `PUT_EDGE`.
-- [ ] Invalid WAL payload for `DELETE_NODE`.
-- [ ] Invalid WAL payload for `DELETE_EDGE`.
-- [ ] Malformed committed WAL that ordinary open must reject.
-- [ ] Invalid Data/derived-key consistency failure.
+- [x] Wrong magic bytes.
+- [x] Unsupported major version.
+- [x] Bad header checksum.
+- [x] Bad section checksum.
+- [x] Duplicate sections where v1 requires uniqueness.
+- [x] Overlapping sections or invalid section ranges.
+- [x] Malformed Bloom section.
+- [x] Invalid WAL opcode.
+- [x] Invalid WAL payload for `PUT_NODE`.
+- [x] Invalid WAL payload for `PUT_EDGE`.
+- [x] Invalid WAL payload for `DELETE_NODE`.
+- [x] Invalid WAL payload for `DELETE_EDGE`.
+- [x] Malformed committed WAL that ordinary open must reject.
+- [x] Invalid Data/derived-key consistency failure.
 
 For each rejection fixture:
 
-- [ ] Public `Validate` or ordinary `Open` rejects it.
-- [ ] The rejection is represented in the manifest.
-- [ ] Exact error strings are not required for conformance, but the failure category is stable enough to document.
+- [x] Public `Validate` or ordinary `Open` rejects it.
+- [x] The rejection is represented in the manifest.
+- [x] Exact error strings are not required for conformance, but the failure category is stable enough to document.
 
 ## Level 6 — Existing accept fixture coverage
 
 Verify the current accept fixtures remain present and manifest-backed:
 
-- [ ] Empty graph created by the store create path.
-- [ ] Minimal node.
-- [ ] Fully populated node.
-- [ ] Single edge.
-- [ ] Small realistic graph with tags and edges.
-- [ ] File with committed WAL requiring ordinary-open replay.
-- [ ] File with trailing uncommitted WAL ignored on open.
-- [ ] Compacted file with no carried-forward WAL.
-- [ ] File involving logical deletes before compaction.
-- [ ] File with structurally valid unknown section tolerated by store-level open/validate, if retained as v1 behavior.
+- [x] Empty graph created by the store create path.
+- [x] Minimal node.
+- [x] Fully populated node.
+- [x] Single edge.
+- [x] Small realistic graph with tags and edges.
+- [x] File with committed WAL requiring ordinary-open replay.
+- [x] File with trailing uncommitted WAL ignored on open.
+- [x] Compacted file with no carried-forward WAL.
+- [x] File involving logical deletes before compaction.
+- [x] File with structurally valid unknown section tolerated by store-level open/validate, if retained as v1 behavior.
 
 ## Level 7 — Spec requirements audit
 
-- [ ] Create/update a traceability document, for example `docs/spec/v1-requirements-audit.md`.
-- [ ] Audit `docs/spec/01-data-model.md` normative requirements.
-- [ ] Audit `docs/spec/02-file-format.md` normative requirements.
-- [ ] Audit `docs/spec/03-keyspace.md` normative requirements.
-- [ ] Audit `docs/spec/04-wal.md` normative requirements.
-- [ ] Audit `docs/spec/05-bloom-filter.md` normative requirements.
-- [ ] Audit `docs/spec/06-conformance.md` normative requirements.
-- [ ] Audit `docs/spec/07-error-handling.md` normative requirements.
-- [ ] Every v1 `MUST`/`MUST NOT` maps to implementation, tests, fixtures, docs-only rationale, or a release-blocking gap.
-- [ ] Every v1 `SHOULD`/`SHOULD NOT` maps to implementation, tests, fixtures, docs-only rationale, or an explicit decision.
-- [ ] Any ambiguous spec wording discovered during audit is clarified before v1 RC.
+- [x] Create/update a traceability document, for example `docs/spec/v1-requirements-audit.md`.
+- [x] Audit `docs/spec/01-data-model.md` normative requirements.
+- [x] Audit `docs/spec/02-binary-layout.md` normative requirements.
+- [x] Audit `docs/spec/03-encoding.md` normative requirements.
+- [x] Audit `docs/spec/04-key-layout.md` normative requirements.
+- [x] Audit `docs/spec/05-wal.md` normative requirements.
+- [x] Audit `docs/spec/06-compaction.md` normative requirements.
+- [x] Audit `docs/spec/07-error-handling.md` normative requirements.
+- [x] Every v1 `MUST`/`MUST NOT` maps to implementation, tests, fixtures, docs-only rationale, or a release-blocking gap.
+- [x] Every v1 `SHOULD`/`SHOULD NOT` maps to implementation, tests, fixtures, docs-only rationale, or an explicit decision.
+- [x] Any ambiguous spec wording discovered during audit is clarified before v1 RC.
 
 ## Level 8 — Public API/read-helper validation
 
-- [ ] `docs/API.md` documents the v1 public read-helper stance.
-- [ ] Exact lookup/list helper policy is explicitly accepted or changed.
-- [ ] Any tag/outbound/inbound helper decision is documented with rationale.
-- [ ] No query engine, planner, traversal language, or broad SDK helper surface is exported.
-- [ ] Exported identifiers in `akg.go` are audited for v1 necessity.
-- [ ] Public API tests cover create/open/validate.
-- [ ] Public API tests cover put/delete node and edge mutations.
-- [ ] Public API tests cover commit/close behavior.
-- [ ] Public API tests cover compaction.
-- [ ] Public API tests cover the allowed read helpers.
-- [ ] Public API does not expose raw WAL internals or mutable derived indexes.
+- [x] `docs/API.md` documents the v1 public read-helper stance.
+- [x] Exact lookup/list helper policy is explicitly accepted or changed.
+- [x] Any tag/outbound/inbound helper decision is documented with rationale.
+- [x] No query engine, planner, traversal language, or broad SDK helper surface is exported.
+- [x] Exported identifiers in `akg.go` are audited for v1 necessity.
+- [x] Public API tests cover create/open/validate.
+- [x] Public API tests cover put/delete node and edge mutations.
+- [x] Public API tests cover commit/close behavior.
+- [x] Public API tests cover compaction.
+- [x] Public API tests cover the allowed read helpers.
+- [x] Public API does not expose raw WAL internals or mutable derived indexes.
 
 ## Level 9 — Dogfood lifecycle validation
 
-- [ ] A tiny lifecycle example or walkthrough exists.
-- [ ] The example creates an AKG file.
-- [ ] The example adds realistic nodes, edges, and tags.
-- [ ] The example commits changes.
-- [ ] The example reopens the file and reads records through the public API.
-- [ ] The example compacts the file.
-- [ ] The example validates the final file.
-- [ ] The example is runnable or followable from a clean checkout.
-- [ ] The example does not implement memory-file ingestion, agent workflow behavior, or product SDK logic.
-- [ ] Any public API/docs usability findings from dogfooding are resolved or explicitly tracked.
+- [x] A tiny lifecycle example or walkthrough exists.
+- [x] The example creates an AKG file.
+- [x] The example adds realistic nodes, edges, and tags.
+- [x] The example commits changes.
+- [x] The example reopens the file and reads records through the public API.
+- [x] The example compacts the file.
+- [x] The example validates the final file.
+- [x] The example is runnable or followable from a clean checkout.
+- [x] The example does not implement memory-file ingestion, agent workflow behavior, or product SDK logic.
+- [x] Any public API/docs usability findings from dogfooding are resolved or explicitly tracked.
 
 ## Level 10 — Release-quality documentation validation
 
-- [ ] Docs explain what AKG is.
-- [ ] Docs explain what AKG is not.
-- [ ] Docs include a lifecycle example: create, mutate, commit, reopen, compact, validate.
-- [ ] Docs explain conformance corpus usage for alternative implementations.
-- [ ] Docs include SDK author guidance.
-- [ ] Docs explain that memory-file ingestion belongs in SDKs/examples, not AKG core.
-- [ ] Docs describe repository layer boundaries: spec, conformance, reference implementation, SDKs, examples.
-- [ ] Docs describe the reference implementation as canonical/minimal, not as a required dependency for downstream SDKs.
-- [ ] Primary docs link to spec, API docs, conformance README, and repository boundary guidance.
+- [x] Docs explain what AKG is.
+- [x] Docs explain what AKG is not.
+- [x] Docs include a lifecycle example: create, mutate, commit, reopen, compact, validate.
+- [x] Docs explain conformance corpus usage for alternative implementations.
+- [x] Docs include SDK author guidance.
+- [x] Docs explain that memory-file ingestion belongs in SDKs/examples, not AKG core.
+- [x] Docs describe repository layer boundaries: spec, conformance, reference implementation, SDKs, examples.
+- [x] Docs describe the reference implementation as canonical/minimal, not as a required dependency for downstream SDKs.
+- [x] Primary docs link to spec, API docs, conformance README, and repository boundary guidance.
 
 ## Suggested Agent Workflow
 
@@ -179,12 +179,12 @@ Recommended sequence:
 
 Milestone 3 should not be considered complete until:
 
-- [ ] `go test -count=1 ./...` passes.
-- [ ] Conformance manifest exists and is checked by tests.
-- [ ] Fixture generation/update workflow is documented.
-- [ ] Required rejection fixtures are present and manifest-backed.
-- [ ] Spec requirements audit is complete.
-- [ ] Public API/read-helper stance is documented and implemented.
-- [ ] A tiny lifecycle example dogfoods the public API without adding SDK/product scope.
-- [ ] Release-quality docs clarify AKG core, conformance, lifecycle, SDK author guidance, and repo boundaries.
-- [ ] No memory ingestion or product SDK scope has entered AKG core.
+- [x] `go test -count=1 ./...` passes.
+- [x] Conformance manifest exists and is checked by tests.
+- [x] Fixture generation/update workflow is documented.
+- [x] Required rejection fixtures are present and manifest-backed.
+- [x] Spec requirements audit is complete.
+- [x] Public API/read-helper stance is documented and implemented.
+- [x] A tiny lifecycle example dogfoods the public API without adding SDK/product scope.
+- [x] Release-quality docs clarify AKG core, conformance, lifecycle, SDK author guidance, and repo boundaries.
+- [x] No memory ingestion or product SDK scope has entered AKG core.

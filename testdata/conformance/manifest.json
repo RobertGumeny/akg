@@ -140,6 +140,20 @@
       "generated_by": "Go reference implementation fixture workflow documented in README.md"
     },
     {
+      "path": "m3-unknown-section-tolerated.akg",
+      "purpose": "Store-level open tolerates a structurally valid unknown section while hydrating known Data/Bloom/WAL sections.",
+      "expected_result": "accept",
+      "validation_scope": "store",
+      "store_expectation": {
+        "nodes": 1,
+        "edges": 0,
+        "has_uncompacted_wal": false,
+        "next_wal_sequence": 1
+      },
+      "sha256": "cf0d21233564af3747ccdb3e64aaef68ab817ebe429778280700579cc2e4ae7d",
+      "generated_by": "Go reference implementation fixture workflow documented in README.md"
+    },
+    {
       "path": "m2-reject-malformed-committed-wal.akg",
       "purpose": "Malformed committed WAL record that ordinary open must reject.",
       "expected_result": "reject",

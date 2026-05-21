@@ -1,3 +1,8 @@
+---
+title: AKG conformance test files
+status: release-candidate docs
+---
+
 # AKG test files
 
 This directory contains small `.akg` files that other implementations can use to check whether they read AKG the same way the Go reference implementation does.
@@ -59,6 +64,12 @@ To deterministically rewrite the Milestone 3 rejection fixtures before auditing 
 go run ./internal/cmd/conformance-fixtures -dir testdata/conformance -write-task3-rejections -print-hashes
 ```
 
+To deterministically rewrite the accepted unknown-section tolerance fixture before auditing its hash:
+
+```sh
+go run ./internal/cmd/conformance-fixtures -dir testdata/conformance -write-unknown-section-accept -print-hashes
+```
+
 To print the current hashes while reviewing a change:
 
 ```sh
@@ -101,6 +112,7 @@ These should open normally:
 - `m2-uncommitted-wal-tail.akg` — committed WAL followed by uncommitted trailing bytes that ordinary open must ignore.
 - `m2-compacted.akg` — live Data/Bloom after compaction, with no carried-forward WAL.
 - `m2-deletes-before-compaction.akg` — WAL history with deletes before the final committed state.
+- `m3-unknown-section-tolerated.akg` — a normal store file with a structurally valid unknown section that readers skip while hydrating known sections.
 
 ### Milestone 2 rejected files
 
@@ -122,9 +134,13 @@ These expand fail-closed coverage for v1 format and validation errors:
 - `m3-reject-malformed-bloom.akg` — invalid Bloom payload shape.
 - `m3-reject-invalid-wal-opcode.akg` — unknown WAL opcode.
 - `m3-reject-invalid-wal-put-node-payload.akg` — malformed committed `PUT_NODE` payload.
+- `m3-reject-invalid-wal-put-node-utf8-payload.akg` — syntactically valid committed `PUT_NODE` payload with invalid nested UTF-8.
 - `m3-reject-invalid-wal-delete-node-payload.akg` — malformed committed `DELETE_NODE` payload.
 - `m3-reject-invalid-wal-put-edge-payload.akg` — malformed committed `PUT_EDGE` payload.
 - `m3-reject-invalid-wal-delete-edge-payload.akg` — malformed committed `DELETE_EDGE` payload.
 - `m3-reject-malformed-committed-wal-checksum.akg` — damaged checksum in a committed WAL batch.
+- `m3-reject-duplicate-wal-sequence.akg` — committed WAL prefix with duplicate sequence numbers.
+- `m3-reject-decreasing-wal-sequence.akg` — committed WAL prefix with decreasing sequence numbers.
 - `m3-reject-invalid-node-data-payload.akg` — primary node Data key with an invalid node payload.
+- `m3-reject-invalid-node-data-utf8-payload.akg` — primary node Data key with invalid nested UTF-8.
 - `m3-reject-missing-derived-tag-index.akg` — node tag without the required derived tag index key.

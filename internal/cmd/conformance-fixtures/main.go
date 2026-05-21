@@ -23,10 +23,16 @@ func main() {
 	dir := flag.String("dir", "testdata/conformance", "conformance fixture directory")
 	printHashes := flag.Bool("print-hashes", false, "print current fixture sha256 values")
 	writeTask3 := flag.Bool("write-task3-rejections", false, "write deterministic Milestone 3 rejection fixtures")
+	writeUnknownSectionAccept := flag.Bool("write-unknown-section-accept", false, "write deterministic accepted fixture with a structurally valid unknown section")
 	flag.Parse()
 
 	if *writeTask3 {
 		if err := writeTask3Rejections(*dir); err != nil {
+			fatal(err)
+		}
+	}
+	if *writeUnknownSectionAccept {
+		if err := os.WriteFile(filepath.Join(*dir, "m3-unknown-section-tolerated.akg"), unknownSectionAcceptedContainer(), 0o666); err != nil {
 			fatal(err)
 		}
 	}
@@ -238,6 +244,36 @@ func missingDerivedTagContainer() []byte {
 		panic(err)
 	}
 	return containerFromDataEntries([]format.DataEntry{{Key: nodeKey, Value: payload}, {Key: timeKey}})
+}
+
+func unknownSectionAcceptedContainer() []byte {
+	node := record.Node{Type: "note", Title: "Unknown section tolerated", CreatedAt: 1, UpdatedAt: 1}
+	payload, err := record.EncodeNodePayload(node)
+	if err != nil {
+		panic(err)
+	}
+	nodeKey, err := keys.BuildNodeKey("note", "n1")
+	if err != nil {
+		panic(err)
+	}
+	timeKey, err := keys.BuildTemporalNodeKey(1, "note", "n1")
+	if err != nil {
+		panic(err)
+	}
+	data, err := format.EncodeDataEntries([]format.DataEntry{{Key: nodeKey, Value: payload}, {Key: timeKey}})
+	if err != nil {
+		panic(err)
+	}
+	bloom, err := format.EncodeBloom([][]byte{nodeKey, timeKey})
+	if err != nil {
+		panic(err)
+	}
+	return containerFromSections([]testSection{
+		{typ: format.SectionData, payload: data},
+		{typ: 0x99, payload: []byte("future-section")},
+		{typ: format.SectionBloom, payload: bloom},
+		{typ: format.SectionWAL, zeroLength: true},
+	})
 }
 
 func validNodePutPayload() []byte {
