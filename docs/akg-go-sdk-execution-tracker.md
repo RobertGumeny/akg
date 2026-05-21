@@ -75,10 +75,11 @@ Definition of done for this milestone:
 
 ## Next 3–5 Tasks
 
-1. Implement hydration from Data entries back to authoritative state, including payload/key consistency checks and materialize/hydrate round-trip tests.
-2. Implement file create/open/validate using existing format and WAL primitives, including committed-WAL replay, ignored uncommitted tails, next-sequence tracking, and WAL threshold counters.
-3. Implement ordinary commit and explicit compaction, then perform the minimal public API/CLI review before adding exported surface.
-4. Add fixture-backed conformance files once create/open/compact behavior exists.
+1. Implement file create/open/validate using existing format and WAL primitives, including committed-WAL replay, ignored uncommitted tails, next-sequence tracking, and WAL threshold counters.
+2. Implement ordinary commit and WAL lifecycle behavior, including threshold detection.
+3. Implement explicit compaction using whole-file rewrite from live state.
+4. Perform the minimal public API/CLI review before adding exported surface.
+5. Add fixture-backed conformance files once create/open/compact behavior exists.
 
 ## Test / Conformance Checkpoints
 
@@ -127,6 +128,7 @@ Key invariant:
 
 ## Recent Completions
 
+- Completed Milestone 2 Task 3: `internal/store` now hydrates decoded Data entries into authoritative `internal/state`, loads primary `n:`/`e:` records without writer-owned timestamp/version mutation, validates key/payload identity, rejects malformed primary payloads, validates required `ei:`, `t:`, and `ts:` indexes by regenerating materialized keys, rejects non-empty derived values and unknown Data keys, and drops unknown MessagePack fields after read/rewrite. `go test ./...` passes.
 - Completed Milestone 2 Task 2: `internal/store` now materializes authoritative `internal/state` live nodes and edges into sorted AKG Data entries, regenerating `n:`, `e:`, `ei:`, `t:`, and self-describing `ts:` keys, using empty values for derived indexes, rejecting duplicate materialized keys, and re-encoding node/edge payloads through canonical record encoders. Focused tests cover determinism, sorted output, Data-section decoder acceptance, empty derived values, duplicate derived-key rejection, and omitted deleted/superseded records. `go test ./...` passes.
 - Updated `docs/spec/01-data-model.md` and `docs/spec/04-key-layout.md` to lock the Task 1 decision that node identity is `(type,id)`, node IDs are unique within a type key space rather than globally, and changing type is identity change.
 - Completed Milestone 2 Task 1: `internal/state` now holds authoritative live nodes and edges only, supports `PutNode`, `PutEdge`, `DeleteNode`, and `DeleteEdge`, generates 16-character lowercase hex node IDs, enforces key/tag validation, writer-owned timestamps/versions, strict delete-not-found behavior, dangling-edge tolerance, and `(type,id)` identity semantics. `go test ./...` passes.
@@ -154,7 +156,7 @@ Key invariant:
 
 ## Handoff Seed
 
-Next session should start with Milestone 2 Task 3: hydrating authoritative state from Data entries.
+Next session should start with Milestone 2 Task 4: ordinary create/open/validate behavior.
 
 Suggested next-session prompt:
-> Continue from `docs/TASKS.md` and `docs/VALIDATION.md`. Implement Milestone 2 Task 3 only: hydrate decoded Data entries back into `internal/state`, decode primary `n:` and `e:` payloads, validate key/payload identity consistency, decide and document/enforce required derived-index validation for this milestone, test materialize -> hydrate -> materialize equivalence including unknown MessagePack fields dropped after rewrite, run `gofmt` and `go test ./...`, then update tracker/checklists.
+> Continue from `docs/TASKS.md` and `docs/VALIDATION.md`. Implement Milestone 2 Task 4 only: create/open/validate AKG files using existing format/Data/Bloom/WAL primitives, hydrate Data into authoritative state, replay committed WAL through the last valid COMMIT, ignore trailing uncommitted WAL, reject malformed committed WAL and invalid payloads, track next WAL sequence and uncompacted WAL counters, keep API internal/minimal, run `gofmt` and `go test ./...`, then update tracker/checklists.

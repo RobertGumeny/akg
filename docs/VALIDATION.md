@@ -72,19 +72,20 @@ Before adding exported API surface or large store behavior:
 - [x] Materialized entries are sorted by raw bytewise key order.
 - [x] Duplicate materialized keys are rejected.
 - [x] Deleted/superseded records do not appear in materialized output.
-- [ ] Unknown MessagePack fields are dropped on rewrite (full read/rewrite coverage belongs with Task 3 hydration; Task 2 materialization re-encodes from canonical typed records only).
+- [x] Unknown MessagePack fields are dropped on rewrite.
 
 ## Level 4 — Hydration/open/replay validation
 
 ### Data hydration
 
-- [ ] Data primary node entries decode into authoritative state.
-- [ ] Data primary edge entries decode into authoritative state.
-- [ ] Node key/payload consistency is validated where applicable.
-- [ ] Edge key/payload identity mismatch is rejected.
-- [ ] Missing or malformed primary payloads are rejected.
-- [ ] Required derived index omissions/inconsistencies are either rejected or explicitly documented as deferred.
-- [ ] `materialize -> hydrate -> materialize` preserves logical state.
+- [x] Data primary node entries decode into authoritative state.
+- [x] Data primary edge entries decode into authoritative state.
+- [x] Node key/payload consistency is validated where applicable.
+- [x] Edge key/payload identity mismatch is rejected.
+- [x] Missing or malformed primary payloads are rejected.
+- [x] Required derived index omissions/inconsistencies are rejected.
+- [x] `materialize -> hydrate -> materialize` preserves logical state.
+- [x] Unknown Data keys are rejected in Task 3 rather than ignored.
 
 ### Ordinary open
 

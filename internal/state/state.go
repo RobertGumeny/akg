@@ -134,6 +134,7 @@ func (s *State) PutEdge(e record.Edge) (record.Edge, error) {
 	}
 	ident := edgeIdentity{from: e.FromNode, relation: e.Relation, to: e.ToNode}
 	e.Meta = cloneMap(e.Meta)
+	e.ApplyReadDefaults()
 	now := s.now()
 	if existing, ok := s.edges[ident]; ok {
 		e.CreatedAt = existing.CreatedAt
@@ -175,6 +176,58 @@ func (s *State) DeleteEdge(from record.NodeID, relation record.Relation, to reco
 		return ErrNotFound
 	}
 	delete(s.edges, ident)
+	return nil
+}
+
+// LoadNodeRecord installs a node decoded from durable storage without applying
+// writer-owned timestamp/version mutation semantics.
+func (s *State) LoadNodeRecord(rec NodeRecord) error {
+	if s == nil {
+		return ErrInvalidInput
+	}
+	if err := rec.Node.ValidateForWrite(); err != nil {
+		return err
+	}
+	if rec.Node.Type == "" || rec.ID == "" {
+		return ErrInvalidInput
+	}
+	if err := validateTags(rec.Node.Tags); err != nil {
+		return err
+	}
+	if _, err := keys.BuildNodeKey(rec.Node.Type, rec.ID); err != nil {
+		return err
+	}
+	for _, tag := range rec.Node.Tags {
+		if _, err := keys.BuildTagKey(tag, rec.ID); err != nil {
+			return err
+		}
+	}
+	rec.Node.ApplyReadDefaults()
+	rec.Node.Meta = cloneMap(rec.Node.Meta)
+	rec.Node.Tags = cloneTags(rec.Node.Tags)
+	s.nodes[nodeIdentity{typeName: rec.Node.Type, id: rec.ID}] = rec
+	return nil
+}
+
+// LoadEdge installs an edge decoded from durable storage without applying
+// writer-owned timestamp/version mutation semantics.
+func (s *State) LoadEdge(e record.Edge) error {
+	if s == nil {
+		return ErrInvalidInput
+	}
+	if err := e.ValidateForWrite(); err != nil {
+		return err
+	}
+	if _, err := keys.BuildEdgeKey(e.FromNode, e.Relation, e.ToNode); err != nil {
+		return err
+	}
+	e.ApplyReadDefaults()
+	e.Meta = cloneMap(e.Meta)
+	if e.Confidence != nil {
+		v := *e.Confidence
+		e.Confidence = &v
+	}
+	s.edges[edgeIdentity{from: e.FromNode, relation: e.Relation, to: e.ToNode}] = e
 	return nil
 }
 

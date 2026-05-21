@@ -173,6 +173,110 @@ func TestMaterializeDataEntriesOmitsDeletedAndSupersededRecords(t *testing.T) {
 	}
 }
 
+func TestHydrateDataEntriesRoundTripsMaterializedState(t *testing.T) {
+	s := state.New(state.WithNow(fixedClock(11, 22, 33)))
+	if _, err := s.PutNode("a", record.Node{Type: "note", Title: "A", Tags: []string{"alpha"}}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.PutNode("b", record.Node{Type: "note", Title: "B"}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.PutEdge(record.Edge{FromNode: "a", Relation: "links", ToNode: "b"}); err != nil {
+		t.Fatal(err)
+	}
+	entries, err := MaterializeDataEntries(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+	hydrated, err := HydrateDataEntries(entries)
+	if err != nil {
+		t.Fatalf("HydrateDataEntries: %v", err)
+	}
+	again, err := MaterializeDataEntries(hydrated)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(entries, again) {
+		t.Fatalf("materialize/hydrate/materialize changed entries")
+	}
+}
+
+func TestHydrateDataEntriesRejectsMalformedPrimaryAndIdentityMismatch(t *testing.T) {
+	s := state.New(state.WithNow(fixedClock(1)))
+	if _, err := s.PutNode("n1", record.Node{Type: "note", Title: "A"}); err != nil {
+		t.Fatal(err)
+	}
+	entries, err := MaterializeDataEntries(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+	badPayload := cloneEntries(entries)
+	badPayload[indexOfKey(t, badPayload, "n:note:n1")].Value = []byte{0x80}
+	if _, err := HydrateDataEntries(badPayload); err == nil {
+		t.Fatalf("expected malformed primary payload rejection")
+	}
+
+	mismatch := cloneEntries(entries)
+	mismatch[indexOfKey(t, mismatch, "n:note:n1")].Key = []byte("n:other:n1")
+	if _, err := HydrateDataEntries(mismatch); !errors.Is(err, ErrIdentityMismatch) {
+		t.Fatalf("HydrateDataEntries mismatch error = %v, want ErrIdentityMismatch", err)
+	}
+}
+
+func TestHydrateDataEntriesValidatesDerivedIndexes(t *testing.T) {
+	s := state.New(state.WithNow(fixedClock(1, 2)))
+	if _, err := s.PutNode("n1", record.Node{Type: "note", Title: "A", Tags: []string{"topic"}}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.PutEdge(record.Edge{FromNode: "n1", Relation: "links", ToNode: "n2"}); err != nil {
+		t.Fatal(err)
+	}
+	entries, err := MaterializeDataEntries(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+	missing := withoutKey(entries, "t:topic:n1")
+	if _, err := HydrateDataEntries(missing); !errors.Is(err, ErrDerivedIndexMismatch) {
+		t.Fatalf("missing derived error = %v, want ErrDerivedIndexMismatch", err)
+	}
+	wrong := cloneEntries(entries)
+	wrong[indexOfKey(t, wrong, "ei:n2:links:n1")].Key = []byte("ei:n2:wrong:n1")
+	if _, err := HydrateDataEntries(wrong); !errors.Is(err, ErrDerivedIndexMismatch) {
+		t.Fatalf("wrong derived error = %v, want ErrDerivedIndexMismatch", err)
+	}
+	nonEmpty := cloneEntries(entries)
+	nonEmpty[indexOfKey(t, nonEmpty, "t:topic:n1")].Value = []byte("x")
+	if _, err := HydrateDataEntries(nonEmpty); !errors.Is(err, ErrNonEmptyDerivedValue) {
+		t.Fatalf("non-empty derived error = %v, want ErrNonEmptyDerivedValue", err)
+	}
+}
+
+func TestHydrateDataEntriesDropsUnknownMessagePackFieldsAfterRewrite(t *testing.T) {
+	entries := []format.DataEntry{
+		{Key: []byte("n:note:n1"), Value: nodePayloadWithUnknownField()},
+		{Key: []byte("ts:7:n:note:n1")},
+	}
+	hydrated, err := HydrateDataEntries(entries)
+	if err != nil {
+		t.Fatalf("HydrateDataEntries: %v", err)
+	}
+	rewritten, err := MaterializeDataEntries(hydrated)
+	if err != nil {
+		t.Fatal(err)
+	}
+	value := entryMap(rewritten)["n:note:n1"]
+	if bytes.Equal(value, entries[0].Value) {
+		t.Fatalf("node payload was not canonically rewritten")
+	}
+	node, err := record.DecodeNodePayload(value)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if node.Type != "note" || node.Title != "A" || node.UpdatedAt != 7 {
+		t.Fatalf("unexpected rewritten node: %+v", node)
+	}
+}
+
 func keysOf(entries []format.DataEntry) []string {
 	out := make([]string, len(entries))
 	for i, entry := range entries {
@@ -196,4 +300,57 @@ func contains(values []string, want string) bool {
 		}
 	}
 	return false
+}
+
+func cloneEntries(entries []format.DataEntry) []format.DataEntry {
+	out := make([]format.DataEntry, len(entries))
+	for i, entry := range entries {
+		out[i] = format.DataEntry{
+			Key:   append([]byte(nil), entry.Key...),
+			Value: append([]byte(nil), entry.Value...),
+		}
+	}
+	return out
+}
+
+func indexOfKey(t *testing.T, entries []format.DataEntry, key string) int {
+	t.Helper()
+	for i, entry := range entries {
+		if string(entry.Key) == key {
+			return i
+		}
+	}
+	t.Fatalf("key %q not found in %q", key, keysOf(entries))
+	return -1
+}
+
+func withoutKey(entries []format.DataEntry, key string) []format.DataEntry {
+	out := make([]format.DataEntry, 0, len(entries))
+	for _, entry := range entries {
+		if string(entry.Key) != key {
+			out = append(out, entry)
+		}
+	}
+	return out
+}
+
+func nodePayloadWithUnknownField() []byte {
+	var out []byte
+	out = append(out, 0x85)
+	appendMsgpackString(&out, "created_at")
+	out = append(out, 0x07)
+	appendMsgpackString(&out, "extra")
+	appendMsgpackString(&out, "ignored")
+	appendMsgpackString(&out, "title")
+	appendMsgpackString(&out, "A")
+	appendMsgpackString(&out, "type")
+	appendMsgpackString(&out, "note")
+	appendMsgpackString(&out, "updated_at")
+	out = append(out, 0x07)
+	return out
+}
+
+func appendMsgpackString(out *[]byte, s string) {
+	*out = append(*out, 0xa0|byte(len(s)))
+	*out = append(*out, s...)
 }
