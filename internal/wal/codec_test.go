@@ -11,7 +11,7 @@ import (
 )
 
 func TestWALRoundTripAllOperationsAndPayloadValidation(t *testing.T) {
-	nodePayload, err := record.EncodeNodePayload(record.Node{Type: "note", Title: "hello", CreatedAt: 1, UpdatedAt: 2})
+	nodePayload, err := record.EncodeNodePutPayload(record.NodePut{ID: "a", Node: record.Node{Type: "note", Title: "hello", CreatedAt: 1, UpdatedAt: 2}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -93,7 +93,7 @@ func TestWALDeletePayloadsTolerateUnknownReadFields(t *testing.T) {
 }
 
 func TestWALRejectsLevel4RecordCorruption(t *testing.T) {
-	nodePayload, _ := record.EncodeNodePayload(record.Node{Type: "note", Title: "ok", CreatedAt: 1, UpdatedAt: 1})
+	nodePayload, _ := record.EncodeNodePutPayload(record.NodePut{ID: "a", Node: record.Node{Type: "note", Title: "ok", CreatedAt: 1, UpdatedAt: 1}})
 	valid, _ := EncodeRecord(Record{Sequence: 1, Operation: OpPutNode, Payload: nodePayload})
 
 	tests := []struct {
@@ -117,8 +117,8 @@ func TestWALRejectsLevel4RecordCorruption(t *testing.T) {
 }
 
 func TestWALReplayCommittedTailBehavior(t *testing.T) {
-	nodePayload, _ := record.EncodeNodePayload(record.Node{Type: "note", Title: "committed", CreatedAt: 1, UpdatedAt: 1})
-	uncommittedPayload, _ := record.EncodeNodePayload(record.Node{Type: "note", Title: "uncommitted", CreatedAt: 2, UpdatedAt: 2})
+	nodePayload, _ := record.EncodeNodePutPayload(record.NodePut{ID: "a", Node: record.Node{Type: "note", Title: "committed", CreatedAt: 1, UpdatedAt: 1}})
+	uncommittedPayload, _ := record.EncodeNodePutPayload(record.NodePut{ID: "b", Node: record.Node{Type: "note", Title: "uncommitted", CreatedAt: 2, UpdatedAt: 2}})
 	committed, _ := EncodeRecords([]Record{{Sequence: 1, Operation: OpPutNode, Payload: nodePayload}, {Sequence: 2, Operation: OpCommit}})
 	uncommitted, _ := EncodeRecord(Record{Sequence: 3, Operation: OpPutNode, Payload: uncommittedPayload})
 	payload := append(committed, uncommitted...)

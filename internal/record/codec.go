@@ -8,6 +8,28 @@ import (
 
 // EncodeNodePayload encodes a node as a deterministic MessagePack map for WAL/data payloads.
 func EncodeNodePayload(n Node) ([]byte, error) {
+	m, err := nodePayloadMap(n)
+	if err != nil {
+		return nil, err
+	}
+	return encodeMsgpack(m)
+}
+
+// EncodeNodePutPayload encodes a WAL PUT_NODE payload by pairing node content
+// with the key-space node ID. Canonical Data node payloads do not carry IDs.
+func EncodeNodePutPayload(p NodePut) ([]byte, error) {
+	if p.ID == "" {
+		return nil, ErrMissingRequiredField
+	}
+	m, err := nodePayloadMap(p.Node)
+	if err != nil {
+		return nil, err
+	}
+	m["id"] = string(p.ID)
+	return encodeMsgpack(m)
+}
+
+func nodePayloadMap(n Node) (map[string]any, error) {
 	if err := n.ValidateForWrite(); err != nil {
 		return nil, err
 	}
@@ -28,7 +50,7 @@ func EncodeNodePayload(n Node) ([]byte, error) {
 	if n.Version != 0 && n.Version != 1 {
 		m["version"] = uint64(n.Version)
 	}
-	return encodeMsgpack(m)
+	return m, nil
 }
 
 // DecodeNodePayload decodes a MessagePack node map and applies AKG read defaults.

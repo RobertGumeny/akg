@@ -105,18 +105,18 @@ Before adding exported API surface or large store behavior:
 
 ### Commit
 
-- [ ] Commit appends mutation WAL records.
-- [ ] Commit appends a `COMMIT` record with empty payload.
-- [ ] Commit fsyncs the file state required for durable recovery.
-- [ ] Committed mutation survives close/reopen.
-- [ ] Uncommitted mutation is not applied after reopen.
-- [ ] Multiple committed batches replay in sequence order.
-- [ ] WAL sequence numbers are monotonic and never reused across sessions.
-- [ ] Committed WAL remains present until compaction.
-- [ ] Clean close commits outstanding mutations unless already committed.
-- [ ] Internal threshold detection fires at `>= 1,000` WAL entries.
-- [ ] Internal threshold detection fires at `>= 10 MB` WAL data.
-- [ ] No public flush API is exposed.
+- [x] Commit appends mutation WAL records.
+- [x] Commit appends a `COMMIT` record with empty payload.
+- [x] Commit fsyncs the file state required for durable recovery.
+- [x] Committed mutation survives close/reopen.
+- [x] Uncommitted mutation is not applied after reopen.
+- [x] Multiple committed batches replay in sequence order.
+- [x] WAL sequence numbers are monotonic and never reused across sessions.
+- [x] Committed WAL remains present until compaction.
+- [x] Clean close commits outstanding mutations unless already committed.
+- [x] Internal threshold detection fires at `>= 1,000` WAL entries.
+- [x] Internal threshold detection fires at `>= 10 MB` WAL data.
+- [x] No public flush API is exposed.
 
 ### Compaction
 

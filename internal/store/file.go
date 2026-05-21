@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"os"
+	"path/filepath"
 
 	"github.com/earendil-works/akg/internal/format"
 	"github.com/earendil-works/akg/internal/record"
@@ -11,10 +12,20 @@ import (
 	"github.com/earendil-works/akg/internal/wal"
 )
 
+const (
+	walEntryFlushThreshold = 1000
+	walByteFlushThreshold  = 10 * 1024 * 1024
+)
+
 var (
 	ErrInvalidWALReplay = errors.New("invalid wal replay")
 	ErrBloomMismatch    = errors.New("bloom mismatch")
 )
+
+type pendingWALRecord struct {
+	op      wal.Operation
+	payload []byte
+}
 
 // Store is the minimal internal file-level store state produced by ordinary
 // create/open. It intentionally exposes only live authoritative state plus WAL
@@ -22,9 +33,12 @@ var (
 type Store struct {
 	path                  string
 	state                 *state.State
+	pending               []pendingWALRecord
 	nextWALSequence       wal.SequenceNumber
 	uncompactedWALEntries int
 	uncompactedWALBytes   int
+	walAppendBytes        int
+	walAppendEntries      int
 }
 
 func Path(s *Store) string {
@@ -60,6 +74,126 @@ func (s *Store) UncompactedWALBytes() int {
 		return 0
 	}
 	return s.uncompactedWALBytes
+}
+
+func (s *Store) walThresholdExceeded() bool {
+	if s == nil {
+		return false
+	}
+	return s.uncompactedWALEntries >= walEntryFlushThreshold || s.uncompactedWALBytes >= walByteFlushThreshold
+}
+
+func (s *Store) PutNode(id record.NodeID, n record.Node) (state.NodeRecord, error) {
+	if s == nil || s.state == nil {
+		return state.NodeRecord{}, state.ErrInvalidInput
+	}
+	rec, err := s.state.PutNode(id, n)
+	if err != nil {
+		return state.NodeRecord{}, err
+	}
+	payload, err := record.EncodeNodePutPayload(record.NodePut{ID: rec.ID, Node: rec.Node})
+	if err != nil {
+		return state.NodeRecord{}, err
+	}
+	s.pending = append(s.pending, pendingWALRecord{op: wal.OpPutNode, payload: payload})
+	return rec, nil
+}
+
+func (s *Store) PutEdge(e record.Edge) (record.Edge, error) {
+	if s == nil || s.state == nil {
+		return record.Edge{}, state.ErrInvalidInput
+	}
+	edge, err := s.state.PutEdge(e)
+	if err != nil {
+		return record.Edge{}, err
+	}
+	payload, err := record.EncodeEdgePayload(edge)
+	if err != nil {
+		return record.Edge{}, err
+	}
+	s.pending = append(s.pending, pendingWALRecord{op: wal.OpPutEdge, payload: payload})
+	return edge, nil
+}
+
+func (s *Store) DeleteNode(typeName string, id record.NodeID) error {
+	if s == nil || s.state == nil {
+		return state.ErrInvalidInput
+	}
+	if err := s.state.DeleteNode(typeName, id); err != nil {
+		return err
+	}
+	payload, err := record.EncodeNodeDeletePayload(record.NodeDelete{Type: typeName, ID: id})
+	if err != nil {
+		return err
+	}
+	s.pending = append(s.pending, pendingWALRecord{op: wal.OpDeleteNode, payload: payload})
+	return nil
+}
+
+func (s *Store) DeleteEdge(from record.NodeID, relation record.Relation, to record.NodeID) error {
+	if s == nil || s.state == nil {
+		return state.ErrInvalidInput
+	}
+	if err := s.state.DeleteEdge(from, relation, to); err != nil {
+		return err
+	}
+	payload, err := record.EncodeEdgeDeletePayload(record.EdgeDelete{FromNode: from, Relation: relation, ToNode: to})
+	if err != nil {
+		return err
+	}
+	s.pending = append(s.pending, pendingWALRecord{op: wal.OpDeleteEdge, payload: payload})
+	return nil
+}
+
+func (s *Store) Commit() error {
+	if s == nil {
+		return state.ErrInvalidInput
+	}
+	if len(s.pending) == 0 {
+		return nil
+	}
+	file, err := os.ReadFile(s.path)
+	if err != nil {
+		return err
+	}
+	container, _, err := format.DecodeContainer(file)
+	if err != nil {
+		return err
+	}
+	if s.walAppendBytes > len(container.WAL) {
+		return ErrInvalidWALReplay
+	}
+	walPrefix := append([]byte(nil), container.WAL[:s.walAppendBytes]...)
+	records := make([]wal.Record, 0, len(s.pending)+1)
+	next := s.nextWALSequence
+	for _, p := range s.pending {
+		records = append(records, wal.Record{Sequence: next, Operation: p.op, Payload: append([]byte(nil), p.payload...)})
+		next++
+	}
+	records = append(records, wal.Record{Sequence: next, Operation: wal.OpCommit})
+	encoded, err := wal.EncodeRecords(records)
+	if err != nil {
+		return err
+	}
+	newWAL := append(walPrefix, encoded...)
+	newFile, _, err := format.EncodeContainer(format.Container{Data: container.Data, Bloom: container.Bloom, WAL: newWAL})
+	if err != nil {
+		return err
+	}
+	if err := writeFileSync(s.path, newFile); err != nil {
+		return err
+	}
+	s.pending = nil
+	s.nextWALSequence = next + 1
+	s.uncompactedWALEntries = s.walAppendEntries + len(records)
+	s.uncompactedWALBytes = len(newWAL)
+	s.walAppendEntries = s.uncompactedWALEntries
+	s.walAppendBytes = s.uncompactedWALBytes
+	return nil
+}
+
+func (s *Store) Close() error {
+	return s.Commit()
 }
 
 // Create writes a new AKG file containing an empty Data section, deterministic
@@ -135,6 +269,8 @@ func openBytes(file []byte) (*Store, error) {
 		nextWALSequence:       info.next,
 		uncompactedWALEntries: info.entries,
 		uncompactedWALBytes:   len(container.WAL),
+		walAppendBytes:        info.appendBytes,
+		walAppendEntries:      info.appendEntries,
 	}, nil
 }
 
@@ -160,15 +296,19 @@ func validateBloom(payload []byte, entries []format.DataEntry) error {
 }
 
 type walInfo struct {
-	committed []wal.Record
-	next      wal.SequenceNumber
-	entries   int
+	committed     []wal.Record
+	next          wal.SequenceNumber
+	entries       int
+	appendBytes   int
+	appendEntries int
 }
 
 func inspectWAL(payload []byte) (walInfo, error) {
 	info := walInfo{next: 1}
 	var all []wal.Record
 	lastCommit := -1
+	pos := 0
+	lastCommitEnd := 0
 	for len(payload) > 0 {
 		r, n, err := wal.DecodeRecord(payload)
 		if err != nil {
@@ -184,12 +324,18 @@ func inspectWAL(payload []byte) (walInfo, error) {
 		}
 		if r.Operation == wal.OpCommit {
 			lastCommit = len(all) - 1
+			lastCommitEnd = pos + n
 		}
+		pos += n
 		payload = payload[n:]
 	}
 	if lastCommit < 0 {
+		info.appendBytes = 0
+		info.appendEntries = 0
 		return info, nil
 	}
+	info.appendBytes = lastCommitEnd
+	info.appendEntries = lastCommit + 1
 	for _, r := range all[:lastCommit+1] {
 		if err := wal.ValidatePayload(r); err != nil {
 			return walInfo{}, err
@@ -199,6 +345,33 @@ func inspectWAL(payload []byte) (walInfo, error) {
 		}
 	}
 	return info, nil
+}
+
+func writeFileSync(path string, data []byte) error {
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_TRUNC, 0)
+	if err != nil {
+		return err
+	}
+	n, writeErr := f.Write(data)
+	syncErr := f.Sync()
+	closeErr := f.Close()
+	if writeErr != nil {
+		return writeErr
+	}
+	if n != len(data) {
+		return errors.New("short file write")
+	}
+	if syncErr != nil {
+		return syncErr
+	}
+	if closeErr != nil {
+		return closeErr
+	}
+	if dir, err := os.Open(filepath.Dir(path)); err == nil {
+		_ = dir.Sync()
+		_ = dir.Close()
+	}
+	return nil
 }
 
 func replayWAL(s *state.State, records []wal.Record) error {

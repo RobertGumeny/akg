@@ -123,7 +123,7 @@ func CommittedRecords(payload []byte) ([]Record, error) {
 func ValidatePayload(r Record) error {
 	switch r.Operation {
 	case OpPutNode:
-		_, err := record.DecodeNodePayload(r.Payload)
+		_, err := record.DecodeNodePutPayload(r.Payload)
 		return err
 	case OpPutEdge:
 		_, err := record.DecodeEdgePayload(r.Payload)

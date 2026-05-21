@@ -118,6 +118,179 @@ func TestOpenRejectsMalformedCommittedWALAndInvalidPayload(t *testing.T) {
 	}
 }
 
+func TestCommitPersistsMutationViaWALReplay(t *testing.T) {
+	path := tempPath(t)
+	st, err := Create(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := st.PutNode("n1", record.Node{Type: "note", Title: "A"}); err != nil {
+		t.Fatalf("PutNode: %v", err)
+	}
+	if err := st.Commit(); err != nil {
+		t.Fatalf("Commit: %v", err)
+	}
+	if _, ok := st.State().GetNode("note", "n1"); !ok {
+		t.Fatalf("committed in-memory node missing")
+	}
+	if st.NextWALSequence() != 3 || st.UncompactedWALEntries() != 2 || st.UncompactedWALBytes() == 0 {
+		t.Fatalf("unexpected WAL bookkeeping after commit: next=%d entries=%d bytes=%d", st.NextWALSequence(), st.UncompactedWALEntries(), st.UncompactedWALBytes())
+	}
+
+	reopened, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	if _, ok := reopened.State().GetNode("note", "n1"); !ok {
+		t.Fatalf("committed node did not survive reopen")
+	}
+	records := readWALRecords(t, path)
+	if len(records) != 2 || records[0].Operation != wal.OpPutNode || records[1].Operation != wal.OpCommit || len(records[1].Payload) != 0 {
+		t.Fatalf("unexpected WAL records after commit: %#v", records)
+	}
+}
+
+func TestUncommittedMutationDoesNotReopen(t *testing.T) {
+	path := tempPath(t)
+	st, err := Create(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := st.PutNode("n1", record.Node{Type: "note", Title: "A"}); err != nil {
+		t.Fatalf("PutNode: %v", err)
+	}
+	if _, ok := st.State().GetNode("note", "n1"); !ok {
+		t.Fatalf("pending node should be visible in current store state")
+	}
+	reopened, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	if _, ok := reopened.State().GetNode("note", "n1"); ok {
+		t.Fatalf("uncommitted node was applied after reopen")
+	}
+}
+
+func TestMultipleCommittedBatchesReplayInSequenceAcrossSessions(t *testing.T) {
+	path := tempPath(t)
+	st, err := Create(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := st.PutNode("n1", record.Node{Type: "note", Title: "A"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := st.Commit(); err != nil {
+		t.Fatal(err)
+	}
+	st, err = Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := st.PutNode("n2", record.Node{Type: "note", Title: "B"}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := st.PutEdge(record.Edge{FromNode: "n1", Relation: "links", ToNode: "n2"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := st.Commit(); err != nil {
+		t.Fatal(err)
+	}
+
+	reopened, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	if _, ok := reopened.State().GetNode("note", "n1"); !ok {
+		t.Fatalf("first batch node missing")
+	}
+	if _, ok := reopened.State().GetNode("note", "n2"); !ok {
+		t.Fatalf("second batch node missing")
+	}
+	if _, ok := reopened.State().GetEdge("n1", "links", "n2"); !ok {
+		t.Fatalf("second batch edge missing")
+	}
+	records := readWALRecords(t, path)
+	if len(records) != 5 {
+		t.Fatalf("WAL record count = %d, want 5", len(records))
+	}
+	for i, r := range records {
+		want := wal.SequenceNumber(i + 1)
+		if r.Sequence != want {
+			t.Fatalf("record %d sequence = %d, want %d", i, r.Sequence, want)
+		}
+	}
+	if reopened.NextWALSequence() != 6 {
+		t.Fatalf("next WAL sequence = %d, want 6", reopened.NextWALSequence())
+	}
+}
+
+func TestCloseCommitsOutstandingMutation(t *testing.T) {
+	path := tempPath(t)
+	st, err := Create(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := st.PutNode("n1", record.Node{Type: "note", Title: "A"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := st.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+	reopened, err := Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := reopened.State().GetNode("note", "n1"); !ok {
+		t.Fatalf("Close did not commit outstanding node")
+	}
+}
+
+func TestCommitDiscardsIgnoredWALTailBeforeAppending(t *testing.T) {
+	path := tempPath(t)
+	base := state.New()
+	committed := nodePutPayload("n1", record.Node{Type: "note", Title: "A", CreatedAt: 1, UpdatedAt: 1, Version: 1})
+	uncommitted := nodePutPayload("n2", record.Node{Type: "note", Title: "B", CreatedAt: 2, UpdatedAt: 2, Version: 1})
+	walPayload := mustWAL(t, []wal.Record{
+		{Sequence: 1, Operation: wal.OpPutNode, Payload: committed},
+		{Sequence: 2, Operation: wal.OpCommit},
+		{Sequence: 3, Operation: wal.OpPutNode, Payload: uncommitted},
+	})
+	writeStoreFile(t, path, base, walPayload)
+	st, err := Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := st.PutNode("n3", record.Node{Type: "note", Title: "C"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := st.Commit(); err != nil {
+		t.Fatal(err)
+	}
+	reopened, err := Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := reopened.State().GetNode("note", "n2"); ok {
+		t.Fatalf("previous uncommitted tail became committed")
+	}
+	if _, ok := reopened.State().GetNode("note", "n3"); !ok {
+		t.Fatalf("new committed node missing")
+	}
+}
+
+func TestWALThresholdDetection(t *testing.T) {
+	if (&Store{uncompactedWALEntries: 999, uncompactedWALBytes: walByteFlushThreshold - 1}).walThresholdExceeded() {
+		t.Fatalf("threshold fired early")
+	}
+	if !(&Store{uncompactedWALEntries: 1000}).walThresholdExceeded() {
+		t.Fatalf("entry threshold did not fire")
+	}
+	if !(&Store{uncompactedWALBytes: walByteFlushThreshold}).walThresholdExceeded() {
+		t.Fatalf("byte threshold did not fire")
+	}
+}
+
 func TestOpenRejectsInvalidDataBloomAndContainer(t *testing.T) {
 	checksumPath := tempPath(t)
 	writeStoreFile(t, checksumPath, state.New(), nil)
@@ -177,6 +350,23 @@ func tempPath(t *testing.T) string {
 		t.Fatal(err)
 	}
 	return path
+}
+
+func readWALRecords(t *testing.T, path string) []wal.Record {
+	t.Helper()
+	file, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	container, _, err := format.DecodeContainer(file)
+	if err != nil {
+		t.Fatal(err)
+	}
+	records, err := wal.DecodeRecordsStrict(container.WAL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return records
 }
 
 func writeStoreFile(t *testing.T, path string, s *state.State, walPayload []byte) {

@@ -52,7 +52,7 @@ func TestConformanceFixtureLevel3Validation(t *testing.T) {
 		wantSections := []Section{
 			{Type: SectionData, Offset: 115, Length: 176},
 			{Type: SectionBloom, Offset: 291, Length: 28},
-			{Type: SectionWAL, Offset: 319, Length: 192},
+			{Type: SectionWAL, Offset: 319, Length: 197},
 		}
 		if len(sections) != len(wantSections) {
 			t.Fatalf("decoded %d sections, want %d", len(sections), len(wantSections))
@@ -62,7 +62,7 @@ func TestConformanceFixtureLevel3Validation(t *testing.T) {
 				t.Fatalf("section %d = %+v, want %+v", i, sections[i], wantSections[i])
 			}
 		}
-		assertHexBytes(t, "section table bytes", file[HeaderSize:int(wantSections[0].Offset)], "017300000000000000b0000000000000000223010000000000001c00000000000000033f01000000000000c000000000000000")
+		assertHexBytes(t, "section table bytes", file[HeaderSize:int(wantSections[0].Offset)], "017300000000000000b0000000000000000223010000000000001c00000000000000033f01000000000000c500000000000000")
 	})
 
 	entries, err := DecodeDataEntries(container.Data)
@@ -122,7 +122,7 @@ func TestConformanceFixtureLevel3Validation(t *testing.T) {
 		if len(committed) != 2 || committed[0].Operation != wal.OpPutNode || committed[1].Operation != wal.OpPutEdge {
 			t.Fatalf("unexpected replay records: %#v", committed)
 		}
-		assertHexBytes(t, "first WAL record header", container.WAL[:13], "0100000000000000013b000000")
+		assertHexBytes(t, "first WAL record header", container.WAL[:13], "01000000000000000140000000")
 	})
 
 	t.Run("whole container round trip", func(t *testing.T) {
