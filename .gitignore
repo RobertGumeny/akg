@@ -1,0 +1,61 @@
+# Go build outputs
+/bin/
+/build/
+/dist/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go test, coverage, fuzz, and profiling artifacts
+coverage.out
+coverage.html
+*.cover
+*.prof
+*.pprof
+cpu.out
+mem.out
+trace.out
+/testdata/fuzz/
+
+# Go workspace/vendor files that should not be committed unless intentionally used
+go.work
+go.work.sum
+/vendor/
+
+# Local AKG files generated while testing manually.
+# Keep curated fixtures under testdata/conformance tracked.
+*.akg
+!testdata/conformance/*.akg
+*.akg.tmp
+*.akg.bak
+*.akg.compact
+*.wal
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Editor and IDE metadata
+.vscode/
+.idea/
+*.code-workspace
+
+# Local environment/secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Agent/tooling scratch space
+.pi/
+.agents/
