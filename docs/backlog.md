@@ -87,7 +87,7 @@ Three epics, in order. Don't start epic 2 until epic 1's conformance tests pass.
   - **New test:** Add a test that creates two nodes of different types sharing the same ID string, connects one via an edge, and verifies that `OutboundEdges` on the other type returns empty rather than the wrong edge.
   - **Done when:** `go test ./...` passes, all affected conformance fixtures are regenerated with correct SHA256s in `manifest.json`, and the cross-type collision test passes.
 
-- [ ] **1.10 Add ListNodes (enumerate all nodes, optionally by type)**
+- [x] **1.10 Add ListNodes (enumerate all nodes, optionally by type)**
   - There is currently no way to enumerate all live nodes without knowing their tags. Agents iterating the full graph context have no entry point.
   - Implement `ListNodes(typeName string) ([]Node, error)` on `*Store`. If `typeName` is empty, return all live nodes. If non-empty, return only nodes of that type. Results sorted by node key (consistent with `ListNodesByTag`).
   - If `typeName` is non-empty, validate it with `validateComponent` before scanning — consistent with how other methods validate their inputs.
@@ -98,6 +98,20 @@ Three epics, in order. Don't start epic 2 until epic 1's conformance tests pass.
   - `Close()` commits any pending mutations before closing — this is the intended, idiomatic behavior. `Commit()` is a no-op (returns `nil`) when there is nothing pending — also intentional. Calling `Close()` on an already-closed store returns `nil` silently — also intentional. All three behaviors are undocumented.
   - Update the doc comment on `Close` to state: (1) it commits pending mutations before closing, (2) calling it on an already-closed store is a no-op. Update the doc comment on `Commit` to state that it is a no-op when there are no pending mutations.
   - **Done when:** both doc comments are updated and tests cover: commit-on-close (mutations written after last `Commit` survive a `Close` + `Open` round-trip), no-op on empty pending (`Commit` called twice in a row returns `nil` and does not corrupt state), and close-on-already-closed (returns `nil`).
+
+- [ ] **1.12 Conformance fixture housekeeping (three small items from 1.9b)**
+  - Three friction points surfaced during 1.9b that are worth fixing before the next format change.
+  - **1.12a — Fix the `m2-reject-malformed-committed-wal` corruption note.** The manifest `corruption` field currently says "one byte in the committed WAL record is flipped", which is too vague. A reader has to trace `decodeWALRecord` to understand why the fixture yields `invalid_wal_record` and not `wal_checksum_mismatch`. Update the note to state: "the length field (bytes 9–12) is overwritten to `0x7FFFFFFF`, triggering the buffer-size check in `decodeWALRecord` before the CRC check, yielding `errInvalidWALRecord`." No file or code changes — manifest only.
+  - **1.12b — Consolidate fixture generators.** `cmd/gen_delete_fixtures` is now a strict subset of `gen_conformance_fixtures_test.go` — the internal test file covers all four of its fixtures and has access to internals when needed. Delete `cmd/gen_delete_fixtures/main.go` and update `manifest.json` `generated_by` fields for the four affected fixtures to point at `Go SDK TestGenEdgeConformanceFixtures`.
+  - **1.12c — Tag fixtures with what they touch.** The blast radius of the 1.9b edge format change had to be discovered by running tests and reading failures; the manifest gave no upfront signal. Add a `"features"` array field to each manifest entry listing the logical capabilities exercised (e.g. `["edges"]`, `["wal"]`, `["bloom"]`, `["edge_wal"]`). No test changes — this field is informational and ignored by the conformance runner. Update `README.md` to document the field. The goal is that the next format change can `grep "edges"` the manifest and know its fixture blast radius before touching code.
+  - **Done when:** (a) the manifest corruption note is updated; (b) `cmd/gen_delete_fixtures` is deleted and manifest `generated_by` fields reflect the new generator; (c) every manifest entry has a `features` field and the README documents it.
+
+- [ ] **1.13 Tighten validateComponent to match validateTag character rules**
+  - `validateComponent` currently accepts any non-empty, valid UTF-8 string that does not contain `:`. This means type names and relation names can contain uppercase letters, spaces, punctuation, and other characters that would be rejected by `validateTag`. The TS SDK will inherit whatever contract is locked in here, so tighten it now before that work begins.
+  - Update `validateComponent` in `keys_internal.go` to enforce the same character rules as `validateTag`: lowercase `a–z`, digits `0–9`, and underscores — with underscores disallowed at the start, the end, or consecutively.
+  - `validateTag` calls `validateComponent` as its first check and then applies the same character loop — after this change, `validateTag` can delegate entirely to `validateComponent` and remove its own duplicate loop, or the two can be collapsed into one function. Either way, there should be no duplicated validation logic.
+  - Update the existing `TestListNodes` test: replace `"bad:type"` with a value that is invalid under the new rules but valid under the old ones (e.g. `"BadType"`) to ensure the tightened check is actually exercised.
+  - **Done when:** `validateComponent` enforces lowercase-alphanumeric-underscore, `validateTag` contains no duplicate character logic, and `go test ./...` passes with updated test coverage.
 
 ---
 

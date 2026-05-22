@@ -523,3 +523,72 @@ func TestEdgeRoundTripAcrossCloseReopenAndUpdate(t *testing.T) {
 		t.Fatalf("unexpected reopened inbound edges: %#v", inbound)
 	}
 }
+
+func TestListNodes(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "listnodes.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	_, err = st.PutNode("note", "n1", NodeFields{Title: "Note 1"}, nil)
+	if err != nil {
+		t.Fatalf("PutNode note n1: %v", err)
+	}
+	_, err = st.PutNode("note", "n2", NodeFields{Title: "Note 2"}, nil)
+	if err != nil {
+		t.Fatalf("PutNode note n2: %v", err)
+	}
+	_, err = st.PutNode("card", "c1", NodeFields{Title: "Card 1"}, nil)
+	if err != nil {
+		t.Fatalf("PutNode card c1: %v", err)
+	}
+
+	// all nodes (empty typeName)
+	all, err := st.ListNodes("")
+	if err != nil {
+		t.Fatalf("ListNodes empty: %v", err)
+	}
+	if len(all) != 3 {
+		t.Fatalf("expected 3 nodes, got %d: %#v", len(all), all)
+	}
+
+	// type-filtered
+	notes, err := st.ListNodes("note")
+	if err != nil {
+		t.Fatalf("ListNodes note: %v", err)
+	}
+	if len(notes) != 2 {
+		t.Fatalf("expected 2 note nodes, got %d", len(notes))
+	}
+	for _, n := range notes {
+		if n.Type != "note" {
+			t.Fatalf("unexpected type in filtered result: %s", n.Type)
+		}
+	}
+
+	// unknown type returns empty, not error
+	unknown, err := st.ListNodes("ghost")
+	if err != nil {
+		t.Fatalf("ListNodes unknown: %v", err)
+	}
+	if len(unknown) != 0 {
+		t.Fatalf("expected empty for unknown type, got %d nodes", len(unknown))
+	}
+
+	// invalid typeName (contains colon) returns error
+	_, err = st.ListNodes("bad:type")
+	if err == nil {
+		t.Fatal("expected error for invalid typeName")
+	}
+
+	// results are sorted consistently (same order as a second call)
+	all2, err := st.ListNodes("")
+	if err != nil {
+		t.Fatalf("ListNodes second call: %v", err)
+	}
+	for i := range all {
+		if all[i].ID != all2[i].ID || all[i].Type != all2[i].Type {
+			t.Fatalf("sort not stable between calls: %v vs %v", all[i], all2[i])
+		}
+	}
+}

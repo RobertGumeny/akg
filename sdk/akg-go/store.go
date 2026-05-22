@@ -150,6 +150,37 @@ func (s *Store) ListNodesByTag(tag string) ([]Node, error) {
 	return nodes, nil
 }
 
+// ListNodes returns all current live nodes. If typeName is non-empty, only nodes of
+// that type are returned. Results are sorted by node key. An unknown type returns an
+// empty slice and nil error.
+func (s *Store) ListNodes(typeName string) ([]Node, error) {
+	if s == nil || s.closed {
+		return nil, errInvalidInput
+	}
+	if typeName != "" {
+		if err := validateComponent(typeName); err != nil {
+			return nil, err
+		}
+	}
+	matches := make([]nodeRecord, 0)
+	for _, rec := range s.state.nodes {
+		if typeName != "" && rec.Node.Type != typeName {
+			continue
+		}
+		matches = append(matches, cloneNodeRecord(rec))
+	}
+	sort.Slice(matches, func(i, j int) bool {
+		ik, _ := buildNodeKey(matches[i].Node.Type, matches[i].ID)
+		jk, _ := buildNodeKey(matches[j].Node.Type, matches[j].ID)
+		return bytes.Compare(ik, jk) < 0
+	})
+	nodes := make([]Node, len(matches))
+	for i, rec := range matches {
+		nodes[i] = *nodeFromRecord(rec)
+	}
+	return nodes, nil
+}
+
 // PutEdge writes or replaces the current live edge for (fromRef, relation, toRef).
 // Both referenced nodes must already exist. Strength defaults to 0.5 if zero.
 func (s *Store) PutEdge(fromRef NodeRef, relationValue string, toRef NodeRef, fields EdgeFields) error {
