@@ -183,7 +183,7 @@ func (s *Store) ListNodes(typeName string) ([]Node, error) {
 }
 
 // PutEdge writes or replaces the current live edge for (fromRef, relation, toRef).
-// Both referenced nodes must already exist. Strength defaults to 0.5 if zero.
+// Both referenced nodes must already exist.
 func (s *Store) PutEdge(fromRef NodeRef, relationValue string, toRef NodeRef, fields EdgeFields) error {
 	if s == nil || s.closed {
 		return ErrInvalidInput

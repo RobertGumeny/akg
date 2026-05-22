@@ -15,7 +15,7 @@ func TestWALRoundTripAllOperationsAndPayloadValidation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	edgePayload, err := record.EncodeEdgePayload(record.Edge{FromNode: "a", Relation: "links", ToNode: "b", CreatedAt: 3, UpdatedAt: 4})
+	edgePayload, err := record.EncodeEdgePayload(record.Edge{FromType: "note", FromNode: "a", Relation: "links", ToType: "note", ToNode: "b", CreatedAt: 3, UpdatedAt: 4})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -23,7 +23,7 @@ func TestWALRoundTripAllOperationsAndPayloadValidation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	deleteEdgePayload, err := record.EncodeEdgeDeletePayload(record.EdgeDelete{FromNode: "a", Relation: "links", ToNode: "b"})
+	deleteEdgePayload, err := record.EncodeEdgeDeletePayload(record.EdgeDelete{FromType: "note", FromNode: "a", Relation: "links", ToType: "note", ToNode: "b"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -76,7 +76,15 @@ func TestWALRoundTripAllOperationsAndPayloadValidation(t *testing.T) {
 
 func TestWALDeletePayloadsTolerateUnknownReadFields(t *testing.T) {
 	deleteNodeWithExtra := []byte{0x83, 0xa2, 'i', 'd', 0xa1, 'n', 0xa5, 'e', 'x', 't', 'r', 'a', 0xc3, 0xa4, 't', 'y', 'p', 'e', 0xa4, 'n', 'o', 't', 'e'}
-	deleteEdgeWithExtra := []byte{0x84, 0xa9, 'f', 'r', 'o', 'm', '_', 'n', 'o', 'd', 'e', 0xa1, 'a', 0xa8, 'r', 'e', 'l', 'a', 't', 'i', 'o', 'n', 0xa5, 'l', 'i', 'n', 'k', 's', 0xa7, 't', 'o', '_', 'n', 'o', 'd', 'e', 0xa1, 'b', 0xa7, 'i', 'g', 'n', 'o', 'r', 'e', 'd', 0xcc, 0x2a}
+	deleteEdgeWithExtra := []byte{
+		0x86,
+		0xae, 'f', 'r', 'o', 'm', '_', 'n', 'o', 'd', 'e', '_', 't', 'y', 'p', 'e', 0xa4, 'n', 'o', 't', 'e',
+		0xa9, 'f', 'r', 'o', 'm', '_', 'n', 'o', 'd', 'e', 0xa1, 'a',
+		0xa8, 'r', 'e', 'l', 'a', 't', 'i', 'o', 'n', 0xa5, 'l', 'i', 'n', 'k', 's',
+		0xac, 't', 'o', '_', 'n', 'o', 'd', 'e', '_', 't', 'y', 'p', 'e', 0xa4, 'n', 'o', 't', 'e',
+		0xa7, 't', 'o', '_', 'n', 'o', 'd', 'e', 0xa1, 'b',
+		0xa7, 'i', 'g', 'n', 'o', 'r', 'e', 'd', 0xcc, 0x2a,
+	}
 	for _, r := range []Record{{Operation: OpDeleteNode, Payload: deleteNodeWithExtra}, {Operation: OpDeleteEdge, Payload: deleteEdgeWithExtra}} {
 		if err := ValidatePayload(r); err != nil {
 			t.Fatalf("delete with extra field rejected: %v", err)

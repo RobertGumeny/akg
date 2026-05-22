@@ -119,9 +119,6 @@ func (n coreNode) validateForWrite() error {
 }
 
 func (e *coreEdge) applyReadDefaults() {
-	if e.Strength == 0 {
-		e.Strength = 0.5
-	}
 	if e.Meta == nil {
 		e.Meta = map[string]any{}
 	}

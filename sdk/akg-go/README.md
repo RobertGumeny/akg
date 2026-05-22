@@ -79,7 +79,7 @@ nodes must already exist.
 
 | Field        | Required | Type            | Default |
 |--------------|----------|-----------------|---------|
-| `Strength`   | no       | `float64`       | `0.5`   |
+| `Strength`   | no       | `float64`       | `0.0`   |
 | `Confidence` | no       | `*float64`      | nil     |
 | `Meta`       | no       | `map[string]any`| nil     |
 

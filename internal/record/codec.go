@@ -106,7 +106,7 @@ func EncodeEdgePayload(e Edge) ([]byte, error) {
 	if err := e.ValidateForWrite(); err != nil {
 		return nil, err
 	}
-	m := map[string]any{"from_node": string(e.FromNode), "to_node": string(e.ToNode), "relation": string(e.Relation), "created_at": uint64(e.CreatedAt), "updated_at": uint64(e.UpdatedAt)}
+	m := map[string]any{"from_node_type": e.FromType, "from_node": string(e.FromNode), "to_node_type": e.ToType, "to_node": string(e.ToNode), "relation": string(e.Relation), "created_at": uint64(e.CreatedAt), "updated_at": uint64(e.UpdatedAt)}
 	if e.Strength != 0 {
 		m["strength"] = e.Strength
 	}
@@ -131,8 +131,16 @@ func DecodeEdgePayload(b []byte) (Edge, error) {
 	if !ok {
 		return Edge{}, ErrInvalidPayload
 	}
+	fromType, ok := m["from_node_type"].(string)
+	if !ok || fromType == "" {
+		return Edge{}, ErrMissingRequiredField
+	}
 	from, ok := m["from_node"].(string)
 	if !ok || from == "" {
+		return Edge{}, ErrMissingRequiredField
+	}
+	toType, ok := m["to_node_type"].(string)
+	if !ok || toType == "" {
 		return Edge{}, ErrMissingRequiredField
 	}
 	to, ok := m["to_node"].(string)
@@ -143,7 +151,7 @@ func DecodeEdgePayload(b []byte) (Edge, error) {
 	if !ok || rel == "" {
 		return Edge{}, ErrMissingRequiredField
 	}
-	edge := Edge{FromNode: NodeID(from), ToNode: NodeID(to), Relation: Relation(rel)}
+	edge := Edge{FromType: fromType, FromNode: NodeID(from), ToType: toType, ToNode: NodeID(to), Relation: Relation(rel)}
 	if f, ok := asFloat(m["strength"]); ok {
 		edge.Strength = f
 	}

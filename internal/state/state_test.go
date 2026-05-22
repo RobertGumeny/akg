@@ -48,7 +48,7 @@ func TestPutNodeUpsertIncrementsVersionAndOwnsTimestamps(t *testing.T) {
 func TestPutEdgeUpsertIncrementsVersionAndAllowsDangling(t *testing.T) {
 	s := New(WithNow(tickingClock(200)))
 
-	created, err := s.PutEdge(record.Edge{FromNode: "missing-a", Relation: "prefers", ToNode: "missing-b", Strength: 0.7})
+	created, err := s.PutEdge(record.Edge{FromType: "note", FromNode: "missing-a", Relation: "prefers", ToType: "note", ToNode: "missing-b", Strength: 0.7})
 	if err != nil {
 		t.Fatalf("PutEdge create dangling: %v", err)
 	}
@@ -56,7 +56,7 @@ func TestPutEdgeUpsertIncrementsVersionAndAllowsDangling(t *testing.T) {
 		t.Fatalf("unexpected created edge: %+v", created)
 	}
 
-	updated, err := s.PutEdge(record.Edge{FromNode: "missing-a", Relation: "prefers", ToNode: "missing-b", Strength: 1.0})
+	updated, err := s.PutEdge(record.Edge{FromType: "note", FromNode: "missing-a", Relation: "prefers", ToType: "note", ToNode: "missing-b", Strength: 1.0})
 	if err != nil {
 		t.Fatalf("PutEdge update: %v", err)
 	}
@@ -114,13 +114,13 @@ func TestStrictDeleteNotFoundAndSuccessfulDeletes(t *testing.T) {
 	if err := s.DeleteNode("person", "missing"); !errors.Is(err, ErrNotFound) {
 		t.Fatalf("DeleteNode missing error = %v, want ErrNotFound", err)
 	}
-	if err := s.DeleteEdge("a", "rel", "b"); !errors.Is(err, ErrNotFound) {
+	if err := s.DeleteEdge("note", "a", "rel", "note", "b"); !errors.Is(err, ErrNotFound) {
 		t.Fatalf("DeleteEdge missing error = %v, want ErrNotFound", err)
 	}
 	if _, err := s.PutNode("n1", record.Node{Type: "person", Title: "Sam"}); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.PutEdge(record.Edge{FromNode: "a", Relation: "rel", ToNode: "b"}); err != nil {
+	if _, err := s.PutEdge(record.Edge{FromType: "note", FromNode: "a", Relation: "rel", ToType: "note", ToNode: "b"}); err != nil {
 		t.Fatal(err)
 	}
 	if err := s.DeleteNode("person", "n1"); err != nil {
@@ -129,10 +129,10 @@ func TestStrictDeleteNotFoundAndSuccessfulDeletes(t *testing.T) {
 	if _, ok := s.GetNode("person", "n1"); ok {
 		t.Fatalf("deleted node still present")
 	}
-	if err := s.DeleteEdge("a", "rel", "b"); err != nil {
+	if err := s.DeleteEdge("note", "a", "rel", "note", "b"); err != nil {
 		t.Fatalf("DeleteEdge existing: %v", err)
 	}
-	if _, ok := s.GetEdge("a", "rel", "b"); ok {
+	if _, ok := s.GetEdge("note", "a", "rel", "note", "b"); ok {
 		t.Fatalf("deleted edge still present")
 	}
 }
@@ -160,10 +160,10 @@ func TestTypeChangeIsIdentityChange(t *testing.T) {
 
 func TestPutEdgeRejectsInvalidKeyComponents(t *testing.T) {
 	s := New(WithNow(tickingClock(1)))
-	if _, err := s.PutEdge(record.Edge{FromNode: "bad:from", Relation: "rel", ToNode: "b"}); err == nil {
+	if _, err := s.PutEdge(record.Edge{FromType: "note", FromNode: "bad:from", Relation: "rel", ToType: "note", ToNode: "b"}); err == nil {
 		t.Fatalf("expected invalid from_node rejection")
 	}
-	if _, err := s.PutEdge(record.Edge{FromNode: "a", Relation: "bad:rel", ToNode: "b"}); err == nil {
+	if _, err := s.PutEdge(record.Edge{FromType: "note", FromNode: "a", Relation: "bad:rel", ToType: "note", ToNode: "b"}); err == nil {
 		t.Fatalf("expected invalid relation rejection")
 	}
 }

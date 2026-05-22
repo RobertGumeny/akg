@@ -77,8 +77,10 @@ func run(path string) error {
 	// Edges make relationships explicit. An edge identity is the triple
 	// (from node, relation, to node), so later we can read this exact edge back.
 	if _, err := store.PutEdge(akg.Edge{
+		FromType:  "note",
 		FromNode:  "paper-akg-v1",
 		Relation:  "supports",
+		ToType:    "decision",
 		ToNode:    "decision-minimal-api",
 		Strength:  0.9,
 		CreatedAt: now,
@@ -88,8 +90,10 @@ func run(path string) error {
 		return fmt.Errorf("put supports edge: %w", err)
 	}
 	if _, err := store.PutEdge(akg.Edge{
+		FromType:  "note",
 		FromNode:  "conformance-corpus",
 		Relation:  "checks",
+		ToType:    "note",
 		ToNode:    "paper-akg-v1",
 		Strength:  0.8,
 		CreatedAt: now,
@@ -125,7 +129,7 @@ func run(path string) error {
 	if !ok {
 		return errors.New("expected decision decision-minimal-api after reopen")
 	}
-	edge, ok := reopened.GetEdge("paper-akg-v1", "supports", "decision-minimal-api")
+	edge, ok := reopened.GetEdge("note", "paper-akg-v1", "supports", "decision", "decision-minimal-api")
 	if !ok {
 		return errors.New("expected supports edge after reopen")
 	}

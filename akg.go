@@ -33,9 +33,11 @@ type NodeRecord struct {
 }
 
 // Edge is the public current-state edge payload. Its identity is
-// (from_node, relation, to_node).
+// (from_node_type, from_node, relation, to_node_type, to_node).
 type Edge struct {
+	FromType   string         `json:"from_node_type"`
 	FromNode   string         `json:"from_node"`
+	ToType     string         `json:"to_node_type"`
 	ToNode     string         `json:"to_node"`
 	Relation   string         `json:"relation"`
 	Strength   float64        `json:"strength"`
@@ -100,9 +102,9 @@ func (s *Store) DeleteNode(typeName, id string) error {
 	return s.inner.DeleteNode(typeName, record.NodeID(id))
 }
 
-// DeleteEdge deletes an existing edge by (from_node, relation, to_node).
-func (s *Store) DeleteEdge(fromNode, relation, toNode string) error {
-	return s.inner.DeleteEdge(record.NodeID(fromNode), record.Relation(relation), record.NodeID(toNode))
+// DeleteEdge deletes an existing edge by (from_node_type, from_node, relation, to_node_type, to_node).
+func (s *Store) DeleteEdge(fromType, fromNode, relation, toType, toNode string) error {
+	return s.inner.DeleteEdge(fromType, record.NodeID(fromNode), record.Relation(relation), toType, record.NodeID(toNode))
 }
 
 // GetNode returns a current live node by (type, id).
@@ -114,9 +116,9 @@ func (s *Store) GetNode(typeName, id string) (NodeRecord, bool) {
 	return fromStateNode(rec), true
 }
 
-// GetEdge returns a current live edge by (from_node, relation, to_node).
-func (s *Store) GetEdge(fromNode, relation, toNode string) (Edge, bool) {
-	edge, ok := s.inner.State().GetEdge(record.NodeID(fromNode), record.Relation(relation), record.NodeID(toNode))
+// GetEdge returns a current live edge by (from_node_type, from_node, relation, to_node_type, to_node).
+func (s *Store) GetEdge(fromType, fromNode, relation, toType, toNode string) (Edge, bool) {
+	edge, ok := s.inner.State().GetEdge(fromType, record.NodeID(fromNode), record.Relation(relation), toType, record.NodeID(toNode))
 	if !ok {
 		return Edge{}, false
 	}
@@ -168,11 +170,11 @@ func fromStateNode(rec state.NodeRecord) NodeRecord {
 }
 
 func toRecordEdge(e Edge) record.Edge {
-	return record.Edge{FromNode: record.NodeID(e.FromNode), ToNode: record.NodeID(e.ToNode), Relation: record.Relation(e.Relation), Strength: e.Strength, Confidence: cloneFloat(e.Confidence), Meta: cloneMap(e.Meta), CreatedAt: record.TimestampMicros(e.CreatedAt), UpdatedAt: record.TimestampMicros(e.UpdatedAt), Version: record.Version(e.Version)}
+	return record.Edge{FromType: e.FromType, FromNode: record.NodeID(e.FromNode), ToType: e.ToType, ToNode: record.NodeID(e.ToNode), Relation: record.Relation(e.Relation), Strength: e.Strength, Confidence: cloneFloat(e.Confidence), Meta: cloneMap(e.Meta), CreatedAt: record.TimestampMicros(e.CreatedAt), UpdatedAt: record.TimestampMicros(e.UpdatedAt), Version: record.Version(e.Version)}
 }
 
 func fromRecordEdge(e record.Edge) Edge {
-	return Edge{FromNode: string(e.FromNode), ToNode: string(e.ToNode), Relation: string(e.Relation), Strength: e.Strength, Confidence: cloneFloat(e.Confidence), Meta: cloneMap(e.Meta), CreatedAt: uint64(e.CreatedAt), UpdatedAt: uint64(e.UpdatedAt), Version: uint32(e.Version)}
+	return Edge{FromType: e.FromType, FromNode: string(e.FromNode), ToType: e.ToType, ToNode: string(e.ToNode), Relation: string(e.Relation), Strength: e.Strength, Confidence: cloneFloat(e.Confidence), Meta: cloneMap(e.Meta), CreatedAt: uint64(e.CreatedAt), UpdatedAt: uint64(e.UpdatedAt), Version: uint32(e.Version)}
 }
 
 func cloneStrings(in []string) []string {

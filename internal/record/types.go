@@ -24,9 +24,11 @@ type Node struct {
 }
 
 // Edge is the canonical AKG edge payload shape. Its identity is the tuple
-// (FromNode, Relation, ToNode).
+// (FromType, FromNode, Relation, ToType, ToNode).
 type Edge struct {
+	FromType   string
 	FromNode   NodeID
+	ToType     string
 	ToNode     NodeID
 	Relation   Relation
 	Strength   float64
@@ -52,8 +54,10 @@ type NodeDelete struct {
 
 // EdgeDelete identifies an edge delete WAL payload.
 type EdgeDelete struct {
+	FromType string
 	FromNode NodeID
 	Relation Relation
+	ToType   string
 	ToNode   NodeID
 }
 
@@ -87,9 +91,6 @@ func (n Node) ValidateForWrite() error {
 // ApplyReadDefaults fills defaults that AKG readers apply for omitted optional
 // edge fields.
 func (e *Edge) ApplyReadDefaults() {
-	if e.Strength == 0 {
-		e.Strength = 0.5
-	}
 	if e.Meta == nil {
 		e.Meta = map[string]any{}
 	}
@@ -100,7 +101,7 @@ func (e *Edge) ApplyReadDefaults() {
 
 // ValidateForWrite enforces edge fields required of conformant writers.
 func (e Edge) ValidateForWrite() error {
-	if e.FromNode == "" || e.ToNode == "" || e.Relation == "" {
+	if e.FromType == "" || e.FromNode == "" || e.Relation == "" || e.ToType == "" || e.ToNode == "" {
 		return ErrMissingRequiredField
 	}
 	return nil
@@ -122,15 +123,17 @@ func (d NodeDelete) ValidateForWrite() error {
 // Map returns the MessagePack map identity shape for a DELETE_EDGE payload.
 func (d EdgeDelete) Map() map[string]any {
 	return map[string]any{
-		"from_node": string(d.FromNode),
-		"relation":  string(d.Relation),
-		"to_node":   string(d.ToNode),
+		"from_node_type": d.FromType,
+		"from_node":      string(d.FromNode),
+		"relation":       string(d.Relation),
+		"to_node_type":   d.ToType,
+		"to_node":        string(d.ToNode),
 	}
 }
 
 // ValidateForWrite enforces DELETE_EDGE required identity fields.
 func (d EdgeDelete) ValidateForWrite() error {
-	if d.FromNode == "" || d.Relation == "" || d.ToNode == "" {
+	if d.FromType == "" || d.FromNode == "" || d.Relation == "" || d.ToType == "" || d.ToNode == "" {
 		return ErrMissingRequiredField
 	}
 	return nil
@@ -153,6 +156,10 @@ func NodeDeleteFromMap(m map[string]any) (NodeDelete, error) {
 // EdgeDeleteFromMap decodes a DELETE_EDGE identity map and ignores unknown extra
 // fields, matching read-time WAL payload rules.
 func EdgeDeleteFromMap(m map[string]any) (EdgeDelete, error) {
+	fromType, ok := m["from_node_type"].(string)
+	if !ok || fromType == "" {
+		return EdgeDelete{}, ErrMissingRequiredField
+	}
 	from, ok := m["from_node"].(string)
 	if !ok || from == "" {
 		return EdgeDelete{}, ErrMissingRequiredField
@@ -161,9 +168,13 @@ func EdgeDeleteFromMap(m map[string]any) (EdgeDelete, error) {
 	if !ok || relation == "" {
 		return EdgeDelete{}, ErrMissingRequiredField
 	}
+	toType, ok := m["to_node_type"].(string)
+	if !ok || toType == "" {
+		return EdgeDelete{}, ErrMissingRequiredField
+	}
 	to, ok := m["to_node"].(string)
 	if !ok || to == "" {
 		return EdgeDelete{}, ErrMissingRequiredField
 	}
-	return EdgeDelete{FromNode: NodeID(from), Relation: Relation(relation), ToNode: NodeID(to)}, nil
+	return EdgeDelete{FromType: fromType, FromNode: NodeID(from), Relation: Relation(relation), ToType: toType, ToNode: NodeID(to)}, nil
 }

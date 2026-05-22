@@ -130,14 +130,14 @@ func (s *Store) DeleteNode(typeName string, id record.NodeID) error {
 	return nil
 }
 
-func (s *Store) DeleteEdge(from record.NodeID, relation record.Relation, to record.NodeID) error {
+func (s *Store) DeleteEdge(fromType string, from record.NodeID, relation record.Relation, toType string, to record.NodeID) error {
 	if s == nil || s.state == nil {
 		return state.ErrInvalidInput
 	}
-	if err := s.state.DeleteEdge(from, relation, to); err != nil {
+	if err := s.state.DeleteEdge(fromType, from, relation, toType, to); err != nil {
 		return err
 	}
-	payload, err := record.EncodeEdgeDeletePayload(record.EdgeDelete{FromNode: from, Relation: relation, ToNode: to})
+	payload, err := record.EncodeEdgeDeletePayload(record.EdgeDelete{FromType: fromType, FromNode: from, Relation: relation, ToType: toType, ToNode: to})
 	if err != nil {
 		return err
 	}
@@ -521,7 +521,7 @@ func replayWAL(s *state.State, records []wal.Record) error {
 			if err != nil {
 				return err
 			}
-			if err := s.DeleteEdge(del.FromNode, del.Relation, del.ToNode); err != nil {
+			if err := s.DeleteEdge(del.FromType, del.FromNode, del.Relation, del.ToType, del.ToNode); err != nil {
 				return err
 			}
 		default:

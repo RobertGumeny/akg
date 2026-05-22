@@ -32,17 +32,21 @@ type NodeKey struct {
 	ID   record.NodeID
 }
 
-// EdgeKey is the parsed identity carried by e:{from}:{relation}:{to} keys.
+// EdgeKey is the parsed identity carried by e:{fromType}:{fromID}:{relation}:{toType}:{toID} keys.
 type EdgeKey struct {
+	FromType string
 	FromNode record.NodeID
 	Relation record.Relation
+	ToType   string
 	ToNode   record.NodeID
 }
 
-// EdgeIndexKey is the parsed identity carried by ei:{to}:{relation}:{from} keys.
+// EdgeIndexKey is the parsed identity carried by ei:{toType}:{toID}:{relation}:{fromType}:{fromID} keys.
 type EdgeIndexKey struct {
+	ToType   string
 	ToNode   record.NodeID
 	Relation record.Relation
+	FromType string
 	FromNode record.NodeID
 }
 
@@ -85,54 +89,66 @@ func ParseNodeKey(key []byte) (NodeKey, error) {
 	return NodeKey{Type: parts[1], ID: id}, nil
 }
 
-func BuildEdgeKey(from record.NodeID, relation record.Relation, to record.NodeID) ([]byte, error) {
+func BuildEdgeKey(fromType string, from record.NodeID, relation record.Relation, toType string, to record.NodeID) ([]byte, error) {
+	if err := validateComponent(fromType); err != nil {
+		return nil, err
+	}
 	if err := validateNodeID(from); err != nil {
 		return nil, err
 	}
 	if err := validateComponent(string(relation)); err != nil {
 		return nil, err
 	}
+	if err := validateComponent(toType); err != nil {
+		return nil, err
+	}
 	if err := validateNodeID(to); err != nil {
 		return nil, err
 	}
-	return []byte(prefixEdge + ":" + string(from) + ":" + string(relation) + ":" + string(to)), nil
+	return []byte(prefixEdge + ":" + fromType + ":" + string(from) + ":" + string(relation) + ":" + toType + ":" + string(to)), nil
 }
 
 func ParseEdgeKey(key []byte) (EdgeKey, error) {
-	parts := splitKey(key, 4)
+	parts := splitKey(key, 6)
 	if parts == nil || parts[0] != prefixEdge {
 		return EdgeKey{}, ErrMalformedKey
 	}
-	from, relation, to := record.NodeID(parts[1]), record.Relation(parts[2]), record.NodeID(parts[3])
-	if validateNodeID(from) != nil || validateComponent(string(relation)) != nil || validateNodeID(to) != nil {
+	fromType, from, relation, toType, to := parts[1], record.NodeID(parts[2]), record.Relation(parts[3]), parts[4], record.NodeID(parts[5])
+	if validateComponent(fromType) != nil || validateNodeID(from) != nil || validateComponent(string(relation)) != nil || validateComponent(toType) != nil || validateNodeID(to) != nil {
 		return EdgeKey{}, ErrMalformedKey
 	}
-	return EdgeKey{FromNode: from, Relation: relation, ToNode: to}, nil
+	return EdgeKey{FromType: fromType, FromNode: from, Relation: relation, ToType: toType, ToNode: to}, nil
 }
 
-func BuildEdgeIndexKey(to record.NodeID, relation record.Relation, from record.NodeID) ([]byte, error) {
+func BuildEdgeIndexKey(toType string, to record.NodeID, relation record.Relation, fromType string, from record.NodeID) ([]byte, error) {
+	if err := validateComponent(toType); err != nil {
+		return nil, err
+	}
 	if err := validateNodeID(to); err != nil {
 		return nil, err
 	}
 	if err := validateComponent(string(relation)); err != nil {
 		return nil, err
 	}
+	if err := validateComponent(fromType); err != nil {
+		return nil, err
+	}
 	if err := validateNodeID(from); err != nil {
 		return nil, err
 	}
-	return []byte(prefixEdgeIndex + ":" + string(to) + ":" + string(relation) + ":" + string(from)), nil
+	return []byte(prefixEdgeIndex + ":" + toType + ":" + string(to) + ":" + string(relation) + ":" + fromType + ":" + string(from)), nil
 }
 
 func ParseEdgeIndexKey(key []byte) (EdgeIndexKey, error) {
-	parts := splitKey(key, 4)
+	parts := splitKey(key, 6)
 	if parts == nil || parts[0] != prefixEdgeIndex {
 		return EdgeIndexKey{}, ErrMalformedKey
 	}
-	to, relation, from := record.NodeID(parts[1]), record.Relation(parts[2]), record.NodeID(parts[3])
-	if validateNodeID(to) != nil || validateComponent(string(relation)) != nil || validateNodeID(from) != nil {
+	toType, to, relation, fromType, from := parts[1], record.NodeID(parts[2]), record.Relation(parts[3]), parts[4], record.NodeID(parts[5])
+	if validateComponent(toType) != nil || validateNodeID(to) != nil || validateComponent(string(relation)) != nil || validateComponent(fromType) != nil || validateNodeID(from) != nil {
 		return EdgeIndexKey{}, ErrMalformedKey
 	}
-	return EdgeIndexKey{ToNode: to, Relation: relation, FromNode: from}, nil
+	return EdgeIndexKey{ToType: toType, ToNode: to, Relation: relation, FromType: fromType, FromNode: from}, nil
 }
 
 func BuildTagKey(tag string, nodeID record.NodeID) ([]byte, error) {
@@ -168,8 +184,8 @@ func BuildTemporalNodeKey(timestamp record.TimestampMicros, nodeType string, id 
 	return []byte(prefixTemporal + ":" + strconv.FormatUint(uint64(timestamp), 10) + ":" + string(nodeKey)), nil
 }
 
-func BuildTemporalEdgeKey(timestamp record.TimestampMicros, from record.NodeID, relation record.Relation, to record.NodeID) ([]byte, error) {
-	edgeKey, err := BuildEdgeKey(from, relation, to)
+func BuildTemporalEdgeKey(timestamp record.TimestampMicros, fromType string, from record.NodeID, relation record.Relation, toType string, to record.NodeID) ([]byte, error) {
+	edgeKey, err := BuildEdgeKey(fromType, from, relation, toType, to)
 	if err != nil {
 		return nil, err
 	}

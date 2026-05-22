@@ -31,7 +31,7 @@ func TestMaterializeDataEntriesGeneratesPrimaryAndDerivedKeys(t *testing.T) {
 	if _, err := s.PutNode("n1", record.Node{Type: "person", Title: "Ada", Tags: []string{"alpha"}}); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.PutEdge(record.Edge{FromNode: "n1", Relation: "knows", ToNode: "n2", Strength: 0.9}); err != nil {
+	if _, err := s.PutEdge(record.Edge{FromType: "person", FromNode: "n1", Relation: "knows", ToType: "person", ToNode: "n2", Strength: 0.9}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -41,8 +41,8 @@ func TestMaterializeDataEntriesGeneratesPrimaryAndDerivedKeys(t *testing.T) {
 	}
 	got := entryMap(entries)
 	wantKeys := []string{
-		"e:n1:knows:n2",
-		"ei:n2:knows:n1",
+		"e:person:n1:knows:person:n2",
+		"ei:person:n2:knows:person:n1",
 		"n:person:n1",
 		"n:person:n2",
 		"t:alpha:n1",
@@ -50,12 +50,12 @@ func TestMaterializeDataEntriesGeneratesPrimaryAndDerivedKeys(t *testing.T) {
 		"t:graph:n2",
 		"ts:1000:n:person:n2",
 		"ts:2000:n:person:n1",
-		"ts:3000:e:n1:knows:n2",
+		"ts:3000:e:person:n1:knows:person:n2",
 	}
 	if !reflect.DeepEqual(keysOf(entries), wantKeys) {
 		t.Fatalf("keys mismatch\ngot  %q\nwant %q", keysOf(entries), wantKeys)
 	}
-	for _, key := range []string{"ei:n2:knows:n1", "t:alpha:n1", "t:beta:n2", "t:graph:n2", "ts:1000:n:person:n2", "ts:2000:n:person:n1", "ts:3000:e:n1:knows:n2"} {
+	for _, key := range []string{"ei:person:n2:knows:person:n1", "t:alpha:n1", "t:beta:n2", "t:graph:n2", "ts:1000:n:person:n2", "ts:2000:n:person:n1", "ts:3000:e:person:n1:knows:person:n2"} {
 		if value := got[key]; len(value) != 0 {
 			t.Fatalf("derived key %q value len = %d, want 0", key, len(value))
 		}
@@ -63,7 +63,7 @@ func TestMaterializeDataEntriesGeneratesPrimaryAndDerivedKeys(t *testing.T) {
 	if _, err := record.DecodeNodePayload(got["n:person:n1"]); err != nil {
 		t.Fatalf("node payload not canonical-decodable: %v", err)
 	}
-	if _, err := record.DecodeEdgePayload(got["e:n1:knows:n2"]); err != nil {
+	if _, err := record.DecodeEdgePayload(got["e:person:n1:knows:person:n2"]); err != nil {
 		t.Fatalf("edge payload not canonical-decodable: %v", err)
 	}
 }
@@ -76,7 +76,7 @@ func TestMaterializeDataEntriesIsDeterministicAndSorted(t *testing.T) {
 	if _, err := s.PutNode("a", record.Node{Type: "note", Title: "A", Tags: []string{"tag_a"}}); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.PutEdge(record.Edge{FromNode: "b", Relation: "rel", ToNode: "a"}); err != nil {
+	if _, err := s.PutEdge(record.Edge{FromType: "note", FromNode: "b", Relation: "rel", ToType: "note", ToNode: "a"}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -103,7 +103,7 @@ func TestMaterializedEntriesAreAcceptedByDataSectionDecoderWithEmptyIndexValues(
 	if _, err := s.PutNode("n1", record.Node{Type: "note", Title: "A", Tags: []string{"topic"}}); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.PutEdge(record.Edge{FromNode: "n1", Relation: "links", ToNode: "n2"}); err != nil {
+	if _, err := s.PutEdge(record.Edge{FromType: "note", FromNode: "n1", Relation: "links", ToType: "note", ToNode: "n2"}); err != nil {
 		t.Fatal(err)
 	}
 	entries, err := MaterializeDataEntries(s)
@@ -120,7 +120,7 @@ func TestMaterializedEntriesAreAcceptedByDataSectionDecoderWithEmptyIndexValues(
 	}
 	for _, entry := range decoded {
 		key := string(entry.Key)
-		if key == "ei:n2:links:n1" || key == "t:topic:n1" || key == "ts:1:n:note:n1" || key == "ts:2:e:n1:links:n2" {
+		if key == "ei:note:n2:links:note:n1" || key == "t:topic:n1" || key == "ts:1:n:note:n1" || key == "ts:2:e:note:n1:links:note:n2" {
 			if len(entry.Value) != 0 {
 				t.Fatalf("%q decoded value len = %d, want 0", key, len(entry.Value))
 			}
@@ -181,7 +181,7 @@ func TestHydrateDataEntriesRoundTripsMaterializedState(t *testing.T) {
 	if _, err := s.PutNode("b", record.Node{Type: "note", Title: "B"}); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.PutEdge(record.Edge{FromNode: "a", Relation: "links", ToNode: "b"}); err != nil {
+	if _, err := s.PutEdge(record.Edge{FromType: "note", FromNode: "a", Relation: "links", ToType: "note", ToNode: "b"}); err != nil {
 		t.Fatal(err)
 	}
 	entries, err := MaterializeDataEntries(s)
@@ -228,7 +228,7 @@ func TestHydrateDataEntriesValidatesDerivedIndexes(t *testing.T) {
 	if _, err := s.PutNode("n1", record.Node{Type: "note", Title: "A", Tags: []string{"topic"}}); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.PutEdge(record.Edge{FromNode: "n1", Relation: "links", ToNode: "n2"}); err != nil {
+	if _, err := s.PutEdge(record.Edge{FromType: "note", FromNode: "n1", Relation: "links", ToType: "note", ToNode: "n2"}); err != nil {
 		t.Fatal(err)
 	}
 	entries, err := MaterializeDataEntries(s)
@@ -240,7 +240,7 @@ func TestHydrateDataEntriesValidatesDerivedIndexes(t *testing.T) {
 		t.Fatalf("missing derived error = %v, want ErrDerivedIndexMismatch", err)
 	}
 	wrong := cloneEntries(entries)
-	wrong[indexOfKey(t, wrong, "ei:n2:links:n1")].Key = []byte("ei:n2:wrong:n1")
+	wrong[indexOfKey(t, wrong, "ei:note:n2:links:note:n1")].Key = []byte("ei:note:n2:wrong:note:n1")
 	if _, err := HydrateDataEntries(wrong); !errors.Is(err, ErrDerivedIndexMismatch) {
 		t.Fatalf("wrong derived error = %v, want ErrDerivedIndexMismatch", err)
 	}

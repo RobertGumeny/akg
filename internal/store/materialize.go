@@ -69,7 +69,7 @@ func MaterializeDataEntries(s *state.State) ([]format.DataEntry, error) {
 	}
 
 	for _, edge := range s.Edges() {
-		key, err := keys.BuildEdgeKey(edge.FromNode, edge.Relation, edge.ToNode)
+		key, err := keys.BuildEdgeKey(edge.FromType, edge.FromNode, edge.Relation, edge.ToType, edge.ToNode)
 		if err != nil {
 			return nil, err
 		}
@@ -80,14 +80,14 @@ func MaterializeDataEntries(s *state.State) ([]format.DataEntry, error) {
 		if err := add(key, value); err != nil {
 			return nil, err
 		}
-		inboundKey, err := keys.BuildEdgeIndexKey(edge.ToNode, edge.Relation, edge.FromNode)
+		inboundKey, err := keys.BuildEdgeIndexKey(edge.ToType, edge.ToNode, edge.Relation, edge.FromType, edge.FromNode)
 		if err != nil {
 			return nil, err
 		}
 		if err := add(inboundKey, nil); err != nil {
 			return nil, err
 		}
-		temporalKey, err := keys.BuildTemporalEdgeKey(edge.UpdatedAt, edge.FromNode, edge.Relation, edge.ToNode)
+		temporalKey, err := keys.BuildTemporalEdgeKey(edge.UpdatedAt, edge.FromType, edge.FromNode, edge.Relation, edge.ToType, edge.ToNode)
 		if err != nil {
 			return nil, err
 		}

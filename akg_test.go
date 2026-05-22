@@ -118,7 +118,7 @@ func TestPublicAPIEdgeReadsAndDelete(t *testing.T) {
 	if _, err := st.PutNode("b", akg.Node{Type: "note", Title: "B"}); err != nil {
 		t.Fatalf("PutNode b: %v", err)
 	}
-	if _, err := st.PutEdge(akg.Edge{FromNode: "a", Relation: "links", ToNode: "b"}); err != nil {
+	if _, err := st.PutEdge(akg.Edge{FromType: "note", FromNode: "a", Relation: "links", ToType: "note", ToNode: "b"}); err != nil {
 		t.Fatalf("PutEdge: %v", err)
 	}
 	if err := st.Commit(); err != nil {
@@ -129,13 +129,13 @@ func TestPublicAPIEdgeReadsAndDelete(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Open: %v", err)
 	}
-	if edge, ok := reopened.GetEdge("a", "links", "b"); !ok || edge.Relation != "links" {
+	if edge, ok := reopened.GetEdge("note", "a", "links", "note", "b"); !ok || edge.Relation != "links" {
 		t.Fatalf("GetEdge = %#v, %v", edge, ok)
 	}
 	if edges := reopened.ListEdges(); len(edges) != 1 {
 		t.Fatalf("ListEdges = %#v, want one edge", edges)
 	}
-	if err := reopened.DeleteEdge("a", "links", "b"); err != nil {
+	if err := reopened.DeleteEdge("note", "a", "links", "note", "b"); err != nil {
 		t.Fatalf("DeleteEdge: %v", err)
 	}
 	if err := reopened.Commit(); err != nil {
@@ -146,7 +146,7 @@ func TestPublicAPIEdgeReadsAndDelete(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Open after delete: %v", err)
 	}
-	if _, ok := deleted.GetEdge("a", "links", "b"); ok {
+	if _, ok := deleted.GetEdge("note", "a", "links", "note", "b"); ok {
 		t.Fatalf("deleted edge is visible")
 	}
 	if edges := deleted.ListEdges(); len(edges) != 0 {
@@ -197,7 +197,7 @@ func TestPublicAPICompactPreservesCurrentState(t *testing.T) {
 	if _, err := st.PutNode("b", akg.Node{Type: "note", Title: "B"}); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := st.PutEdge(akg.Edge{FromNode: "a", Relation: "links", ToNode: "b"}); err != nil {
+	if _, err := st.PutEdge(akg.Edge{FromType: "note", FromNode: "a", Relation: "links", ToType: "note", ToNode: "b"}); err != nil {
 		t.Fatal(err)
 	}
 	if err := st.Compact(); err != nil {

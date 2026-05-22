@@ -54,7 +54,7 @@ func HydrateDataEntries(entries []format.DataEntry) (*state.State, error) {
 			if err != nil {
 				return nil, err
 			}
-			if edge.FromNode != parsed.FromNode || edge.Relation != parsed.Relation || edge.ToNode != parsed.ToNode {
+			if edge.FromType != parsed.FromType || edge.FromNode != parsed.FromNode || edge.Relation != parsed.Relation || edge.ToType != parsed.ToType || edge.ToNode != parsed.ToNode {
 				return nil, ErrIdentityMismatch
 			}
 			if err := s.LoadEdge(edge); err != nil {

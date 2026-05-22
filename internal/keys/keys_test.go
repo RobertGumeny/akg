@@ -26,35 +26,35 @@ func TestNodeKeyBuildParse(t *testing.T) {
 }
 
 func TestEdgeKeyBuildParse(t *testing.T) {
-	key, err := BuildEdgeKey("a", "links_to", "b")
+	key, err := BuildEdgeKey("note", "a", "links_to", "task", "b")
 	if err != nil {
 		t.Fatalf("BuildEdgeKey: %v", err)
 	}
-	if got, want := string(key), "e:a:links_to:b"; got != want {
+	if got, want := string(key), "e:note:a:links_to:task:b"; got != want {
 		t.Fatalf("key = %q, want %q", got, want)
 	}
 	parsed, err := ParseEdgeKey(key)
 	if err != nil {
 		t.Fatalf("ParseEdgeKey: %v", err)
 	}
-	if parsed != (EdgeKey{FromNode: "a", Relation: "links_to", ToNode: "b"}) {
+	if parsed != (EdgeKey{FromType: "note", FromNode: "a", Relation: "links_to", ToType: "task", ToNode: "b"}) {
 		t.Fatalf("parsed = %#v", parsed)
 	}
 }
 
 func TestEdgeIndexKeyBuildParse(t *testing.T) {
-	key, err := BuildEdgeIndexKey("b", "links_to", "a")
+	key, err := BuildEdgeIndexKey("task", "b", "links_to", "note", "a")
 	if err != nil {
 		t.Fatalf("BuildEdgeIndexKey: %v", err)
 	}
-	if got, want := string(key), "ei:b:links_to:a"; got != want {
+	if got, want := string(key), "ei:task:b:links_to:note:a"; got != want {
 		t.Fatalf("key = %q, want %q", got, want)
 	}
 	parsed, err := ParseEdgeIndexKey(key)
 	if err != nil {
 		t.Fatalf("ParseEdgeIndexKey: %v", err)
 	}
-	if parsed != (EdgeIndexKey{ToNode: "b", Relation: "links_to", FromNode: "a"}) {
+	if parsed != (EdgeIndexKey{ToType: "task", ToNode: "b", Relation: "links_to", FromType: "note", FromNode: "a"}) {
 		t.Fatalf("parsed = %#v", parsed)
 	}
 }
@@ -94,18 +94,18 @@ func TestTemporalNodeKeyBuildParse(t *testing.T) {
 }
 
 func TestTemporalEdgeKeyBuildParse(t *testing.T) {
-	key, err := BuildTemporalEdgeKey(1700000000000001, "a", "links_to", "b")
+	key, err := BuildTemporalEdgeKey(1700000000000001, "note", "a", "links_to", "task", "b")
 	if err != nil {
 		t.Fatalf("BuildTemporalEdgeKey: %v", err)
 	}
-	if got, want := string(key), "ts:1700000000000001:e:a:links_to:b"; got != want {
+	if got, want := string(key), "ts:1700000000000001:e:note:a:links_to:task:b"; got != want {
 		t.Fatalf("key = %q, want %q", got, want)
 	}
 	parsed, err := ParseTemporalKey(key)
 	if err != nil {
 		t.Fatalf("ParseTemporalKey: %v", err)
 	}
-	if parsed.Timestamp != 1700000000000001 || parsed.Kind != "e" || parsed.Edge != (EdgeKey{FromNode: "a", Relation: "links_to", ToNode: "b"}) {
+	if parsed.Timestamp != 1700000000000001 || parsed.Kind != "e" || parsed.Edge != (EdgeKey{FromType: "note", FromNode: "a", Relation: "links_to", ToType: "task", ToNode: "b"}) {
 		t.Fatalf("parsed = %#v", parsed)
 	}
 }
@@ -119,9 +119,11 @@ func TestBuildersRejectInvalidInputs(t *testing.T) {
 		{"node empty type", func() ([]byte, error) { return BuildNodeKey("", "id") }},
 		{"node id colon", func() ([]byte, error) { return BuildNodeKey("note", "bad:id") }},
 		{"node id too long", func() ([]byte, error) { return BuildNodeKey("note", longID) }},
-		{"edge empty from", func() ([]byte, error) { return BuildEdgeKey("", "rel", "b") }},
-		{"edge relation colon", func() ([]byte, error) { return BuildEdgeKey("a", "bad:rel", "b") }},
-		{"edge index empty to", func() ([]byte, error) { return BuildEdgeIndexKey("", "rel", "a") }},
+		{"edge empty from type", func() ([]byte, error) { return BuildEdgeKey("", "a", "rel", "note", "b") }},
+		{"edge empty from", func() ([]byte, error) { return BuildEdgeKey("note", "", "rel", "note", "b") }},
+		{"edge relation colon", func() ([]byte, error) { return BuildEdgeKey("note", "a", "bad:rel", "note", "b") }},
+		{"edge index empty to type", func() ([]byte, error) { return BuildEdgeIndexKey("", "b", "rel", "note", "a") }},
+		{"edge index empty to", func() ([]byte, error) { return BuildEdgeIndexKey("note", "", "rel", "note", "a") }},
 		{"tag uppercase", func() ([]byte, error) { return BuildTagKey("Bad", "id") }},
 		{"tag spaces", func() ([]byte, error) { return BuildTagKey("bad tag", "id") }},
 		{"tag double underscore", func() ([]byte, error) { return BuildTagKey("bad__tag", "id") }},
@@ -146,9 +148,9 @@ func TestParsersRejectMalformedKeys(t *testing.T) {
 		{"node incomplete", []byte("n:note"), func(k []byte) error { _, err := ParseNodeKey(k); return err }},
 		{"node ambiguous extra delimiter", []byte("n:note:id:extra"), func(k []byte) error { _, err := ParseNodeKey(k); return err }},
 		{"node wrong prefix", []byte("x:note:id"), func(k []byte) error { _, err := ParseNodeKey(k); return err }},
-		{"edge incomplete", []byte("e:a:rel"), func(k []byte) error { _, err := ParseEdgeKey(k); return err }},
-		{"edge empty component", []byte("e:a::b"), func(k []byte) error { _, err := ParseEdgeKey(k); return err }},
-		{"edge index wrong prefix", []byte("e:b:rel:a"), func(k []byte) error { _, err := ParseEdgeIndexKey(k); return err }},
+		{"edge incomplete", []byte("e:note:a:rel:note"), func(k []byte) error { _, err := ParseEdgeKey(k); return err }},
+		{"edge empty component", []byte("e:note:a::note:b"), func(k []byte) error { _, err := ParseEdgeKey(k); return err }},
+		{"edge index wrong prefix", []byte("e:note:b:rel:note:a"), func(k []byte) error { _, err := ParseEdgeIndexKey(k); return err }},
 		{"tag uppercase", []byte("t:Bad:id"), func(k []byte) error { _, err := ParseTagKey(k); return err }},
 		{"temporal missing suffix", []byte("ts:123"), func(k []byte) error { _, err := ParseTemporalKey(k); return err }},
 		{"temporal unknown kind", []byte("ts:123:x:a:b"), func(k []byte) error { _, err := ParseTemporalKey(k); return err }},
@@ -169,8 +171,8 @@ func TestRawBytewiseLexicographicOrdering(t *testing.T) {
 	noteA, _ := BuildNodeKey("note", "a")
 	noteB, _ := BuildNodeKey("note", "b")
 	taskA, _ := BuildNodeKey("task", "a")
-	edge, _ := BuildEdgeKey("a", "rel", "b")
-	inbound, _ := BuildEdgeIndexKey("b", "rel", "a")
+	edge, _ := BuildEdgeKey("note", "a", "rel", "note", "b")
+	inbound, _ := BuildEdgeIndexKey("note", "b", "rel", "note", "a")
 	ts1, _ := BuildTemporalNodeKey(1700000000000000, "note", "a")
 	ts2, _ := BuildTemporalNodeKey(1700000000000001, "note", "a")
 

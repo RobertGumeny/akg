@@ -54,8 +54,8 @@ func TestOpenAppliesCommittedWALAndIgnoresUncommittedTail(t *testing.T) {
 		t.Fatal(err)
 	}
 	committedNode := nodePutPayload("n2", record.Node{Type: "note", Title: "B", CreatedAt: 2, UpdatedAt: 2, Version: 1})
-	committedEdge := mustEdgePayload(t, record.Edge{FromNode: "n1", Relation: "links", ToNode: "n2", CreatedAt: 3, UpdatedAt: 3, Version: 1})
-	uncommittedEdge := mustEdgePayload(t, record.Edge{FromNode: "n2", Relation: "links", ToNode: "n3", CreatedAt: 4, UpdatedAt: 4, Version: 1})
+	committedEdge := mustEdgePayload(t, record.Edge{FromType: "note", FromNode: "n1", Relation: "links", ToType: "note", ToNode: "n2", CreatedAt: 3, UpdatedAt: 3, Version: 1})
+	uncommittedEdge := mustEdgePayload(t, record.Edge{FromType: "note", FromNode: "n2", Relation: "links", ToType: "note", ToNode: "n3", CreatedAt: 4, UpdatedAt: 4, Version: 1})
 	walPayload := mustWAL(t, []wal.Record{
 		{Sequence: 7, Operation: wal.OpPutNode, Payload: committedNode},
 		{Sequence: 8, Operation: wal.OpPutEdge, Payload: committedEdge},
@@ -72,10 +72,10 @@ func TestOpenAppliesCommittedWALAndIgnoresUncommittedTail(t *testing.T) {
 	if _, ok := st.State().GetNode("note", "n2"); !ok {
 		t.Fatalf("committed WAL node was not replayed")
 	}
-	if _, ok := st.State().GetEdge("n1", "links", "n2"); !ok {
+	if _, ok := st.State().GetEdge("note", "n1", "links", "note", "n2"); !ok {
 		t.Fatalf("committed WAL edge was not replayed")
 	}
-	if _, ok := st.State().GetEdge("n2", "links", "n3"); ok {
+	if _, ok := st.State().GetEdge("note", "n2", "links", "note", "n3"); ok {
 		t.Fatalf("trailing uncommitted WAL edge was replayed")
 	}
 	if st.NextWALSequence() != 11 || st.UncompactedWALEntries() != 4 || st.UncompactedWALBytes() != len(walPayload) {
@@ -86,7 +86,7 @@ func TestOpenAppliesCommittedWALAndIgnoresUncommittedTail(t *testing.T) {
 func TestOpenWithNoValidCommitAppliesNoWALMutations(t *testing.T) {
 	path := tempPath(t)
 	base := state.New()
-	walPayload := mustWAL(t, []wal.Record{{Sequence: 1, Operation: wal.OpPutEdge, Payload: mustEdgePayload(t, record.Edge{FromNode: "a", Relation: "r", ToNode: "b"})}})
+	walPayload := mustWAL(t, []wal.Record{{Sequence: 1, Operation: wal.OpPutEdge, Payload: mustEdgePayload(t, record.Edge{FromType: "note", FromNode: "a", Relation: "r", ToType: "note", ToNode: "b"})}})
 	writeStoreFile(t, path, base, walPayload)
 
 	st, err := Open(path)
@@ -105,7 +105,7 @@ func TestOpenRejectsMalformedCommittedWALAndInvalidPayload(t *testing.T) {
 	base := state.New()
 
 	malformedPath := tempPath(t)
-	bad := mustWAL(t, []wal.Record{{Sequence: 1, Operation: wal.OpPutEdge, Payload: mustEdgePayload(t, record.Edge{FromNode: "a", Relation: "r", ToNode: "b"})}, {Sequence: 2, Operation: wal.OpCommit}})
+	bad := mustWAL(t, []wal.Record{{Sequence: 1, Operation: wal.OpPutEdge, Payload: mustEdgePayload(t, record.Edge{FromType: "note", FromNode: "a", Relation: "r", ToType: "note", ToNode: "b"})}, {Sequence: 2, Operation: wal.OpCommit}})
 	bad[3] ^= 0xff
 	writeStoreFile(t, malformedPath, base, bad)
 	if _, err := Open(malformedPath); err == nil {
@@ -248,7 +248,7 @@ func TestMultipleCommittedBatchesReplayInSequenceAcrossSessions(t *testing.T) {
 	if _, err := st.PutNode("n2", record.Node{Type: "note", Title: "B"}); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := st.PutEdge(record.Edge{FromNode: "n1", Relation: "links", ToNode: "n2"}); err != nil {
+	if _, err := st.PutEdge(record.Edge{FromType: "note", FromNode: "n1", Relation: "links", ToType: "note", ToNode: "n2"}); err != nil {
 		t.Fatal(err)
 	}
 	if err := st.Commit(); err != nil {
@@ -265,7 +265,7 @@ func TestMultipleCommittedBatchesReplayInSequenceAcrossSessions(t *testing.T) {
 	if _, ok := reopened.State().GetNode("note", "n2"); !ok {
 		t.Fatalf("second batch node missing")
 	}
-	if _, ok := reopened.State().GetEdge("n1", "links", "n2"); !ok {
+	if _, ok := reopened.State().GetEdge("note", "n1", "links", "note", "n2"); !ok {
 		t.Fatalf("second batch edge missing")
 	}
 	records := readWALRecords(t, path)
@@ -361,19 +361,19 @@ func TestCompactPreservesLiveStateDropsWALAndRegeneratesDerivedData(t *testing.T
 	if _, err := st.PutNode("n2", record.Node{Type: "note", Title: "live", Tags: []string{"topic"}}); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := st.PutEdge(record.Edge{FromNode: "n1", Relation: "links", ToNode: "n2"}); err != nil {
+	if _, err := st.PutEdge(record.Edge{FromType: "note", FromNode: "n1", Relation: "links", ToType: "note", ToNode: "n2"}); err != nil {
 		t.Fatal(err)
 	}
 	if err := st.Commit(); err != nil {
 		t.Fatal(err)
 	}
-	if err := st.DeleteEdge("n1", "links", "n2"); err != nil {
+	if err := st.DeleteEdge("note", "n1", "links", "note", "n2"); err != nil {
 		t.Fatal(err)
 	}
 	if err := st.DeleteNode("note", "n1"); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := st.PutEdge(record.Edge{FromNode: "n2", Relation: "links", ToNode: "n3"}); err != nil {
+	if _, err := st.PutEdge(record.Edge{FromType: "note", FromNode: "n2", Relation: "links", ToType: "note", ToNode: "n3"}); err != nil {
 		t.Fatal(err)
 	}
 	if err := st.Commit(); err != nil {
@@ -399,13 +399,13 @@ func TestCompactPreservesLiveStateDropsWALAndRegeneratesDerivedData(t *testing.T
 	}
 	keys := dataKeys(entries)
 	assertHasKey(t, keys, "n:note:n2")
-	assertHasKey(t, keys, "e:n2:links:n3")
-	assertHasKey(t, keys, "ei:n3:links:n2")
+	assertHasKey(t, keys, "e:note:n2:links:note:n3")
+	assertHasKey(t, keys, "ei:note:n3:links:note:n2")
 	assertHasKey(t, keys, "t:topic:n2")
 	assertHasPrefix(t, keys, "ts:")
 	assertNoKey(t, keys, "n:note:n1")
-	assertNoKey(t, keys, "e:n1:links:n2")
-	assertNoKey(t, keys, "ei:n2:links:n1")
+	assertNoKey(t, keys, "e:note:n1:links:note:n2")
+	assertNoKey(t, keys, "ei:note:n2:links:note:n1")
 	assertNoKey(t, keys, "t:old:n1")
 	if err := validateBloom(container.Bloom, entries); err != nil {
 		t.Fatalf("compacted Bloom was not regenerated from live keys: %v", err)
@@ -420,7 +420,7 @@ func TestCompactPreservesLiveStateDropsWALAndRegeneratesDerivedData(t *testing.T
 	if _, ok := reopened.State().GetNode("note", "n1"); ok {
 		t.Fatalf("deleted node survived compaction")
 	}
-	if _, ok := reopened.State().GetEdge("n2", "links", "n3"); !ok {
+	if _, ok := reopened.State().GetEdge("note", "n2", "links", "note", "n3"); !ok {
 		t.Fatalf("live edge missing after compact/reopen")
 	}
 	if reopened.NextWALSequence() != 1 || reopened.UncompactedWALEntries() != 0 || reopened.UncompactedWALBytes() != 0 {

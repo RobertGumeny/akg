@@ -25,10 +25,10 @@ func TestNodeDefaultsAndWriteValidation(t *testing.T) {
 }
 
 func TestEdgeDefaultsAndWriteValidation(t *testing.T) {
-	e := Edge{FromNode: "a", Relation: "links", ToNode: "b"}
+	e := Edge{FromType: "note", FromNode: "a", Relation: "links", ToType: "note", ToNode: "b"}
 	e.ApplyReadDefaults()
 
-	if e.Strength != 0.5 || e.Confidence != nil || e.Meta == nil || len(e.Meta) != 0 || e.Version != 1 {
+	if e.Strength != 0.0 || e.Confidence != nil || e.Meta == nil || len(e.Meta) != 0 || e.Version != 1 {
 		t.Fatalf("unexpected defaults: %#v", e)
 	}
 	if err := e.ValidateForWrite(); err != nil {
@@ -71,8 +71,8 @@ func TestNodeDeletePayloadShapeAndReadTolerance(t *testing.T) {
 }
 
 func TestEdgeDeletePayloadShapeAndReadTolerance(t *testing.T) {
-	d := EdgeDelete{FromNode: "a", Relation: "links", ToNode: "b"}
-	wantMap := map[string]any{"from_node": "a", "relation": "links", "to_node": "b"}
+	d := EdgeDelete{FromType: "note", FromNode: "a", Relation: "links", ToType: "note", ToNode: "b"}
+	wantMap := map[string]any{"from_node_type": "note", "from_node": "a", "relation": "links", "to_node_type": "note", "to_node": "b"}
 	if got := d.Map(); !reflect.DeepEqual(got, wantMap) {
 		t.Fatalf("DELETE_EDGE map = %#v, want %#v", got, wantMap)
 	}
@@ -80,17 +80,17 @@ func TestEdgeDeletePayloadShapeAndReadTolerance(t *testing.T) {
 		t.Fatalf("valid delete rejected: %v", err)
 	}
 
-	got, err := EdgeDeleteFromMap(map[string]any{"from_node": "a", "relation": "links", "to_node": "b", "ignored": 123})
+	got, err := EdgeDeleteFromMap(map[string]any{"from_node_type": "note", "from_node": "a", "relation": "links", "to_node_type": "note", "to_node": "b", "ignored": 123})
 	if err != nil {
 		t.Fatalf("read with unknown field rejected: %v", err)
 	}
 	if got != d {
 		t.Fatalf("decoded delete = %#v, want %#v", got, d)
 	}
-	if _, err := EdgeDeleteFromMap(map[string]any{"from_node": "a", "relation": "links"}); !errors.Is(err, ErrMissingRequiredField) {
+	if _, err := EdgeDeleteFromMap(map[string]any{"from_node_type": "note", "from_node": "a", "relation": "links", "to_node_type": "note"}); !errors.Is(err, ErrMissingRequiredField) {
 		t.Fatalf("missing to_node error = %v", err)
 	}
-	if err := (EdgeDelete{FromNode: "a", Relation: "links"}).ValidateForWrite(); !errors.Is(err, ErrMissingRequiredField) {
+	if err := (EdgeDelete{FromType: "note", FromNode: "a", Relation: "links"}).ValidateForWrite(); !errors.Is(err, ErrMissingRequiredField) {
 		t.Fatalf("write validation error = %v", err)
 	}
 }

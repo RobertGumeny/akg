@@ -126,7 +126,7 @@ Three epics, in order. Don't start epic 2 until epic 1's conformance tests pass.
   - No API changes, no new tests required — this is a diagnostics-only improvement.
   - **Done when:** all three sites use `%w` wrapping and `go test ./...` passes.
 
-- [ ] **1.16 Allow Strength 0.0 on edges**
+- [x] **1.16 Allow Strength 0.0 on edges**
   - `applyReadDefaults` silently converts a zero `Strength` to `0.5`, making it impossible to write an edge with explicit strength `0.0`. `EdgeFields{}` also silently produces `0.5` rather than a true zero.
   - Remove the `if e.Strength == 0 { e.Strength = 0.5 }` line from `applyReadDefaults`. `EdgeFields{}` now produces strength `0.0`. Update the `EdgeFields` table in `README.md` — the `Strength` default column should reflect that `0.0` is the zero value (remove the "defaults to 0.5" note). Update any tests that assert the old `0.5` default behaviour.
   - **Done when:** `EdgeFields{}` produces an edge with `Strength == 0.0`, `go test ./...` passes, and the README is updated.

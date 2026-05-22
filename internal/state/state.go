@@ -39,8 +39,10 @@ type nodeIdentity struct {
 }
 
 type edgeIdentity struct {
+	fromType string
 	from     record.NodeID
 	relation record.Relation
+	toType   string
 	to       record.NodeID
 }
 
@@ -129,10 +131,10 @@ func (s *State) PutEdge(e record.Edge) (record.Edge, error) {
 	if err := e.ValidateForWrite(); err != nil {
 		return record.Edge{}, err
 	}
-	if _, err := keys.BuildEdgeKey(e.FromNode, e.Relation, e.ToNode); err != nil {
+	if _, err := keys.BuildEdgeKey(e.FromType, e.FromNode, e.Relation, e.ToType, e.ToNode); err != nil {
 		return record.Edge{}, err
 	}
-	ident := edgeIdentity{from: e.FromNode, relation: e.Relation, to: e.ToNode}
+	ident := edgeIdentity{fromType: e.FromType, from: e.FromNode, relation: e.Relation, toType: e.ToType, to: e.ToNode}
 	e.Meta = cloneMap(e.Meta)
 	e.ApplyReadDefaults()
 	now := s.now()
@@ -164,14 +166,14 @@ func (s *State) DeleteNode(typeName string, id record.NodeID) error {
 	return nil
 }
 
-func (s *State) DeleteEdge(from record.NodeID, relation record.Relation, to record.NodeID) error {
+func (s *State) DeleteEdge(fromType string, from record.NodeID, relation record.Relation, toType string, to record.NodeID) error {
 	if s == nil {
 		return ErrInvalidInput
 	}
-	if _, err := keys.BuildEdgeKey(from, relation, to); err != nil {
+	if _, err := keys.BuildEdgeKey(fromType, from, relation, toType, to); err != nil {
 		return err
 	}
-	ident := edgeIdentity{from: from, relation: relation, to: to}
+	ident := edgeIdentity{fromType: fromType, from: from, relation: relation, toType: toType, to: to}
 	if _, ok := s.edges[ident]; !ok {
 		return ErrNotFound
 	}
@@ -218,7 +220,7 @@ func (s *State) LoadEdge(e record.Edge) error {
 	if err := e.ValidateForWrite(); err != nil {
 		return err
 	}
-	if _, err := keys.BuildEdgeKey(e.FromNode, e.Relation, e.ToNode); err != nil {
+	if _, err := keys.BuildEdgeKey(e.FromType, e.FromNode, e.Relation, e.ToType, e.ToNode); err != nil {
 		return err
 	}
 	e.ApplyReadDefaults()
@@ -227,7 +229,7 @@ func (s *State) LoadEdge(e record.Edge) error {
 		v := *e.Confidence
 		e.Confidence = &v
 	}
-	s.edges[edgeIdentity{from: e.FromNode, relation: e.Relation, to: e.ToNode}] = e
+	s.edges[edgeIdentity{fromType: e.FromType, from: e.FromNode, relation: e.Relation, toType: e.ToType, to: e.ToNode}] = e
 	return nil
 }
 
@@ -239,11 +241,11 @@ func (s *State) GetNode(typeName string, id record.NodeID) (NodeRecord, bool) {
 	return cloneNodeRecord(rec), ok
 }
 
-func (s *State) GetEdge(from record.NodeID, relation record.Relation, to record.NodeID) (record.Edge, bool) {
+func (s *State) GetEdge(fromType string, from record.NodeID, relation record.Relation, toType string, to record.NodeID) (record.Edge, bool) {
 	if s == nil {
 		return record.Edge{}, false
 	}
-	e, ok := s.edges[edgeIdentity{from: from, relation: relation, to: to}]
+	e, ok := s.edges[edgeIdentity{fromType: fromType, from: from, relation: relation, toType: toType, to: to}]
 	return cloneEdge(e), ok
 }
 

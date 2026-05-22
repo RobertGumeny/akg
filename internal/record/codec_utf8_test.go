@@ -66,7 +66,7 @@ func TestEncodeRejectsInvalidUTF8PayloadStrings(t *testing.T) {
 			return err
 		}},
 		{name: "edge relation", fn: func() error {
-			_, err := EncodeEdgePayload(Edge{FromNode: "a", Relation: Relation(bad), ToNode: "b", CreatedAt: 1, UpdatedAt: 1})
+			_, err := EncodeEdgePayload(Edge{FromType: "note", FromNode: "a", Relation: Relation(bad), ToType: "note", ToNode: "b", CreatedAt: 1, UpdatedAt: 1})
 			return err
 		}},
 		{name: "delete node id", fn: func() error { _, err := EncodeNodeDeletePayload(NodeDelete{Type: "note", ID: NodeID(bad)}); return err }},
