@@ -162,12 +162,14 @@ func edgePayloadMap(e coreEdge) (map[string]any, error) {
 		return nil, err
 	}
 	m := map[string]any{
-		"from_node":  string(e.FromNode),
-		"to_node":    string(e.ToNode),
-		"relation":   string(e.Relation),
-		"strength":   e.Strength,
-		"created_at": uint64(e.CreatedAt),
-		"updated_at": uint64(e.UpdatedAt),
+		"from_node_type": e.FromType,
+		"from_node":      string(e.FromNode),
+		"to_node_type":   e.ToType,
+		"to_node":        string(e.ToNode),
+		"relation":       string(e.Relation),
+		"strength":       e.Strength,
+		"created_at":     uint64(e.CreatedAt),
+		"updated_at":     uint64(e.UpdatedAt),
 	}
 	if e.Confidence != nil {
 		m["confidence"] = *e.Confidence
@@ -190,8 +192,16 @@ func decodeEdgePayload(b []byte) (coreEdge, error) {
 	if !ok {
 		return coreEdge{}, errInvalidPayload
 	}
+	fromTypeValue, ok := m["from_node_type"].(string)
+	if !ok || fromTypeValue == "" {
+		return coreEdge{}, errMissingRequiredField
+	}
 	fromValue, ok := m["from_node"].(string)
 	if !ok || fromValue == "" {
+		return coreEdge{}, errMissingRequiredField
+	}
+	toTypeValue, ok := m["to_node_type"].(string)
+	if !ok || toTypeValue == "" {
 		return coreEdge{}, errMissingRequiredField
 	}
 	toValue, ok := m["to_node"].(string)
@@ -202,7 +212,7 @@ func decodeEdgePayload(b []byte) (coreEdge, error) {
 	if !ok || relationValue == "" {
 		return coreEdge{}, errMissingRequiredField
 	}
-	edge := coreEdge{FromNode: nodeID(fromValue), ToNode: nodeID(toValue), Relation: relation(relationValue)}
+	edge := coreEdge{FromType: fromTypeValue, FromNode: nodeID(fromValue), ToType: toTypeValue, ToNode: nodeID(toValue), Relation: relation(relationValue)}
 	if f, ok := m["strength"].(float64); ok {
 		edge.Strength = f
 	}
@@ -242,10 +252,16 @@ func decodeEdgePutPayload(b []byte) (edgePut, error) {
 }
 
 func encodeEdgeDeletePayload(d edgeDelete) ([]byte, error) {
-	if d.FromNode == "" || d.Relation == "" || d.ToNode == "" {
+	if d.FromType == "" || d.FromNode == "" || d.Relation == "" || d.ToType == "" || d.ToNode == "" {
 		return nil, errMissingRequiredField
 	}
-	return encodeMsgpack(map[string]any{"from_node": string(d.FromNode), "relation": string(d.Relation), "to_node": string(d.ToNode)})
+	return encodeMsgpack(map[string]any{
+		"from_node_type": d.FromType,
+		"from_node":      string(d.FromNode),
+		"relation":       string(d.Relation),
+		"to_node_type":   d.ToType,
+		"to_node":        string(d.ToNode),
+	})
 }
 
 func decodeEdgeDeletePayload(b []byte) (edgeDelete, error) {
@@ -257,6 +273,10 @@ func decodeEdgeDeletePayload(b []byte) (edgeDelete, error) {
 	if !ok {
 		return edgeDelete{}, errInvalidPayload
 	}
+	fromTypeValue, ok := m["from_node_type"].(string)
+	if !ok || fromTypeValue == "" {
+		return edgeDelete{}, errMissingRequiredField
+	}
 	fromValue, ok := m["from_node"].(string)
 	if !ok || fromValue == "" {
 		return edgeDelete{}, errMissingRequiredField
@@ -265,11 +285,15 @@ func decodeEdgeDeletePayload(b []byte) (edgeDelete, error) {
 	if !ok || relationValue == "" {
 		return edgeDelete{}, errMissingRequiredField
 	}
+	toTypeValue, ok := m["to_node_type"].(string)
+	if !ok || toTypeValue == "" {
+		return edgeDelete{}, errMissingRequiredField
+	}
 	toValue, ok := m["to_node"].(string)
 	if !ok || toValue == "" {
 		return edgeDelete{}, errMissingRequiredField
 	}
-	return edgeDelete{FromNode: nodeID(fromValue), Relation: relation(relationValue), ToNode: nodeID(toValue)}, nil
+	return edgeDelete{FromType: fromTypeValue, FromNode: nodeID(fromValue), Relation: relation(relationValue), ToType: toTypeValue, ToNode: nodeID(toValue)}, nil
 }
 
 func encodeMsgpack(v any) ([]byte, error) {

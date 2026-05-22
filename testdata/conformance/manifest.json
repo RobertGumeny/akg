@@ -6,8 +6,8 @@
       "purpose": "Whole-container format fixture containing Data, Bloom, and WAL sections for binary round-trip coverage.",
       "expected_result": "accept",
       "validation_scope": "format",
-      "sha256": "bb2fc4d5c7e05e6d436a07b80dafda27060656a3def043d88704bd386a68cf0d",
-      "generated_by": "Go reference implementation fixture workflow documented in README.md"
+      "sha256": "7df835110ca90adb8d722f00a40cb0903660403a7f5d55820c2a82f339d5fea1",
+      "generated_by": "Go SDK TestGenEdgeConformanceFixtures (1.9b)"
     },
     {
       "path": "m2-empty-create.akg",
@@ -62,7 +62,7 @@
         "has_uncompacted_wal": false,
         "next_wal_sequence": 1
       },
-      "sha256": "763ef1a28e9a31d10dd0f3d9a0e2a24df7a1f4e42d4f25b9bab273ea93327186",
+      "sha256": "244a32c488f8bac1de9407dacacb1c3f04e2138430367ee118ce0a5f3ac21acc",
       "generated_by": "Go reference implementation fixture workflow documented in README.md"
     },
     {
@@ -76,7 +76,7 @@
         "has_uncompacted_wal": false,
         "next_wal_sequence": 1
       },
-      "sha256": "d93897b49cae1cb5956b961ff81ba1a4e9c615df7488f665c4a38452df6025ce",
+      "sha256": "f50974e1e820de5a7e9369a3d4e5efe57784e8941dec113b72fb09376644b35e",
       "generated_by": "Go reference implementation fixture workflow documented in README.md"
     },
     {
@@ -90,7 +90,7 @@
         "has_uncompacted_wal": true,
         "next_wal_sequence": 10
       },
-      "sha256": "75ce3417767f331f9a3a9985352abd69c7a3ca97d13b3e30a7c2c936de022aca",
+      "sha256": "7254ab6490bc153699ee1765555b4658e5ca2d1e8841b922318fcf18e6e80fec",
       "generated_by": "Go reference implementation fixture workflow documented in README.md"
     },
     {
@@ -104,7 +104,7 @@
         "has_uncompacted_wal": true,
         "next_wal_sequence": 11
       },
-      "sha256": "c7c522412f2e4593896059cc784cae5bca4d59243432e5adeeb71debe0134f6b",
+      "sha256": "c85d6750bbab3b7cbdde76167effc79a493a93d22a8930120bdf49a251bdb7dd",
       "generated_by": "Go reference implementation fixture workflow documented in README.md"
     },
     {
@@ -136,7 +136,7 @@
         "has_uncompacted_wal": true,
         "next_wal_sequence": 8
       },
-      "sha256": "972e6e3803bad27c03b82a4867cb255033dc85a45402fe49223c53398f94e206",
+      "sha256": "5373810b5e0867ec3528bbe375fc54723e5c8e4d4f224a13e1aeb82b3e12b432",
       "generated_by": "Go reference implementation fixture workflow documented in README.md"
     },
     {
@@ -180,7 +180,7 @@
         "has_uncompacted_wal": true,
         "next_wal_sequence": 6
       },
-      "sha256": "b8d0241522a15503a521aa56ee4ecce9d0b7447ef5cb328e4649d4cd44c65927",
+      "sha256": "d87f97d2ba34b224a183e6fedd20028ac02bf48c21ea01afd07b563485f515a1",
       "generated_by": "Go SDK cmd/gen_delete_fixtures"
     },
     {
@@ -194,7 +194,7 @@
         "has_uncompacted_wal": true,
         "next_wal_sequence": 7
       },
-      "sha256": "24c37191cae83b1a2337c7afe5915175a8539a58eefbf720c03d08dbc8e2cae9",
+      "sha256": "c3eafa747d72cd3faa23e1bc29f901f929ed0df1b30c6d958fe0a02237f6489d",
       "generated_by": "Go SDK cmd/gen_delete_fixtures"
     },
     {
@@ -217,7 +217,7 @@
       "expected_result": "reject",
       "expected_error_category": "invalid_wal_record",
       "validation_scope": "store",
-      "sha256": "953b4fc951de071311f9b5853e0e8ef4d7bb94eaa5db2e7b83a2f0464cf27f05",
+      "sha256": "2349a55b6cda86b04f5e503f39de2c38ebae60558d8895216ff3ff934cc3f5d7",
       "corruption": "Generated from an empty valid store container with a committed PUT_EDGE WAL record, then one byte in the committed WAL record is flipped so ordinary open rejects before salvage."
     },
     {
@@ -226,7 +226,7 @@
       "expected_result": "reject",
       "expected_error_category": "derived_index_mismatch",
       "validation_scope": "store",
-      "sha256": "c826acfd849224a7fbda070ebaa5805cd18087f90907b3a151ceca6c54c9993e",
+      "sha256": "859b0ad44344572263bc8a4cc0ac8766f6ced0cad020b5eb7769a700520cd2ce",
       "corruption": "Generated from a valid small graph Data section, then a derived index key is changed/removed so the authoritative primary records no longer match regenerated derived keys."
     },
     {

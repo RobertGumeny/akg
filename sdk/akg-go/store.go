@@ -186,7 +186,7 @@ func (s *Store) OutboundEdges(nodeRef NodeRef, relationValue string) ([]Edge, er
 	}
 	matches := make([]coreEdge, 0)
 	for _, rec := range s.state.edges {
-		if rec.FromNode != nodeID(nodeRef.ID) {
+		if rec.FromType != nodeRef.Type || rec.FromNode != nodeID(nodeRef.ID) {
 			continue
 		}
 		if relationValue != "" && rec.Relation != relation(relationValue) {
@@ -195,17 +195,13 @@ func (s *Store) OutboundEdges(nodeRef NodeRef, relationValue string) ([]Edge, er
 		matches = append(matches, cloneEdge(rec))
 	}
 	sort.Slice(matches, func(i, j int) bool {
-		ik, _ := buildEdgeKey(matches[i].FromNode, matches[i].Relation, matches[i].ToNode)
-		jk, _ := buildEdgeKey(matches[j].FromNode, matches[j].Relation, matches[j].ToNode)
+		ik, _ := buildEdgeKey(matches[i].FromType, matches[i].FromNode, matches[i].Relation, matches[i].ToType, matches[i].ToNode)
+		jk, _ := buildEdgeKey(matches[j].FromType, matches[j].FromNode, matches[j].Relation, matches[j].ToType, matches[j].ToNode)
 		return bytes.Compare(ik, jk) < 0
 	})
 	edges := make([]Edge, len(matches))
 	for i, rec := range matches {
-		edge, err := edgeFromRecord(s.state, rec)
-		if err != nil {
-			return nil, err
-		}
-		edges[i] = *edge
+		edges[i] = *edgeFromRecord(rec)
 	}
 	return edges, nil
 }
@@ -226,7 +222,7 @@ func (s *Store) InboundEdges(nodeRef NodeRef, relationValue string) ([]Edge, err
 	}
 	matches := make([]coreEdge, 0)
 	for _, rec := range s.state.edges {
-		if rec.ToNode != nodeID(nodeRef.ID) {
+		if rec.ToType != nodeRef.Type || rec.ToNode != nodeID(nodeRef.ID) {
 			continue
 		}
 		if relationValue != "" && rec.Relation != relation(relationValue) {
@@ -235,17 +231,13 @@ func (s *Store) InboundEdges(nodeRef NodeRef, relationValue string) ([]Edge, err
 		matches = append(matches, cloneEdge(rec))
 	}
 	sort.Slice(matches, func(i, j int) bool {
-		ik, _ := buildEdgeIndexKey(matches[i].ToNode, matches[i].Relation, matches[i].FromNode)
-		jk, _ := buildEdgeIndexKey(matches[j].ToNode, matches[j].Relation, matches[j].FromNode)
+		ik, _ := buildEdgeIndexKey(matches[i].ToType, matches[i].ToNode, matches[i].Relation, matches[i].FromType, matches[i].FromNode)
+		jk, _ := buildEdgeIndexKey(matches[j].ToType, matches[j].ToNode, matches[j].Relation, matches[j].FromType, matches[j].FromNode)
 		return bytes.Compare(ik, jk) < 0
 	})
 	edges := make([]Edge, len(matches))
 	for i, rec := range matches {
-		edge, err := edgeFromRecord(s.state, rec)
-		if err != nil {
-			return nil, err
-		}
-		edges[i] = *edge
+		edges[i] = *edgeFromRecord(rec)
 	}
 	return edges, nil
 }
@@ -278,7 +270,7 @@ func (s *Store) DeleteEdge(fromRef NodeRef, relationValue string, toRef NodeRef)
 	if err := validateComponent(relationValue); err != nil {
 		return err
 	}
-	return s.deleteEdge(nodeID(fromRef.ID), relation(relationValue), nodeID(toRef.ID))
+	return s.deleteEdge(fromRef.Type, nodeID(fromRef.ID), relation(relationValue), toRef.Type, nodeID(toRef.ID))
 }
 
 // Commit durably writes pending mutations and a COMMIT record.
@@ -376,7 +368,7 @@ func (s *Store) deleteNode(typeName string, id nodeID) error {
 		return errNotFound
 	}
 	for _, edge := range s.state.edges {
-		if edge.FromNode == id || edge.ToNode == id {
+		if (edge.FromType == typeName && edge.FromNode == id) || (edge.ToType == typeName && edge.ToNode == id) {
 			return errInvalidInput
 		}
 	}
@@ -389,13 +381,13 @@ func (s *Store) deleteNode(typeName string, id nodeID) error {
 	return nil
 }
 
-func (s *Store) deleteEdge(fromNode nodeID, rel relation, toNode nodeID) error {
-	ident := edgeIdentity{from: fromNode, relation: rel, to: toNode}
+func (s *Store) deleteEdge(fromType string, fromNode nodeID, rel relation, toType string, toNode nodeID) error {
+	ident := edgeIdentity{fromType: fromType, from: fromNode, relation: rel, toType: toType, to: toNode}
 	if _, ok := s.state.edges[ident]; !ok {
 		return errNotFound
 	}
 	delete(s.state.edges, ident)
-	payload, err := encodeEdgeDeletePayload(edgeDelete{FromNode: fromNode, Relation: rel, ToNode: toNode})
+	payload, err := encodeEdgeDeletePayload(edgeDelete{FromType: fromType, FromNode: fromNode, Relation: rel, ToType: toType, ToNode: toNode})
 	if err != nil {
 		return err
 	}
@@ -455,7 +447,7 @@ func hydrateDataEntries(entries []dataEntry) (*storeState, error) {
 			if err != nil {
 				return nil, errInvalidDataPayload
 			}
-			if edge.FromNode != parsed.FromNode || edge.Relation != parsed.Relation || edge.ToNode != parsed.ToNode {
+			if edge.FromType != parsed.FromType || edge.FromNode != parsed.FromNode || edge.Relation != parsed.Relation || edge.ToType != parsed.ToType || edge.ToNode != parsed.ToNode {
 				return nil, errInvalidInput
 			}
 			if err := s.loadEdgeRecord(edge); err != nil {
@@ -539,7 +531,7 @@ func materializeDataEntries(s *storeState) ([]dataEntry, error) {
 		}
 	}
 	for _, edge := range s.edges {
-		key, err := buildEdgeKey(edge.FromNode, edge.Relation, edge.ToNode)
+		key, err := buildEdgeKey(edge.FromType, edge.FromNode, edge.Relation, edge.ToType, edge.ToNode)
 		if err != nil {
 			return nil, err
 		}
@@ -550,14 +542,14 @@ func materializeDataEntries(s *storeState) ([]dataEntry, error) {
 		if err := add(key, value); err != nil {
 			return nil, err
 		}
-		inboundKey, err := buildEdgeIndexKey(edge.ToNode, edge.Relation, edge.FromNode)
+		inboundKey, err := buildEdgeIndexKey(edge.ToType, edge.ToNode, edge.Relation, edge.FromType, edge.FromNode)
 		if err != nil {
 			return nil, err
 		}
 		if err := add(inboundKey, nil); err != nil {
 			return nil, err
 		}
-		temporalKey, err := buildTemporalEdgeKey(edge.UpdatedAt, edge.FromNode, edge.Relation, edge.ToNode)
+		temporalKey, err := buildTemporalEdgeKey(edge.UpdatedAt, edge.FromType, edge.FromNode, edge.Relation, edge.ToType, edge.ToNode)
 		if err != nil {
 			return nil, err
 		}
@@ -631,7 +623,7 @@ func inspectAndReplayWAL(state *storeState, payload []byte) ([]walRecord, walSeq
 			if err != nil {
 				return nil, 0, err
 			}
-			delete(state.edges, edgeIdentity{from: d.FromNode, relation: d.Relation, to: d.ToNode})
+			delete(state.edges, edgeIdentity{fromType: d.FromType, from: d.FromNode, relation: d.Relation, toType: d.ToType, to: d.ToNode})
 		}
 	}
 	return committed, next, nil

@@ -76,7 +76,7 @@ Three epics, in order. Don't start epic 2 until epic 1's conformance tests pass.
   - No code changes in this task — spec only.
   - **Done when:** all five spec files are updated consistently and the new edge format is unambiguous.
 
-- [ ] **1.9b Implement spec change from 1.9a in the Go SDK**
+- [x] **1.9b Implement spec change from 1.9a in the Go SDK**
   - Implement the breaking edge format change defined in 1.9a. All five spec files in `docs/spec/` are the authoritative source — read them before writing code.
   - **`core_types.go`:** Add `FromType string` and `ToType string` to `coreEdge`. Expand `edgeIdentity` to `{fromType, from, relation, toType, to}`. Add `FromType`/`ToType` to `edgeDelete`. Update `coreEdge.validateForWrite()` to require non-empty `FromType` and `ToType`. Update `storeState.putEdge()` and `loadEdgeRecord()` to key on the new 5-field `edgeIdentity`.
   - **`keys_internal.go`:** Update `parsedEdgeKey` and `parsedEdgeIndexKey` to include type fields. Update `buildEdgeKey` signature and format to `e:{fromType}:{fromID}:{relation}:{toType}:{toID}` (6 parts). Update `parseEdgeKey` to parse 6 parts. Update `buildEdgeIndexKey` and `parseEdgeIndexKey` similarly. Update `buildTemporalEdgeKey` to use the new `buildEdgeKey` signature.

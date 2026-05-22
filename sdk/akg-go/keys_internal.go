@@ -21,14 +21,18 @@ type parsedNodeKey struct {
 }
 
 type parsedEdgeKey struct {
+	FromType string
 	FromNode nodeID
 	Relation relation
+	ToType   string
 	ToNode   nodeID
 }
 
 type parsedEdgeIndexKey struct {
+	ToType   string
 	ToNode   nodeID
 	Relation relation
+	FromType string
 	FromNode nodeID
 }
 
@@ -57,54 +61,66 @@ func parseNodeKey(key []byte) (parsedNodeKey, error) {
 	return parsedNodeKey{Type: parts[1], ID: id}, nil
 }
 
-func buildEdgeKey(from nodeID, rel relation, to nodeID) ([]byte, error) {
+func buildEdgeKey(fromType string, from nodeID, rel relation, toType string, to nodeID) ([]byte, error) {
+	if err := validateComponent(fromType); err != nil {
+		return nil, err
+	}
 	if err := validateNodeID(from); err != nil {
 		return nil, err
 	}
 	if err := validateComponent(string(rel)); err != nil {
 		return nil, err
 	}
+	if err := validateComponent(toType); err != nil {
+		return nil, err
+	}
 	if err := validateNodeID(to); err != nil {
 		return nil, err
 	}
-	return []byte("e:" + string(from) + ":" + string(rel) + ":" + string(to)), nil
+	return []byte("e:" + fromType + ":" + string(from) + ":" + string(rel) + ":" + toType + ":" + string(to)), nil
 }
 
 func parseEdgeKey(key []byte) (parsedEdgeKey, error) {
-	parts := splitKey(key, 4)
+	parts := splitKey(key, 6)
 	if parts == nil || parts[0] != "e" {
 		return parsedEdgeKey{}, errMalformedKey
 	}
-	from, rel, to := nodeID(parts[1]), relation(parts[2]), nodeID(parts[3])
-	if validateNodeID(from) != nil || validateComponent(string(rel)) != nil || validateNodeID(to) != nil {
+	fromType, from, rel, toType, to := parts[1], nodeID(parts[2]), relation(parts[3]), parts[4], nodeID(parts[5])
+	if validateComponent(fromType) != nil || validateNodeID(from) != nil || validateComponent(string(rel)) != nil || validateComponent(toType) != nil || validateNodeID(to) != nil {
 		return parsedEdgeKey{}, errMalformedKey
 	}
-	return parsedEdgeKey{FromNode: from, Relation: rel, ToNode: to}, nil
+	return parsedEdgeKey{FromType: fromType, FromNode: from, Relation: rel, ToType: toType, ToNode: to}, nil
 }
 
-func buildEdgeIndexKey(to nodeID, rel relation, from nodeID) ([]byte, error) {
+func buildEdgeIndexKey(toType string, to nodeID, rel relation, fromType string, from nodeID) ([]byte, error) {
+	if err := validateComponent(toType); err != nil {
+		return nil, err
+	}
 	if err := validateNodeID(to); err != nil {
 		return nil, err
 	}
 	if err := validateComponent(string(rel)); err != nil {
 		return nil, err
 	}
+	if err := validateComponent(fromType); err != nil {
+		return nil, err
+	}
 	if err := validateNodeID(from); err != nil {
 		return nil, err
 	}
-	return []byte("ei:" + string(to) + ":" + string(rel) + ":" + string(from)), nil
+	return []byte("ei:" + toType + ":" + string(to) + ":" + string(rel) + ":" + fromType + ":" + string(from)), nil
 }
 
 func parseEdgeIndexKey(key []byte) (parsedEdgeIndexKey, error) {
-	parts := splitKey(key, 4)
+	parts := splitKey(key, 6)
 	if parts == nil || parts[0] != "ei" {
 		return parsedEdgeIndexKey{}, errMalformedKey
 	}
-	to, rel, from := nodeID(parts[1]), relation(parts[2]), nodeID(parts[3])
-	if validateNodeID(to) != nil || validateComponent(string(rel)) != nil || validateNodeID(from) != nil {
+	toType, to, rel, fromType, from := parts[1], nodeID(parts[2]), relation(parts[3]), parts[4], nodeID(parts[5])
+	if validateComponent(toType) != nil || validateNodeID(to) != nil || validateComponent(string(rel)) != nil || validateComponent(fromType) != nil || validateNodeID(from) != nil {
 		return parsedEdgeIndexKey{}, errMalformedKey
 	}
-	return parsedEdgeIndexKey{ToNode: to, Relation: rel, FromNode: from}, nil
+	return parsedEdgeIndexKey{ToType: toType, ToNode: to, Relation: rel, FromType: fromType, FromNode: from}, nil
 }
 
 func buildTagKey(tag string, id nodeID) ([]byte, error) {
@@ -140,8 +156,8 @@ func buildTemporalNodeKey(ts timestampMicros, nodeType string, id nodeID) ([]byt
 	return []byte("ts:" + strconv.FormatUint(uint64(ts), 10) + ":" + string(nodeKey)), nil
 }
 
-func buildTemporalEdgeKey(ts timestampMicros, from nodeID, rel relation, to nodeID) ([]byte, error) {
-	edgeKey, err := buildEdgeKey(from, rel, to)
+func buildTemporalEdgeKey(ts timestampMicros, fromType string, from nodeID, rel relation, toType string, to nodeID) ([]byte, error) {
+	edgeKey, err := buildEdgeKey(fromType, from, rel, toType, to)
 	if err != nil {
 		return nil, err
 	}

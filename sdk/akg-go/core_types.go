@@ -26,7 +26,9 @@ type coreNode struct {
 }
 
 type coreEdge struct {
+	FromType   string
 	FromNode   nodeID
+	ToType     string
 	ToNode     nodeID
 	Relation   relation
 	Strength   float64
@@ -48,8 +50,10 @@ type nodeDelete struct {
 }
 
 type edgeDelete struct {
+	FromType string
 	FromNode nodeID
 	Relation relation
+	ToType   string
 	ToNode   nodeID
 }
 
@@ -68,8 +72,10 @@ type nodeIdentity struct {
 }
 
 type edgeIdentity struct {
+	fromType string
 	from     nodeID
 	relation relation
+	toType   string
 	to       nodeID
 }
 
@@ -114,7 +120,7 @@ func (e *coreEdge) applyReadDefaults() {
 }
 
 func (e coreEdge) validateForWrite() error {
-	if e.FromNode == "" || e.ToNode == "" || e.Relation == "" {
+	if e.FromType == "" || e.FromNode == "" || e.ToType == "" || e.ToNode == "" || e.Relation == "" {
 		return errMissingRequiredField
 	}
 	return nil
@@ -210,16 +216,16 @@ func (s *storeState) putEdge(e coreEdge) (coreEdge, error) {
 	if err := e.validateForWrite(); err != nil {
 		return coreEdge{}, err
 	}
-	if _, err := buildEdgeKey(e.FromNode, e.Relation, e.ToNode); err != nil {
+	if _, err := buildEdgeKey(e.FromType, e.FromNode, e.Relation, e.ToType, e.ToNode); err != nil {
 		return coreEdge{}, err
 	}
-	if _, err := buildEdgeIndexKey(e.ToNode, e.Relation, e.FromNode); err != nil {
+	if _, err := buildEdgeIndexKey(e.ToType, e.ToNode, e.Relation, e.FromType, e.FromNode); err != nil {
 		return coreEdge{}, err
 	}
 	e.Meta = cloneMap(e.Meta)
 	e.applyReadDefaults()
 	now := s.now()
-	ident := edgeIdentity{from: e.FromNode, relation: e.Relation, to: e.ToNode}
+	ident := edgeIdentity{fromType: e.FromType, from: e.FromNode, relation: e.Relation, toType: e.ToType, to: e.ToNode}
 	if existing, ok := s.edges[ident]; ok {
 		e.CreatedAt = existing.CreatedAt
 		e.UpdatedAt = now
@@ -240,15 +246,15 @@ func (s *storeState) loadEdgeRecord(e coreEdge) error {
 	if err := e.validateForWrite(); err != nil {
 		return err
 	}
-	if _, err := buildEdgeKey(e.FromNode, e.Relation, e.ToNode); err != nil {
+	if _, err := buildEdgeKey(e.FromType, e.FromNode, e.Relation, e.ToType, e.ToNode); err != nil {
 		return err
 	}
-	if _, err := buildEdgeIndexKey(e.ToNode, e.Relation, e.FromNode); err != nil {
+	if _, err := buildEdgeIndexKey(e.ToType, e.ToNode, e.Relation, e.FromType, e.FromNode); err != nil {
 		return err
 	}
 	e.applyReadDefaults()
 	e.Meta = cloneMap(e.Meta)
-	s.edges[edgeIdentity{from: e.FromNode, relation: e.Relation, to: e.ToNode}] = e
+	s.edges[edgeIdentity{fromType: e.FromType, from: e.FromNode, relation: e.Relation, toType: e.ToType, to: e.ToNode}] = e
 	return nil
 }
 

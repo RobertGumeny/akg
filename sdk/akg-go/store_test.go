@@ -419,6 +419,56 @@ func TestDeleteEdgeRoundTripReopen(t *testing.T) {
 	}
 }
 
+func TestOutboundEdgesDoesNotReturnEdgesFromDifferentNodeType(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "cross-type.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	// Two nodes sharing the same ID string but different types.
+	if _, err := st.PutNode("note", "shared", NodeFields{Title: "note node"}, nil); err != nil {
+		t.Fatalf("PutNode note/shared: %v", err)
+	}
+	if _, err := st.PutNode("concept", "shared", NodeFields{Title: "concept node"}, nil); err != nil {
+		t.Fatalf("PutNode concept/shared: %v", err)
+	}
+	if _, err := st.PutNode("note", "target", NodeFields{Title: "target"}, nil); err != nil {
+		t.Fatalf("PutNode note/target: %v", err)
+	}
+
+	// Connect note/shared -> links_to -> note/target.
+	if err := st.PutEdge(NodeRef{Type: "note", ID: "shared"}, "links_to", NodeRef{Type: "note", ID: "target"}, EdgeFields{}); err != nil {
+		t.Fatalf("PutEdge: %v", err)
+	}
+
+	// OutboundEdges on concept/shared must return empty — different type, same ID.
+	out, err := st.OutboundEdges(NodeRef{Type: "concept", ID: "shared"}, "")
+	if err != nil {
+		t.Fatalf("OutboundEdges concept/shared: %v", err)
+	}
+	if len(out) != 0 {
+		t.Fatalf("expected 0 outbound edges for concept/shared, got %d (cross-type contamination bug)", len(out))
+	}
+
+	// OutboundEdges on note/shared must return the edge.
+	out, err = st.OutboundEdges(NodeRef{Type: "note", ID: "shared"}, "")
+	if err != nil {
+		t.Fatalf("OutboundEdges note/shared: %v", err)
+	}
+	if len(out) != 1 || out[0].To.ID != "target" {
+		t.Fatalf("expected 1 outbound edge from note/shared, got %#v", out)
+	}
+
+	// InboundEdges on note/target must return the edge from note/shared (not concept/shared).
+	in, err := st.InboundEdges(NodeRef{Type: "note", ID: "target"}, "")
+	if err != nil {
+		t.Fatalf("InboundEdges note/target: %v", err)
+	}
+	if len(in) != 1 || in[0].From != (NodeRef{Type: "note", ID: "shared"}) {
+		t.Fatalf("expected 1 inbound edge from note/shared, got %#v", in)
+	}
+}
+
 func TestEdgeRoundTripAcrossCloseReopenAndUpdate(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "edge-reopen.akg")
 	st, err := Open(path)
