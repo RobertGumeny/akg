@@ -27,6 +27,8 @@ func TestGenEdgeConformanceFixtures(t *testing.T) {
 		{"m2-committed-wal-replay.akg", genFixtureCommittedWALReplay},
 		{"m2-uncommitted-wal-tail.akg", genFixtureUncommittedWALTail},
 		{"m2-deletes-before-compaction.akg", genFixtureDeletesBeforeCompaction},
+		{"m2-node-deleted-before-commit.akg", genFixtureNodeDeletedBeforeCommit},
+		{"m2-node-deletion-survives-reopen.akg", genFixtureNodeDeletionSurvivesReopen},
 		{"m2-edge-deleted-before-commit.akg", genFixtureEdgeDeletedBeforeCommit},
 		{"m2-edge-deletion-survives-reopen.akg", genFixtureEdgeDeletionSurvivesReopen},
 		{"m2-reject-derived-index-mismatch.akg", genFixtureRejectDerivedIndexMismatch},
@@ -214,6 +216,48 @@ func genFixtureDeletesBeforeCompaction(path string) error {
 		return err
 	}
 	return st.Close() // seqs 5,6,7 — nextWALSeq=8
+}
+
+// genFixtureNodeDeletedBeforeCommit: PutNode + DeleteNode in a single commit.
+// WAL: PUT_NODE@1, DELETE_NODE@2, COMMIT@3 → nextWALSeq=4
+func genFixtureNodeDeletedBeforeCommit(path string) error {
+	_ = os.Remove(path)
+	st, err := Open(path)
+	if err != nil {
+		return err
+	}
+	if _, err := st.PutNode("note", "n1", NodeFields{Title: "hello"}, nil); err != nil {
+		return err
+	}
+	if err := st.DeleteNode("note", "n1"); err != nil {
+		return err
+	}
+	return st.Close()
+}
+
+// genFixtureNodeDeletionSurvivesReopen: PutNode committed, then DeleteNode in a second commit.
+// WAL: PUT_NODE@1, COMMIT@2, DELETE_NODE@3, COMMIT@4 → nextWALSeq=5
+func genFixtureNodeDeletionSurvivesReopen(path string) error {
+	_ = os.Remove(path)
+	st, err := Open(path)
+	if err != nil {
+		return err
+	}
+	if _, err := st.PutNode("note", "n1", NodeFields{Title: "hello"}, nil); err != nil {
+		return err
+	}
+	if err := st.Close(); err != nil {
+		return err
+	}
+
+	st2, err := Open(path)
+	if err != nil {
+		return err
+	}
+	if err := st2.DeleteNode("note", "n1"); err != nil {
+		return err
+	}
+	return st2.Close()
 }
 
 // genFixtureEdgeDeletedBeforeCommit: PutNode×2, PutEdge, DeleteEdge in one commit.

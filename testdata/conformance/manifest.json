@@ -7,7 +7,8 @@
       "expected_result": "accept",
       "validation_scope": "format",
       "sha256": "7df835110ca90adb8d722f00a40cb0903660403a7f5d55820c2a82f339d5fea1",
-      "generated_by": "Go SDK TestGenEdgeConformanceFixtures (1.9b)"
+      "generated_by": "Go SDK TestGenEdgeConformanceFixtures (1.9b)",
+      "features": ["edges", "bloom", "wal"]
     },
     {
       "path": "m2-empty-create.akg",
@@ -21,7 +22,8 @@
         "next_wal_sequence": 1
       },
       "sha256": "6b0c5e4579200b71b55f813f72d885be1811a94cd746dafc74753ee7d909b841",
-      "generated_by": "Go reference implementation fixture workflow documented in README.md"
+      "generated_by": "Go reference implementation fixture workflow documented in README.md",
+      "features": []
     },
     {
       "path": "m2-minimal-node.akg",
@@ -35,7 +37,8 @@
         "next_wal_sequence": 1
       },
       "sha256": "95ad0c6578bf4aca490fea6f21ff92528f48c5fc339450d655095a46aa93b336",
-      "generated_by": "Go reference implementation fixture workflow documented in README.md"
+      "generated_by": "Go reference implementation fixture workflow documented in README.md",
+      "features": ["nodes"]
     },
     {
       "path": "m2-full-node.akg",
@@ -49,7 +52,8 @@
         "next_wal_sequence": 1
       },
       "sha256": "d6473bd807896ea1e32aff4a9b353e4fe12b4e21287a35ec6babf2ebec99a7e5",
-      "generated_by": "Go reference implementation fixture workflow documented in README.md"
+      "generated_by": "Go reference implementation fixture workflow documented in README.md",
+      "features": ["nodes", "tags"]
     },
     {
       "path": "m2-single-edge.akg",
@@ -63,7 +67,8 @@
         "next_wal_sequence": 1
       },
       "sha256": "244a32c488f8bac1de9407dacacb1c3f04e2138430367ee118ce0a5f3ac21acc",
-      "generated_by": "Go reference implementation fixture workflow documented in README.md"
+      "generated_by": "Go reference implementation fixture workflow documented in README.md",
+      "features": ["nodes", "edges"]
     },
     {
       "path": "m2-small-graph.akg",
@@ -77,7 +82,8 @@
         "next_wal_sequence": 1
       },
       "sha256": "f50974e1e820de5a7e9369a3d4e5efe57784e8941dec113b72fb09376644b35e",
-      "generated_by": "Go reference implementation fixture workflow documented in README.md"
+      "generated_by": "Go reference implementation fixture workflow documented in README.md",
+      "features": ["nodes", "edges", "tags"]
     },
     {
       "path": "m2-committed-wal-replay.akg",
@@ -91,7 +97,8 @@
         "next_wal_sequence": 10
       },
       "sha256": "7254ab6490bc153699ee1765555b4658e5ca2d1e8841b922318fcf18e6e80fec",
-      "generated_by": "Go reference implementation fixture workflow documented in README.md"
+      "generated_by": "Go reference implementation fixture workflow documented in README.md",
+      "features": ["nodes", "edges", "wal"]
     },
     {
       "path": "m2-uncommitted-wal-tail.akg",
@@ -105,7 +112,8 @@
         "next_wal_sequence": 11
       },
       "sha256": "c85d6750bbab3b7cbdde76167effc79a493a93d22a8930120bdf49a251bdb7dd",
-      "generated_by": "Go reference implementation fixture workflow documented in README.md"
+      "generated_by": "Go reference implementation fixture workflow documented in README.md",
+      "features": ["nodes", "edges", "wal"]
     },
     {
       "path": "m2-compacted.akg",
@@ -123,7 +131,8 @@
         }
       },
       "sha256": "27de132485734e2bdaa8d13417fef980702a3f8ee3367dec4009fddf44352307",
-      "generated_by": "Go reference implementation fixture workflow documented in README.md"
+      "generated_by": "Go reference implementation fixture workflow documented in README.md",
+      "features": ["nodes", "compaction"]
     },
     {
       "path": "m2-deletes-before-compaction.akg",
@@ -137,7 +146,8 @@
         "next_wal_sequence": 8
       },
       "sha256": "5373810b5e0867ec3528bbe375fc54723e5c8e4d4f224a13e1aeb82b3e12b432",
-      "generated_by": "Go reference implementation fixture workflow documented in README.md"
+      "generated_by": "Go reference implementation fixture workflow documented in README.md",
+      "features": ["nodes", "edges", "wal", "delete_node", "delete_edge"]
     },
     {
       "path": "m2-node-deleted-before-commit.akg",
@@ -152,7 +162,8 @@
         "absent_node": {"type": "note", "id": "n1"}
       },
       "sha256": "5eb7053000095aae583d06c51f01ab27ca4cdc18e4663dc9150a4bb271b44e71",
-      "generated_by": "Go SDK cmd/gen_delete_fixtures"
+      "generated_by": "Go SDK TestGenEdgeConformanceFixtures",
+      "features": ["nodes", "wal", "delete_node"]
     },
     {
       "path": "m2-node-deletion-survives-reopen.akg",
@@ -167,7 +178,8 @@
         "absent_node": {"type": "note", "id": "n1"}
       },
       "sha256": "dde689ec0511a5303a9fd82d5bceaf92a66f5c16a89257061d8d5a5dc3242cd2",
-      "generated_by": "Go SDK cmd/gen_delete_fixtures"
+      "generated_by": "Go SDK TestGenEdgeConformanceFixtures",
+      "features": ["nodes", "wal", "delete_node"]
     },
     {
       "path": "m2-edge-deleted-before-commit.akg",
@@ -181,7 +193,8 @@
         "next_wal_sequence": 6
       },
       "sha256": "d87f97d2ba34b224a183e6fedd20028ac02bf48c21ea01afd07b563485f515a1",
-      "generated_by": "Go SDK cmd/gen_delete_fixtures"
+      "generated_by": "Go SDK TestGenEdgeConformanceFixtures",
+      "features": ["nodes", "edges", "wal", "delete_edge"]
     },
     {
       "path": "m2-edge-deletion-survives-reopen.akg",
@@ -195,7 +208,8 @@
         "next_wal_sequence": 7
       },
       "sha256": "c3eafa747d72cd3faa23e1bc29f901f929ed0df1b30c6d958fe0a02237f6489d",
-      "generated_by": "Go SDK cmd/gen_delete_fixtures"
+      "generated_by": "Go SDK TestGenEdgeConformanceFixtures",
+      "features": ["nodes", "edges", "wal", "delete_edge"]
     },
     {
       "path": "m3-unknown-section-tolerated.akg",
@@ -209,7 +223,8 @@
         "next_wal_sequence": 1
       },
       "sha256": "cf0d21233564af3747ccdb3e64aaef68ab817ebe429778280700579cc2e4ae7d",
-      "generated_by": "Go reference implementation fixture workflow documented in README.md"
+      "generated_by": "Go reference implementation fixture workflow documented in README.md",
+      "features": ["nodes"]
     },
     {
       "path": "m2-reject-malformed-committed-wal.akg",
@@ -218,7 +233,8 @@
       "expected_error_category": "invalid_wal_record",
       "validation_scope": "store",
       "sha256": "2349a55b6cda86b04f5e503f39de2c38ebae60558d8895216ff3ff934cc3f5d7",
-      "corruption": "Generated from an empty valid store container with a committed PUT_EDGE WAL record, then one byte in the committed WAL record is flipped so ordinary open rejects before salvage."
+      "corruption": "Generated from an empty valid store container with a committed PUT_EDGE WAL record; the length field (bytes 9–12) is overwritten to 0x7FFFFFFF, triggering the buffer-size check in decodeWALRecord before the CRC check, yielding errInvalidWALRecord.",
+      "features": ["edges", "wal"]
     },
     {
       "path": "m2-reject-derived-index-mismatch.akg",
@@ -227,7 +243,8 @@
       "expected_error_category": "derived_index_mismatch",
       "validation_scope": "store",
       "sha256": "859b0ad44344572263bc8a4cc0ac8766f6ced0cad020b5eb7769a700520cd2ce",
-      "corruption": "Generated from a valid small graph Data section, then a derived index key is changed/removed so the authoritative primary records no longer match regenerated derived keys."
+      "corruption": "Generated from a valid small graph Data section, then a derived index key is changed/removed so the authoritative primary records no longer match regenerated derived keys.",
+      "features": ["nodes", "edges"]
     },
     {
       "path": "m3-reject-wrong-magic.akg",
@@ -236,7 +253,8 @@
       "expected_error_category": "invalid_header",
       "validation_scope": "store",
       "sha256": "b118421669d833e1dd1b3a203a1582a1fb8662fc0a12276cebc06a096e9c60b3",
-      "corruption": "Generated from a valid empty store container, then the first magic byte is flipped."
+      "corruption": "Generated from a valid empty store container, then the first magic byte is flipped.",
+      "features": []
     },
     {
       "path": "m3-reject-unsupported-major-version.akg",
@@ -245,7 +263,8 @@
       "expected_error_category": "invalid_header",
       "validation_scope": "store",
       "sha256": "15ed9a447b52d9122128dc667a6f694cc9bba47e3a04dc6e8addc5e099a02776",
-      "corruption": "Generated with a v2 header using the deterministic container encoder."
+      "corruption": "Generated with a v2 header using the deterministic container encoder.",
+      "features": []
     },
     {
       "path": "m3-reject-bad-header-checksum.akg",
@@ -254,7 +273,8 @@
       "expected_error_category": "checksum_mismatch",
       "validation_scope": "store",
       "sha256": "07d40d988b78c251aec5fae5f094df7be976af0d77cf179a39dcfe518c094ff7",
-      "corruption": "Generated from a valid empty store container, then one header checksum byte is flipped."
+      "corruption": "Generated from a valid empty store container, then one header checksum byte is flipped.",
+      "features": []
     },
     {
       "path": "m3-reject-bad-section-checksum.akg",
@@ -263,7 +283,8 @@
       "expected_error_category": "checksum_mismatch",
       "validation_scope": "store",
       "sha256": "45e80609def411436af0070f7bca8466834c2dde5f88c79efd8edc749cb7a214",
-      "corruption": "Generated from a valid empty store container, then one trailing section checksum byte is flipped."
+      "corruption": "Generated from a valid empty store container, then one trailing section checksum byte is flipped.",
+      "features": []
     },
     {
       "path": "m3-reject-duplicate-data-sections.akg",
@@ -272,7 +293,8 @@
       "expected_error_category": "invalid_section_table",
       "validation_scope": "store",
       "sha256": "3a89502572aa8ec6a79a9183b4a55a13e9b5c353d9f66d094bffec0fff31c9ea",
-      "corruption": "Generated as a structurally encoded container with two Data section table entries."
+      "corruption": "Generated as a structurally encoded container with two Data section table entries.",
+      "features": []
     },
     {
       "path": "m3-reject-overlapping-sections.akg",
@@ -281,7 +303,8 @@
       "expected_error_category": "invalid_section_ranges",
       "validation_scope": "store",
       "sha256": "2aed77276cd1a321b48e5c209343552825db9b8ee54665764b19fcfb27200699",
-      "corruption": "Generated with valid section payload bytes but overlapping section table offsets."
+      "corruption": "Generated with valid section payload bytes but overlapping section table offsets.",
+      "features": []
     },
     {
       "path": "m3-reject-malformed-bloom.akg",
@@ -290,7 +313,8 @@
       "expected_error_category": "invalid_bloom_section",
       "validation_scope": "store",
       "sha256": "eb461b6ccd1f702f255546ad2253e9c49fc93f99d4e91998c6774f2a0e8da573",
-      "corruption": "Generated with a one-byte Bloom payload that cannot satisfy v1 Bloom shape checks."
+      "corruption": "Generated with a one-byte Bloom payload that cannot satisfy v1 Bloom shape checks.",
+      "features": ["bloom"]
     },
     {
       "path": "m3-reject-invalid-wal-opcode.akg",
@@ -299,7 +323,8 @@
       "expected_error_category": "unknown_wal_operation",
       "validation_scope": "store",
       "sha256": "264c0035a5dbd1a20abbca563bbfa9455c38ac81d7bf4bbb6bef5822d345459c",
-      "corruption": "Generated with a WAL record carrying opcode 0xff and a valid record checksum."
+      "corruption": "Generated with a WAL record carrying opcode 0xff and a valid record checksum.",
+      "features": ["wal"]
     },
     {
       "path": "m3-reject-invalid-wal-put-node-payload.akg",
@@ -308,7 +333,8 @@
       "expected_error_category": "invalid_wal_payload",
       "validation_scope": "store",
       "sha256": "62fe57b764123e879f7542725a323bf707af489d73356763f74f769ef6391e13",
-      "corruption": "Generated with an invalid MessagePack payload for a committed PUT_NODE record."
+      "corruption": "Generated with an invalid MessagePack payload for a committed PUT_NODE record.",
+      "features": ["nodes", "wal"]
     },
     {
       "path": "m3-reject-invalid-wal-put-node-utf8-payload.akg",
@@ -317,7 +343,8 @@
       "expected_error_category": "invalid_wal_payload",
       "validation_scope": "store",
       "sha256": "6871323a94bd96edce7c5cd76e14ea7d6201bb0ae5d554785d8067fe92bb471a",
-      "corruption": "Generated with a syntactically valid MessagePack node payload containing invalid UTF-8 in nested meta."
+      "corruption": "Generated with a syntactically valid MessagePack node payload containing invalid UTF-8 in nested meta.",
+      "features": ["nodes", "wal"]
     },
     {
       "path": "m3-reject-invalid-wal-delete-node-payload.akg",
@@ -326,7 +353,8 @@
       "expected_error_category": "invalid_wal_payload",
       "validation_scope": "store",
       "sha256": "a717e3220ab3184694c7a1c210fefba6b6a7a94beed97252e5b4a3a6e4780180",
-      "corruption": "Generated with an invalid MessagePack payload for a committed DELETE_NODE record."
+      "corruption": "Generated with an invalid MessagePack payload for a committed DELETE_NODE record.",
+      "features": ["nodes", "wal", "delete_node"]
     },
     {
       "path": "m3-reject-invalid-wal-put-edge-payload.akg",
@@ -335,7 +363,8 @@
       "expected_error_category": "invalid_wal_payload",
       "validation_scope": "store",
       "sha256": "e4dfed37993f749fa9f56301e9631f6610a8a0d5ecf0b7aebbf48a0f0696dbf4",
-      "corruption": "Generated with an invalid MessagePack payload for a committed PUT_EDGE record."
+      "corruption": "Generated with an invalid MessagePack payload for a committed PUT_EDGE record.",
+      "features": ["edges", "wal"]
     },
     {
       "path": "m3-reject-invalid-wal-delete-edge-payload.akg",
@@ -344,7 +373,8 @@
       "expected_error_category": "invalid_wal_payload",
       "validation_scope": "store",
       "sha256": "6e455cc7693d31e48405a9bae12ddfbfd264337d24211aa80b4adb1ca515ea20",
-      "corruption": "Generated with an invalid MessagePack payload for a committed DELETE_EDGE record."
+      "corruption": "Generated with an invalid MessagePack payload for a committed DELETE_EDGE record.",
+      "features": ["edges", "wal", "delete_edge"]
     },
     {
       "path": "m3-reject-malformed-committed-wal-checksum.akg",
@@ -353,7 +383,8 @@
       "expected_error_category": "wal_checksum_mismatch",
       "validation_scope": "store",
       "sha256": "68b4eecb418e1ccc902eda06515a6722b7fac51afabe0942ef1c40cf6e9b4d7b",
-      "corruption": "Generated from a committed WAL batch, then one byte in the first committed record is flipped."
+      "corruption": "Generated from a committed WAL batch, then one byte in the first committed record is flipped.",
+      "features": ["wal"]
     },
     {
       "path": "m3-reject-duplicate-wal-sequence.akg",
@@ -362,7 +393,8 @@
       "expected_error_category": "invalid_wal_record",
       "validation_scope": "store",
       "sha256": "d1972b7856a087d2fabceb9721f67ed04a533c815be496af431e58993dba4fe6",
-      "corruption": "Generated with a committed WAL batch whose COMMIT record reuses the preceding mutation sequence number."
+      "corruption": "Generated with a committed WAL batch whose COMMIT record reuses the preceding mutation sequence number.",
+      "features": ["wal"]
     },
     {
       "path": "m3-reject-decreasing-wal-sequence.akg",
@@ -371,7 +403,8 @@
       "expected_error_category": "invalid_wal_record",
       "validation_scope": "store",
       "sha256": "c8a1b931a0b5b34eae88e9b0795e1b4971637c114e1203732c9f306e15e07a71",
-      "corruption": "Generated with a committed WAL batch whose COMMIT record sequence number is lower than the preceding mutation sequence number."
+      "corruption": "Generated with a committed WAL batch whose COMMIT record sequence number is lower than the preceding mutation sequence number.",
+      "features": ["wal"]
     },
     {
       "path": "m3-reject-invalid-node-data-payload.akg",
@@ -380,7 +413,8 @@
       "expected_error_category": "invalid_data_payload",
       "validation_scope": "store",
       "sha256": "b0838014911ea94e3dcebed7d795a6e58b6f076c65b15619e2ebcaa46914e903",
-      "corruption": "Generated with a primary node Data key whose value is invalid MessagePack, with Bloom regenerated for the damaged Data keys."
+      "corruption": "Generated with a primary node Data key whose value is invalid MessagePack, with Bloom regenerated for the damaged Data keys.",
+      "features": ["nodes"]
     },
     {
       "path": "m3-reject-invalid-node-data-utf8-payload.akg",
@@ -389,7 +423,8 @@
       "expected_error_category": "invalid_data_payload",
       "validation_scope": "store",
       "sha256": "e887f53b03fdc196ae9a07c013b1e95129507c65104a45e661d4bfb9ee0d273e",
-      "corruption": "Generated with a syntactically valid MessagePack node payload containing invalid UTF-8 in nested meta, with Bloom regenerated for the Data keys."
+      "corruption": "Generated with a syntactically valid MessagePack node payload containing invalid UTF-8 in nested meta, with Bloom regenerated for the Data keys.",
+      "features": ["nodes"]
     },
     {
       "path": "m3-reject-missing-derived-tag-index.akg",
@@ -398,7 +433,8 @@
       "expected_error_category": "derived_index_mismatch",
       "validation_scope": "store",
       "sha256": "efb8be8652d8b307d3a7e75d674fcb9b94ef21d49fd376de0956a2111c0c8fc5",
-      "corruption": "Generated from canonical node Data entries, then the required tag-derived index entry is omitted while Bloom matches the remaining keys."
+      "corruption": "Generated from canonical node Data entries, then the required tag-derived index entry is omitted while Bloom matches the remaining keys.",
+      "features": ["nodes", "tags"]
     }
   ]
 }

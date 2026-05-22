@@ -41,6 +41,7 @@ Fields:
 - `generated_by` — for accepted files, notes the deterministic Go reference workflow that produced the file.
 - `corruption` — for rejected files, explains what was intentionally damaged.
 - `store_expectation` — optional extra checks used by the Go reference tests, such as node count, edge count, and WAL sequence expectations.
+- `features` — array of logical capabilities exercised by the fixture (e.g. `["nodes", "edges", "wal", "delete_node", "delete_edge", "tags", "bloom", "compaction"]`). Informational only; ignored by the conformance runner. Use it to assess blast radius before a format change: `grep '"edges"' manifest.json` lists every fixture that contains edge records and would need regeneration or revalidation if the edge format changes.
 
 If you are writing another AKG reader, the main loop is simple: load `manifest.json`, read each `path`, then check whether your reader accepts or rejects it as declared. Go test names and Go error messages can be useful clues while debugging, but they are not the cross-implementation contract. The stable contract is the manifest: `expected_result` plus `expected_error_category` for rejected files.
 
