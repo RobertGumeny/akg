@@ -5,7 +5,7 @@ status: release-candidate docs
 
 # AKG conformance guide
 
-The conformance corpus is the shared test set for AKG implementations. It lives
+The conformance test suite is the shared test set for AKG implementations. It lives
 in [`../testdata/conformance`](../testdata/conformance) and is described by a
 machine-readable `manifest.json`.
 
@@ -13,7 +13,7 @@ Use it when writing a reader, writer, validator, SDK, or independent tooling in
 another language. You should not need to read Go test source to understand the
 expected behavior of each fixture.
 
-## How to use the corpus
+## How to use it
 
 For each manifest entry:
 
@@ -45,7 +45,7 @@ go test -count=1 ./...
 
 ## What conformance proves
 
-The corpus checks that implementations agree on release-critical format behavior:
+The test suite checks that implementations agree on release-critical format behavior:
 accepted examples open, malformed files fail closed, committed WAL is handled
 correctly, invalid checksums are rejected, and derived-key consistency is
 validated.

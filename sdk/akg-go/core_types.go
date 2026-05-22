@@ -1,0 +1,299 @@
+package akg
+
+import (
+	"crypto/rand"
+	"encoding/hex"
+	"errors"
+	"time"
+)
+
+const maxTags = 32
+
+type nodeID string
+type relation string
+type timestampMicros uint64
+type version uint32
+
+type coreNode struct {
+	Type      string
+	Title     string
+	Body      string
+	Meta      map[string]any
+	Tags      []string
+	CreatedAt timestampMicros
+	UpdatedAt timestampMicros
+	Version   version
+}
+
+type coreEdge struct {
+	FromNode   nodeID
+	ToNode     nodeID
+	Relation   relation
+	Strength   float64
+	Confidence *float64
+	Meta       map[string]any
+	CreatedAt  timestampMicros
+	UpdatedAt  timestampMicros
+	Version    version
+}
+
+type nodePut struct {
+	ID   nodeID
+	Node coreNode
+}
+
+type nodeDelete struct {
+	Type string
+	ID   nodeID
+}
+
+type edgeDelete struct {
+	FromNode nodeID
+	Relation relation
+	ToNode   nodeID
+}
+
+type edgePut struct {
+	Edge coreEdge
+}
+
+type nodeRecord struct {
+	ID   nodeID
+	Node coreNode
+}
+
+type nodeIdentity struct {
+	typeName string
+	id       nodeID
+}
+
+type edgeIdentity struct {
+	from     nodeID
+	relation relation
+	to       nodeID
+}
+
+var (
+	errMissingRequiredField = errors.New("missing required field")
+	errInvalidPayload       = errors.New("invalid payload")
+	errInvalidInput         = errors.New("invalid input")
+	errNotFound             = errors.New("not found")
+	errDuplicateTags        = errors.New("duplicate tags")
+	errTooManyTags          = errors.New("too many tags")
+)
+
+func (n *coreNode) applyReadDefaults() {
+	if n.Meta == nil {
+		n.Meta = map[string]any{}
+	}
+	if n.Tags == nil {
+		n.Tags = []string{}
+	}
+	if n.Version == 0 {
+		n.Version = 1
+	}
+}
+
+func (n coreNode) validateForWrite() error {
+	if n.Type == "" || n.Title == "" {
+		return errMissingRequiredField
+	}
+	return nil
+}
+
+func (e *coreEdge) applyReadDefaults() {
+	if e.Strength == 0 {
+		e.Strength = 0.5
+	}
+	if e.Meta == nil {
+		e.Meta = map[string]any{}
+	}
+	if e.Version == 0 {
+		e.Version = 1
+	}
+}
+
+func (e coreEdge) validateForWrite() error {
+	if e.FromNode == "" || e.ToNode == "" || e.Relation == "" {
+		return errMissingRequiredField
+	}
+	return nil
+}
+
+type storeState struct {
+	nodes map[nodeIdentity]nodeRecord
+	edges map[edgeIdentity]coreEdge
+	now   func() timestampMicros
+}
+
+func newStoreState() *storeState {
+	return &storeState{
+		nodes: make(map[nodeIdentity]nodeRecord),
+		edges: make(map[edgeIdentity]coreEdge),
+		now: func() timestampMicros {
+			return timestampMicros(time.Now().UnixMicro())
+		},
+	}
+}
+
+func (s *storeState) putNode(id nodeID, n coreNode) (nodeRecord, error) {
+	if s == nil {
+		return nodeRecord{}, errInvalidInput
+	}
+	if err := n.validateForWrite(); err != nil {
+		return nodeRecord{}, err
+	}
+	if err := validateTags(n.Tags); err != nil {
+		return nodeRecord{}, err
+	}
+	if id == "" {
+		generated, err := s.generateNodeID(n.Type)
+		if err != nil {
+			return nodeRecord{}, err
+		}
+		id = generated
+	}
+	if _, err := buildNodeKey(n.Type, id); err != nil {
+		return nodeRecord{}, err
+	}
+	for _, tag := range n.Tags {
+		if _, err := buildTagKey(tag, id); err != nil {
+			return nodeRecord{}, err
+		}
+	}
+	ident := nodeIdentity{typeName: n.Type, id: id}
+	n.Meta = cloneMap(n.Meta)
+	n.Tags = cloneStrings(n.Tags)
+	n.applyReadDefaults()
+	now := s.now()
+	if existing, ok := s.nodes[ident]; ok {
+		n.CreatedAt = existing.Node.CreatedAt
+		n.UpdatedAt = now
+		n.Version = existing.Node.Version + 1
+	} else {
+		n.CreatedAt = now
+		n.UpdatedAt = now
+		n.Version = 1
+	}
+	rec := nodeRecord{ID: id, Node: n}
+	s.nodes[ident] = cloneNodeRecord(rec)
+	return cloneNodeRecord(rec), nil
+}
+
+func (s *storeState) loadNodeRecord(rec nodeRecord) error {
+	if s == nil {
+		return errInvalidInput
+	}
+	if err := rec.Node.validateForWrite(); err != nil {
+		return err
+	}
+	if rec.Node.Type == "" || rec.ID == "" {
+		return errInvalidInput
+	}
+	if err := validateTags(rec.Node.Tags); err != nil {
+		return err
+	}
+	if _, err := buildNodeKey(rec.Node.Type, rec.ID); err != nil {
+		return err
+	}
+	rec.Node.applyReadDefaults()
+	rec.Node.Meta = cloneMap(rec.Node.Meta)
+	rec.Node.Tags = cloneStrings(rec.Node.Tags)
+	s.nodes[nodeIdentity{typeName: rec.Node.Type, id: rec.ID}] = rec
+	return nil
+}
+
+func (s *storeState) putEdge(e coreEdge) (coreEdge, error) {
+	if s == nil {
+		return coreEdge{}, errInvalidInput
+	}
+	if err := e.validateForWrite(); err != nil {
+		return coreEdge{}, err
+	}
+	if _, err := buildEdgeKey(e.FromNode, e.Relation, e.ToNode); err != nil {
+		return coreEdge{}, err
+	}
+	if _, err := buildEdgeIndexKey(e.ToNode, e.Relation, e.FromNode); err != nil {
+		return coreEdge{}, err
+	}
+	e.Meta = cloneMap(e.Meta)
+	e.applyReadDefaults()
+	now := s.now()
+	ident := edgeIdentity{from: e.FromNode, relation: e.Relation, to: e.ToNode}
+	if existing, ok := s.edges[ident]; ok {
+		e.CreatedAt = existing.CreatedAt
+		e.UpdatedAt = now
+		e.Version = existing.Version + 1
+	} else {
+		e.CreatedAt = now
+		e.UpdatedAt = now
+		e.Version = 1
+	}
+	s.edges[ident] = cloneEdge(e)
+	return cloneEdge(e), nil
+}
+
+func (s *storeState) loadEdgeRecord(e coreEdge) error {
+	if s == nil {
+		return errInvalidInput
+	}
+	if err := e.validateForWrite(); err != nil {
+		return err
+	}
+	if _, err := buildEdgeKey(e.FromNode, e.Relation, e.ToNode); err != nil {
+		return err
+	}
+	if _, err := buildEdgeIndexKey(e.ToNode, e.Relation, e.FromNode); err != nil {
+		return err
+	}
+	e.applyReadDefaults()
+	e.Meta = cloneMap(e.Meta)
+	s.edges[edgeIdentity{from: e.FromNode, relation: e.Relation, to: e.ToNode}] = e
+	return nil
+}
+
+func (s *storeState) generateNodeID(typeName string) (nodeID, error) {
+	var b [8]byte
+	for attempts := 0; attempts < 256; attempts++ {
+		if _, err := rand.Read(b[:]); err != nil {
+			return "", err
+		}
+		id := nodeID(hex.EncodeToString(b[:]))
+		if _, exists := s.nodes[nodeIdentity{typeName: typeName, id: id}]; !exists {
+			return id, nil
+		}
+	}
+	return "", errInvalidInput
+}
+
+func validateTags(tags []string) error {
+	if len(tags) > maxTags {
+		return errTooManyTags
+	}
+	seen := make(map[string]struct{}, len(tags))
+	for _, tag := range tags {
+		if _, ok := seen[tag]; ok {
+			return errDuplicateTags
+		}
+		seen[tag] = struct{}{}
+		if _, err := buildTagKey(tag, "tag-validation-placeholder"); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func cloneNodeRecord(rec nodeRecord) nodeRecord {
+	rec.Node.Meta = cloneMap(rec.Node.Meta)
+	rec.Node.Tags = cloneStrings(rec.Node.Tags)
+	return rec
+}
+
+func cloneEdge(e coreEdge) coreEdge {
+	e.Meta = cloneMap(e.Meta)
+	if e.Confidence != nil {
+		value := *e.Confidence
+		e.Confidence = &value
+	}
+	return e
+}

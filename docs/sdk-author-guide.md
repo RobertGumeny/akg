@@ -5,12 +5,14 @@ status: release-candidate docs
 
 # AKG SDK author guide
 
-AKG core is the format layer. SDKs and products should build user-facing memory
-behavior above it instead of adding that behavior to the file format. This is a
-boundary decision, not a claim that RAG, embeddings, vector search, or graph
-servers are bad fits for every agent system.
+AKG core defines the file format. An SDK builds useful behavior on top of it —
+ingestion pipelines, retrieval helpers, tagging utilities, traversal patterns,
+and any product-specific memory policy your users need. That work belongs in the
+SDK, not in the format layer.
 
-## A good SDK boundary
+This guide is for anyone implementing an AKG SDK in any language.
+
+## What an SDK does
 
 An SDK may provide:
 
@@ -22,26 +24,10 @@ An SDK may provide:
   format or represented as ordinary nodes and edges;
 - product policy for naming, retention, summarization, and permissions.
 
-Those are SDK choices. They should not be required for a conformant AKG reader.
+These are SDK choices. None of them are required for a conformant AKG reader or
+writer.
 
-## What not to put in the file format
-
-Do not make the core format depend on:
-
-- memory-file ingestion rules;
-- a specific agent workflow;
-- vector index internals;
-- query language execution;
-- merge/conflict-resolution policy;
-- background compaction or daemon behavior;
-- multi-writer coordination.
-
-If a feature can be rebuilt from nodes, edges, tags, metadata, or external
-indexes, keep it above core.
-
-## Example architecture
-
-One reasonable product architecture is:
+## Suggested architecture
 
 ```text
 Product or agent workflow
@@ -55,17 +41,28 @@ AKG core read/write/validate/compact
 .akg file
 ```
 
-In that shape, AKG core is the durable interchange layer. The SDK can choose how
-to create nodes and edges, how to search them, whether to pair them with RAG or
-vector indexes, and how to present them to users. Another SDK can make different
-choices while still producing conformant `.akg` files.
+AKG core is the durable interchange layer. Your SDK decides how to create nodes
+and edges, how to search them, whether to pair them with external retrieval
+systems, and how to surface them to users. Another SDK can make entirely
+different choices and still produce conformant `.akg` files.
 
-## Reference implementation relationship
+## Conformance testing
 
-The Go package is a canonical minimal reference implementation and conformance
-oracle. It is safe to use directly, but it is not the required architecture for
-every downstream SDK. Treat it as the behavior to match at the format boundary,
-not as a mandate to copy internal package layout.
+The conformance test suite lives in `testdata/conformance/`. It contains `.akg`
+fixture files and a `manifest.json` that describes accept/reject expectations for
+each one.
 
-For the current Go surface, see [Public API](API.md). For lifecycle behavior, see
-[Lifecycle guide](lifecycle.md).
+Run your implementation against it to verify format compatibility. You do not
+need to import the Go package or match its internal structure — the contract is
+the spec plus the fixture expectations.
+
+See the [Conformance guide](conformance.md) for setup and usage details.
+
+## Reference implementation
+
+The Go package at `github.com/RobertGumeny/akg-go` is a minimal reference
+implementation. Treat it as the behavior to match at the format boundary, not as
+a blueprint for your own internal structure.
+
+For the current Go surface, see [Public API](API.md). For lifecycle behavior,
+see [Lifecycle guide](lifecycle.md).

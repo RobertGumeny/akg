@@ -4,7 +4,7 @@ AKG defines a fail-closed reader model and a strict writer model.
 
 A conformant reader must reject files that violate the integrity and compatibility rules of the format. It must tolerate forward-compatible additions and apply defined defaults where this specification requires them. A conformant writer must produce files and payloads that satisfy all mandatory format rules.
 
-This section summarizes the required rejection behavior, the required tolerance behavior, the role of explicit recovery, and the conformance corpus used to validate implementations.
+This section summarizes the required rejection behavior, the required tolerance behavior, the role of explicit recovery, and the conformance test suite used to validate implementations.
 
 ## Rejection Requirements
 
@@ -51,13 +51,13 @@ Where this specification requires rejection of invalid input at write time, such
 
 Recovery is outside normal read semantics. A conformant ordinary reader must reject a corrupted file rather than attempting salvage automatically. Implementations may provide recovery tooling that extracts readable sections or valid WAL content from a damaged file, but that behavior must be explicit and opt-in. Ordinary open is strict even when a separate salvage path exists.
 
-## Conformance Corpus
+## Conformance Test Suite
 
-The AKG conformance corpus lives in the reference implementation repository.
+The AKG conformance test suite lives in the reference implementation repository.
 
-This corpus is the cross-implementation standard for reader behavior. An implementation that claims AKG compatibility should be validated against it.
+This is the cross-implementation standard for reader behavior. An implementation that claims AKG compatibility should be validated against it.
 
-The corpus must cover at least the following categories.
+The test suite must cover at least the following categories.
 
 ### Baseline Cases
 

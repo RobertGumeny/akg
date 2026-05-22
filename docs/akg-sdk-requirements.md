@@ -37,20 +37,20 @@ Explicitly out of scope for v0:
 
 The helpers map directly onto AKG core's existing derived keys (`t:`, `e:`, `ei:`). The SDK is a thin readable wrapper, not a new semantic layer.
 
-`PutNode` and `PutEdge` must return a stable, compact reference (e.g. `{type: "Hand", id: "h_47"}`). This reference shape is part of the public API, must be identical across both SDKs, and should be documented as such.
+`PutNode` must return a stable, compact reference (e.g. `{type: "Document", id: "doc_01"}`). This reference shape is part of the public API, must be identical across both SDKs, and should be documented as such.
 
 ## 2. Go SDK
 
-**Location:** `github.com/RobertGumeny/akg-format/sdk` — either a sibling Go module or a subpackage of the main module. Pick whatever keeps `go get` simple for downstream consumers.
+**Location:** `github.com/RobertGumeny/akg-go`
 
 **Definition of done:**
 - Helper surface implemented.
 - Conformance tests pass.
-- A ~50-line example program writes a few nodes and edges and reads them back.
+- An example program writes a few nodes and edges and reads them back.
 
 ## 3. TypeScript SDK
 
-**Location:** `akg/sdks/typescript/`
+**Location:** `sdk/akg-ts/`
 
 This is a from-scratch TypeScript implementation of AKG core — not a binding to the Go reference. It must produce and consume byte-identical `.akg` files, proven by the conformance tests.
 

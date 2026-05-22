@@ -145,7 +145,7 @@ The Data section payload is a flat sorted key/value stream. It consists of repea
 - `key_bytes`
 - `value_bytes`
 
-Entries are concatenated directly with no padding and repeated until the end of the Data payload. `value_len = 0` encodes an empty value. Data entries are sorted by canonical key order, which is bytewise ascending lexicographic order over the raw UTF-8 key bytes exactly as written. Duplicate keys are invalid.
+Entries are concatenated directly with no padding and repeated until the end of the Data payload. `value_len = 0` encodes an empty value. Data entries are sorted in required key order: bytewise ascending lexicographic order over the raw UTF-8 key bytes exactly as written. Duplicate keys are invalid.
 
 ## WAL Placement
 

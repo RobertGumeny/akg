@@ -24,7 +24,7 @@ AKG core covers:
 
 - the v1 binary file format and validation rules;
 - node, edge, key, section, Bloom, WAL, and compaction semantics;
-- a conformance corpus of accepted and rejected `.akg` files;
+- a conformance test suite of accepted and rejected `.akg` files;
 - a minimal Go reference implementation;
 - examples that demonstrate format lifecycle operations.
 
@@ -45,15 +45,15 @@ applications, indexes, or services above AKG core.
 
 - [Specification](spec/00-introduction.md): the technical contract for the file format.
 - [Public API](API.md): the minimal Go reference API for creating, opening, validating, mutating, reading, and compacting files.
-- [Conformance guide](conformance.md): how alternate implementations use the fixture corpus.
+- [Conformance guide](conformance.md): how to run the conformance tests from another implementation.
 - [Lifecycle guide](lifecycle.md): the ordinary file lifecycle shown by the runnable example.
 - [SDK author guide](sdk-author-guide.md): suggested architecture for building product behavior above core.
 - [Repository boundaries](repository-boundaries.md): ownership and scope for current and future repo areas.
 
 ## Reference implementation stance
 
-The Go implementation is canonical and minimal. It is the reference behavior and
-conformance oracle for AKG v1, but downstream SDKs do not have to import it or
+The Go implementation is a minimal reference. It defines the expected behavior at
+the format boundary for AKG v1, but downstream SDKs do not have to import it or
 copy its internal architecture. A Rust, TypeScript, Python, or product-specific
-implementation can be conformant if it follows the spec and agrees with the
-conformance corpus.
+implementation is conformant if it follows the spec and passes the conformance
+tests.

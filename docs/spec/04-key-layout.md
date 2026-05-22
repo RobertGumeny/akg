@@ -12,7 +12,7 @@ Adding an index in AKG therefore means writing additional prefixed keys alongsid
 
 All keys defined in this section are UTF-8 strings. The colon character `:` is the reserved key delimiter.
 
-Canonical key order is bytewise ascending lexicographic order over the raw UTF-8 key bytes exactly as written. Locale rules, Unicode normalization, and case folding do not apply.
+Required key order is bytewise ascending lexicographic order over the raw UTF-8 key bytes exactly as written. Locale rules, Unicode normalization, and case folding do not apply.
 
 ## Node Primary Key
 
@@ -78,7 +78,7 @@ Writers must reject non-conformant tags. They must not lowercase, normalize whit
 
 Temporal index keys are self-describing and include the full logical identity of the indexed record.
 
-Canonical forms:
+Key forms:
 
 - node: `ts:{timestamp}:n:{type}:{id}`
 - edge: `ts:{timestamp}:e:{from}:{relation}:{to}`

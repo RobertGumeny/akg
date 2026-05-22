@@ -44,7 +44,7 @@ become product prototypes or memory ingestion systems during v1 RC.
 Future official or community SDKs may live in separate repositories or in a
 clearly named area such as `sdks/` if the project later chooses that layout. They
 should document their own product-level APIs and keep AKG file compatibility
-anchored to the spec and conformance corpus.
+anchored to the spec and conformance tests.
 
 ## Documentation graph
 

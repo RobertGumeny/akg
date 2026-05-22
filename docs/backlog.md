@@ -15,40 +15,40 @@ Three epics, in order. Don't start epic 2 until epic 1's conformance tests pass.
 
 **Architecture note:** The reference implementation (`akg.go`) is the spec made executable, not a library. The Go SDK reads it as reference material but does not import it. The conformance test fixtures are the shared contract.
 
-- [ ] **1.1 Module setup**
+- [x] **1.1 Module setup**
   - Scaffold `sdk/akg-go/` with its own `go.mod`.
   - Decided module path: `github.com/RobertGumeny/akg-go`
   - Does not import `github.com/RobertGumeny/akg-format` (the reference).
   - **Done when:** `go mod tidy` runs clean, directory structure is in place, no reference import.
 
-- [ ] **1.2 Define and document NodeRef shape**
+- [x] **1.2 Define and document NodeRef shape**
   - `PutNode` and `PutEdge` return a `NodeRef` — a stable, compact, JSON-serializable identifier (e.g. `{"type": "Hand", "id": "h_47"}`).
   - This shape is public API and must be held identical in the TS SDK. Lock it down here first.
   - Document it in `sdk/akg-go/README.md` or an inline doc comment — wherever downstream SDK authors will find it.
   - **Done when:** `NodeRef` type is defined, its JSON shape is specified and documented, and there's a note that the TS SDK must match it exactly.
 
-- [ ] **1.3 Store lifecycle**
+- [x] **1.3 Store lifecycle**
   - Implement `Open(path) -> Store`, `Close(store)`, `Commit(store)`.
   - Path-based only, no global state, no implicit config.
   - WAL must be intact after `Close` — a store closed and reopened via `Open` must reflect all committed mutations.
   - **Done when:** a store can be created, written to, committed, closed, and reopened with data intact.
 
-- [ ] **1.4 Node operations**
+- [x] **1.4 Node operations**
   - Implement `PutNode(typeName, id, fields, tags) -> NodeRef`, `GetNode(typeName, id) -> Node | null`, `ListNodesByTag(tag) -> Node[]`.
   - `ListNodesByTag` maps onto the `t:` derived keys in the AKG format.
   - **Done when:** all three operations work correctly against real `.akg` files and round-trip cleanly through close/reopen.
 
-- [ ] **1.5 Edge operations**
+- [x] **1.5 Edge operations**
   - Implement `PutEdge(fromRef, relation, toRef, fields)`, `OutboundEdges(nodeRef, relation?) -> Edge[]`, `InboundEdges(nodeRef, relation?) -> Edge[]`.
   - `OutboundEdges`/`InboundEdges` map onto `e:` and `ei:` derived keys respectively. `relation` filter is optional — omitting it returns all edges in that direction.
   - **Done when:** all three operations work correctly against real `.akg` files.
 
-- [ ] **1.6 Conformance tests**
+- [x] **1.6 Conformance tests**
   - Wire `testdata/conformance/` fixtures (from the repo root) against the SDK's open/validate path.
   - For each fixture: `accept` cases must open without error, `reject` cases must fail. Match on `expected_error_category`, not exact error strings.
   - **Done when:** `go test ./...` in `sdk/akg-go/` passes all fixture cases with no skips.
 
-- [ ] **1.7 Example program**
+- [x] **1.7 Example program**
   - ~50-line program at `sdk/akg-go/examples/basic/main.go`.
   - Demonstrates the full helper surface: open a store, write nodes with tags, write edges, read back via `GetNode`, `ListNodesByTag`, `OutboundEdges`. Print human-readable output.
   - This is the template downstream consumers will copy — write it to be readable, not clever.

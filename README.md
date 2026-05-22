@@ -11,7 +11,7 @@ inside graph servers, framework-specific stores, or app-specific schemas. AKG
 makes the knowledge graph a portable file an agent can carry with it.
 
 This repository is the core/open-source home for the format: the v1 spec, the Go
-reference implementation, the conformance corpus, examples, and release-readiness
+reference implementation, conformance tests, examples, and release-readiness
 docs.
 
 AKG core is intentionally small. It defines how nodes and edges are represented
