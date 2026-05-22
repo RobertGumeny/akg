@@ -65,7 +65,7 @@ Three epics, in order. Don't start epic 2 until epic 1's conformance tests pass.
   - Add conformance fixtures covering delete round-trips. Generate each fixture file programmatically using the SDK (create store, write mutations, commit, close — the resulting `.akg` file is the fixture). Copy the file to `testdata/conformance/`, compute its SHA256, and add an entry to `testdata/conformance/manifest.json`. Cover at minimum: node deleted before commit, node deletion reflected after reopen, edge deleted before commit, edge deletion reflected after reopen.
   - **Done when:** both methods exist on `*Store`, deletion semantics above are enforced, pending WAL writes correctly, reopening a store reflects deletions, and conformance fixtures cover the new cases.
 
-- [ ] **1.9a Amend spec: carry full node identity in edge payloads and keys**
+- [x] **1.9a Amend spec: carry full node identity in edge payloads and keys**
   - Root cause of the `OutboundEdges`/`InboundEdges` contamination bug: edge payloads and keys reference nodes by bare `id` string, but the spec defines node identity as `(type, id)`. Edges cannot fully qualify which node they connect to. The fix is a breaking format change — carry `from_node_type` and `to_node_type` explicitly in edge payloads and keys.
   - **Spec changes (all in `docs/spec/`):**
     - `01-data-model.md`: Add `from_node_type: string` (required) and `to_node_type: string` (required) to the edge payload schema. Update the edge identity definition to `(from_node_type, from_node, relation, to_node_type, to_node)`.

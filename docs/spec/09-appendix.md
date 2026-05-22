@@ -21,7 +21,9 @@ A node's identifier is not part of the payload. The node-key identity is `n:{typ
 
 | Field | Type | Required on Write | Read-Time Default if Omitted |
 | --- | --- | --- | --- |
+| `from_node_type` | `string` | yes | none; reader rejects if missing |
 | `from_node` | `string` | yes | none; reader rejects if missing |
+| `to_node_type` | `string` | yes | none; reader rejects if missing |
 | `to_node` | `string` | yes | none; reader rejects if missing |
 | `relation` | `string` | yes | none; reader rejects if missing |
 | `strength` | `float` | no | `0.5` |
@@ -31,17 +33,17 @@ A node's identifier is not part of the payload. The node-key identity is `n:{typ
 | `updated_at` | `uint64` Unix microseconds | yes | `0` |
 | `version` | `uint32` | no | `1` |
 
-The identity of an edge is the tuple `(from_node, relation, to_node)`. AKG does not define an edge `id` field.
+The identity of an edge is the tuple `(from_node_type, from_node, relation, to_node_type, to_node)`. AKG does not define an edge `id` field.
 
 ## Key Prefix Table
 
 | Prefix | Key structure | Purpose |
 | --- | --- | --- |
 | `n:` | `n:{type}:{id}` | Node primary store, grouped by type |
-| `e:` | `e:{from_node}:{relation}:{to_node}` | Outbound edge lookup |
-| `ei:` | `ei:{to_node}:{relation}:{from_node}` | Inbound edge lookup |
+| `e:` | `e:{fromType}:{fromID}:{relation}:{toType}:{toID}` | Outbound edge lookup |
+| `ei:` | `ei:{toType}:{toID}:{relation}:{fromType}:{fromID}` | Inbound edge lookup |
 | `t:` | `t:{tag}:{node_id}` | Tag inverted index |
-| `ts:` | `ts:{timestamp}:n:{type}:{id}` or `ts:{timestamp}:e:{from}:{relation}:{to}` | Temporal index keyed on `updated_at` |
+| `ts:` | `ts:{timestamp}:n:{type}:{id}` or `ts:{timestamp}:e:{fromType}:{fromID}:{relation}:{toType}:{toID}` | Temporal index keyed on `updated_at` |
 
 ## WAL Operation Codes
 
@@ -105,7 +107,7 @@ The bit array is serialized as raw bytes with least-significant-bit-first orderi
 ## WAL Delete Payload Shapes
 
 - `DELETE_NODE` payload: MessagePack map with required `type: string` and `id: string`
-- `DELETE_EDGE` payload: MessagePack map with required `from_node: string`, `relation: string`, and `to_node: string`
+- `DELETE_EDGE` payload: MessagePack map with required `from_node_type: string`, `from_node: string`, `relation: string`, `to_node_type: string`, and `to_node: string`
 
 Unknown extra fields in these delete payloads are tolerated on read and ignored.
 
@@ -163,7 +165,7 @@ These are SDK conventions only. Any UTF-8 string remains valid for `type` and `r
 
 **compaction** — whole-file rewrite that keeps only live records, rebuilds derived sections, and discards tombstones and WAL history.
 
-**natural key** — identity derived from meaningful record fields rather than from a separate synthetic identifier. In AKG, edge identity is `(from_node, relation, to_node)`.
+**natural key** — identity derived from meaningful record fields rather than from a separate synthetic identifier. In AKG, edge identity is `(from_node_type, from_node, relation, to_node_type, to_node)`.
 
 **prefix scan** — lookup over a sorted key space using a shared leading string such as `n:decision:` or `t:auth:`.
 

@@ -41,19 +41,21 @@ A node's identifier is part of the node key, not part of the payload. This prese
 
 The primary key for an edge is:
 
-- `e:{from_node}:{relation}:{to_node}`
+- `e:{fromType}:{fromID}:{relation}:{toType}:{toID}`
 
-This key orders edges by source node first, then by relation, then by destination node. A reader that needs outbound edges for a node performs a prefix scan on `e:{from_node}:`.
+`fromType` and `toType` are the type strings of the source and destination nodes. `fromID` and `toID` are the node identifier strings.
 
-Because edge identity in AKG is the tuple `(from_node, relation, to_node)`, the edge primary key is also the edge key.
+This key orders edges by source node type first, then by source node ID, then by relation, then by destination node type, then by destination node ID. A reader that needs outbound edges for a node of type `T` and ID `X` performs a prefix scan on `e:{T}:{X}:`.
+
+Because edge identity in AKG is the tuple `(from_node_type, from_node, relation, to_node_type, to_node)`, the edge primary key encodes the full edge identity.
 
 ## Inverted Edge Index
 
 Every edge write must also produce an inbound index entry with the key:
 
-- `ei:{to_node}:{relation}:{from_node}`
+- `ei:{toType}:{toID}:{relation}:{fromType}:{fromID}`
 
-This key supports inbound traversal. A reader that needs to determine which nodes point to a given node performs a prefix scan on `ei:{to_node}:`.
+This key supports inbound traversal. A reader that needs to determine which nodes point to a given node of type `T` and ID `X` performs a prefix scan on `ei:{T}:{X}:`.
 
 The primary edge entry and the inverted edge entry are a single logical update. A conformant writer must write or delete them atomically with respect to the edge mutation being applied.
 
@@ -81,7 +83,7 @@ Temporal index keys are self-describing and include the full logical identity of
 Key forms:
 
 - node: `ts:{timestamp}:n:{type}:{id}`
-- edge: `ts:{timestamp}:e:{from}:{relation}:{to}`
+- edge: `ts:{timestamp}:e:{fromType}:{fromID}:{relation}:{toType}:{toID}`
 
 `timestamp` is the record's `updated_at` value, encoded as a Unix-microsecond timestamp.
 
@@ -104,10 +106,10 @@ The complete required key prefix set for AKG v1 is:
 | Prefix | Key structure | Purpose |
 | --- | --- | --- |
 | `n:` | `n:{type}:{id}` | Node primary store, grouped by type |
-| `e:` | `e:{from_node}:{relation}:{to_node}` | Outbound edge lookup |
-| `ei:` | `ei:{to_node}:{relation}:{from_node}` | Inbound edge lookup |
+| `e:` | `e:{fromType}:{fromID}:{relation}:{toType}:{toID}` | Outbound edge lookup |
+| `ei:` | `ei:{toType}:{toID}:{relation}:{fromType}:{fromID}` | Inbound edge lookup |
 | `t:` | `t:{tag}:{node_id}` | Tag inverted index |
-| `ts:` | `ts:{timestamp}:n:{type}:{id}` or `ts:{timestamp}:e:{from}:{relation}:{to}` | Temporal index keyed on `updated_at` |
+| `ts:` | `ts:{timestamp}:n:{type}:{id}` or `ts:{timestamp}:e:{fromType}:{fromID}:{relation}:{toType}:{toID}` | Temporal index keyed on `updated_at` |
 
 ## Validation and Rejection Behavior
 

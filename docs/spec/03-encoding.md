@@ -51,7 +51,9 @@ For `created_at` and `updated_at`, writers are strict and readers are lenient: a
 
 An edge payload has the following field set:
 
+- `from_node_type: string` — required
 - `from_node: string` — required
+- `to_node_type: string` — required
 - `to_node: string` — required
 - `relation: string` — required
 - `strength: float` — optional, default `0.5`
@@ -61,9 +63,9 @@ An edge payload has the following field set:
 - `updated_at: uint64` — required on write, read-time default `0` if absent
 - `version: uint32` — optional, default `1`
 
-A conformant writer must write `from_node`, `to_node`, `relation`, `created_at`, and `updated_at`.
+A conformant writer must write `from_node_type`, `from_node`, `to_node_type`, `to_node`, `relation`, `created_at`, and `updated_at`.
 
-A reader must reject an edge payload if any of the required fields `from_node`, `to_node`, or `relation` is missing. If an optional field is absent, the reader must apply its default silently.
+A reader must reject an edge payload if any of the required fields `from_node_type`, `from_node`, `to_node_type`, `to_node`, or `relation` is missing. If an optional field is absent, the reader must apply its default silently.
 
 As with nodes, `created_at` and `updated_at` are mandatory on write and have read-time default `0` when absent.
 

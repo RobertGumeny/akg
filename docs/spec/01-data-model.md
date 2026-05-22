@@ -43,7 +43,9 @@ This means the same `id` string may identify distinct nodes when paired with dif
 
 An edge payload in AKG has the following schema:
 
+- `from_node_type: string` — required
 - `from_node: string` — required
+- `to_node_type: string` — required
 - `to_node: string` — required
 - `relation: string` — required
 - `strength: float` — optional, default `0.5`
@@ -53,7 +55,9 @@ An edge payload in AKG has the following schema:
 - `updated_at: timestamp` — Unix microseconds, `uint64`
 - `version: uint32` — optional, default `1`
 
-`from_node` and `to_node` identify the source and destination nodes of the directed relationship.
+`from_node_type` and `to_node_type` identify the types of the source and destination nodes. Because node identity in AKG is the tuple `(type, id)`, an edge must carry the type of each endpoint to fully qualify which nodes it connects.
+
+`from_node` and `to_node` identify the source and destination node IDs of the directed relationship.
 
 `relation` names the relationship. The AKG format does not prescribe a closed vocabulary for this field. Any UTF-8 string is valid at the format level.
 
@@ -71,9 +75,11 @@ Conformant writers must write both timestamp fields. Readers that encounter an e
 
 ## Edge Identity
 
-Edges do not carry an `id` field. The identity of an edge is the natural key formed by the tuple `(from_node, relation, to_node)`.
+Edges do not carry an `id` field. The identity of an edge is the natural key formed by the tuple `(from_node_type, from_node, relation, to_node_type, to_node)`.
 
-This identity rule means that AKG permits at most one edge for a given source node, relation string, and destination node combination. Attributes such as `strength`, `confidence`, `meta`, timestamps, and `version` describe that edge instance but do not participate in its identity.
+Because node identity is `(type, id)`, edge identity must also carry both components of each endpoint's identity. Referencing nodes by bare `id` string alone would be ambiguous when two nodes of different types share the same `id` value.
+
+This identity rule means that AKG permits at most one edge for a given source node identity, relation string, and destination node identity combination. Attributes such as `strength`, `confidence`, `meta`, timestamps, and `version` describe that edge instance but do not participate in its identity.
 
 ## Mutability and Versioning
 
@@ -96,7 +102,7 @@ For nodes, the required fields are `type` and `title`. All other optional fields
 - `tags` defaults to `[]`
 - `version` defaults to `1`
 
-For edges, the required fields are `from_node`, `to_node`, and `relation`. All other optional fields have defined defaults:
+For edges, the required fields are `from_node_type`, `from_node`, `to_node_type`, `to_node`, and `relation`. All other optional fields have defined defaults:
 
 - `strength` defaults to `0.5`
 - `confidence` defaults to `null`

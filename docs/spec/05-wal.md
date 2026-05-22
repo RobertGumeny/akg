@@ -67,7 +67,7 @@ For `PUT_EDGE`, the payload must be a MessagePack edge payload as defined in Sec
 
 For `DELETE_NODE`, the payload must be a MessagePack map containing the required identity fields `type: string` and `id: string`. Unknown extra fields are tolerated on read and ignored.
 
-For `DELETE_EDGE`, the payload must be a MessagePack map containing the required identity fields `from_node: string`, `relation: string`, and `to_node: string`. Unknown extra fields are tolerated on read and ignored.
+For `DELETE_EDGE`, the payload must be a MessagePack map containing the required identity fields `from_node_type: string`, `from_node: string`, `relation: string`, `to_node_type: string`, and `to_node: string`. Unknown extra fields are tolerated on read and ignored.
 
 For `COMMIT`, the payload must be empty.
 
