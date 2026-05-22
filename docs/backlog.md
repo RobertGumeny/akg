@@ -146,7 +146,7 @@ Three epics, in order. Don't start epic 2 until epic 1's conformance tests pass.
 
 > Task list is intentionally coarse. Expect to add tasks as spec gaps surface — each one is either a spec amendment in `docs/spec/` or a TS bug.
 
-- [ ] **2.1 Project setup**
+- [x] **2.1 Project setup**
   - Scaffold `sdk/akg-ts/` with its own `package.json`.
   - npm package name: `akg-ts`.
   - TypeScript config, tsup for build, Vitest for tests.
@@ -158,14 +158,14 @@ Three epics, in order. Don't start epic 2 until epic 1's conformance tests pass.
     - **Error model:** Named error classes (`NotFoundError`, `InvalidInputError`, `MissingRequiredFieldError`). Callers use `instanceof`. `GetNode` returns `null` for a missing node (not-found is a valid answer, not an error). `DeleteNode` and `DeleteEdge` throw `NotFoundError` if the target does not exist (imperative operations where a miss is unexpected).
   - **Done when:** `npm install`, `npm run build`, and `npm test` all run clean against an empty test suite.
 
-- [ ] **2.2a MessagePack codec**
+- [x] **2.2a MessagePack codec**
   - Implement a self-contained MessagePack encoder and decoder, using `codec_internal.go` in the Go SDK as the reference implementation.
   - Supported types: nil, bool, string (fixstr + str32; UTF-8 validated), uint64 (read: uint8/16/32/64 all decoded to `number`; write: always uint64 wire format), float64, array (fixarray + array16), map with string keys sorted lexicographically (fixmap + map16).
   - Map keys must be sorted on encode — this is load-bearing for CRC correctness. UTF-8 must be validated on both encode and decode.
   - Internally use `bigint` for uint64 values that may exceed 2^53 (e.g. raw sequence numbers). Convert to `number` at the public API boundary only.
   - **Done when:** encode/decode round-trips correctly for all supported types, map key sorting is verified by test, and UTF-8 rejection is tested.
 
-- [ ] **2.2b Key layout**
+- [x] **2.2b Key layout**
   - Implement key builders and parsers for all five key types, using `keys_internal.go` as the reference:
     - Node: `n:{type}:{id}`
     - Edge: `e:{fromType}:{fromID}:{relation}:{toType}:{toID}`
@@ -175,20 +175,20 @@ Three epics, in order. Don't start epic 2 until epic 1's conformance tests pass.
   - Implement `validateComponent` (lowercase `[a-z0-9_]`, no leading/trailing/consecutive underscores) and `validateNodeID` (valid UTF-8, no colons, max 64 chars). These are used by the helper surface in Epic 3 — export them.
   - **Done when:** all key builders and parsers round-trip correctly and validation rules are tested against the same cases as the Go SDK.
 
-- [ ] **2.2c Container format**
+- [x] **2.2c Container format**
   - Implement the binary container: 64-byte header (magic `AKG\x00`, major/minor version, section count, CRC32-IEEE of header), section table (17 bytes per entry: 1B type + 8B offset + 8B length), section payloads (each with a 4-byte CRC32-IEEE trailer).
   - Implement the data section: length-prefixed key/value entries (4B key length + 4B value length + key + value), sorted by key.
   - Implement the bloom filter section: murmur3x64-128, 10 bits/key, 7 hash functions, seed 0. Match `format_internal.go` exactly — the bloom bytes must be byte-identical to what the Go SDK writes.
   - **Done when:** a container written by the TS codec can be opened by the Go SDK and vice versa. Test by encoding a known fixture and comparing bytes.
 
-- [ ] **2.2d WAL**
+- [x] **2.2d WAL**
   - Implement WAL record encode/decode: 8B sequence (little-endian uint64) + 1B operation + 4B payload length + payload + 4B CRC32-IEEE.
   - Operations: `PUT_NODE` (0x01), `DELETE_NODE` (0x02), `PUT_EDGE` (0x03), `DELETE_EDGE` (0x04), `COMMIT` (0x05). COMMIT records have zero-length payload.
   - On open: decode all records, replay only up to and including the last COMMIT record. Silently discard any uncommitted tail. Error if no committed records exist but the WAL section is non-empty and malformed.
   - Sequence numbers must be monotonically increasing within the committed range — reject on violation.
   - **Done when:** WAL encode/decode round-trips correctly, uncommitted tail truncation is tested, and sequence validation is tested.
 
-- [ ] **2.2e Store hydration + conformance tests**
+- [x] **2.2e Store hydration + conformance tests**
   - Wire the codec (2.2a), keys (2.2b), container (2.2c), and WAL (2.2d) into a read-only store hydration path: open a `.akg` file, decode the container, hydrate nodes and edges from the data section, replay the WAL, validate derived index consistency.
   - Wire `testdata/conformance/manifest.json` as the Vitest test driver. For each fixture: `accept` cases must open without error and match `store_expectation` (node count, edge count, WAL state); `reject` cases must fail and match `expected_error_category`. Respect `validation_scope` (`format` vs `store`).
   - Every time a spec ambiguity surfaces, resolve it in `docs/spec/` first, then implement. Do not paper over it in code. Add new fixtures when TS work uncovers gaps not covered by existing ones.
@@ -200,37 +200,37 @@ Three epics, in order. Don't start epic 2 until epic 1's conformance tests pass.
 
 **Goal:** Same `Open / PutNode / PutEdge / etc.` surface as the Go SDK, layered on top of Epic 2. Idiomatic TypeScript — not a mechanical translation of the Go API.
 
-- [ ] **3.1 Store lifecycle**
+- [x] **3.1 Store lifecycle**
   - Implement `async Open(path): Promise<Store>`, `async close(): Promise<void>`, `async commit(): Promise<void>`.
   - Same semantics as Go SDK: path-based, no global state, WAL intact after close. `commit()` is a no-op when nothing is pending. `close()` commits any pending mutations before closing. Calling `close()` on an already-closed store is a no-op.
   - `writeFileSync` equivalent: write atomically with `fsync` before returning.
   - **Done when:** a store can be created, written to, committed, closed, and reopened with data intact.
 
-- [ ] **3.2 Node operations**
+- [x] **3.2 Node operations**
   - Implement `putNode(typeName, id, fields, tags): NodeRef`, `getNode(typeName, id): Node | null`, `listNodesByTag(tag): Node[]`, `listNodes(typeName?): Node[]`.
   - All four are sync (in-memory). Results from list operations are sorted by node key, consistent with the Go SDK.
   - `getNode` returns `null` if the node does not exist — not an error.
   - `listNodes` with no argument (or empty string) returns all nodes. An unknown type returns an empty array, not an error.
   - **Done when:** all four operations round-trip correctly through close/reopen against real `.akg` files.
 
-- [ ] **3.3 Edge operations**
+- [x] **3.3 Edge operations**
   - Implement `putEdge(fromRef, relation, toRef, fields): void`, `outboundEdges(nodeRef, relation?): Edge[]`, `inboundEdges(nodeRef, relation?): Edge[]`.
   - All three are sync. Results are sorted by edge key, consistent with the Go SDK. Omitting `relation` returns all edges in that direction.
   - Both referenced nodes must exist at write time — throw `NotFoundError` if either is missing.
   - **Done when:** all three operations work correctly against real `.akg` files.
 
-- [ ] **3.4 Delete operations**
+- [x] **3.4 Delete operations**
   - Implement `deleteNode(typeName, id): void` and `deleteEdge(fromRef, relation, toRef): void`.
   - Both are sync. Throw `NotFoundError` if the target does not exist. `deleteNode` throws `InvalidInputError` if the node has any live inbound or outbound edges — callers must delete edges first.
   - **Done when:** both operations work correctly, deletion is reflected after close/reopen, and error cases are tested.
 
-- [ ] **3.5 Validation and error classes**
+- [x] **3.5 Validation and error classes**
   - Implement the three named error classes: `NotFoundError`, `InvalidInputError`, `MissingRequiredFieldError`. Each extends `Error`, sets `name` appropriately, and is exported.
   - Apply `validateComponent` and `validateNodeID` (from 2.2b) consistently across all write operations: type names and relation names via `validateComponent`; node IDs via `validateNodeID`; tags via `validateComponent`.
   - Invalid inputs throw `InvalidInputError`. Missing required fields (e.g. empty `title` on `putNode`) throw `MissingRequiredFieldError`.
   - **Done when:** all three error classes are exported, validation is applied consistently across all operations, and error cases are tested for each.
 
-- [ ] **3.6 NodeRef shape + example program**
+- [x] **3.6 NodeRef shape + example program**
   - Verify `NodeRef` JSON shape (`{"type": "...", "id": "..."}`) is byte-identical to the shape locked down in task 1.2.
   - Write a ~50-line example at `sdk/akg-ts/examples/basic.ts` mirroring `sdk/akg-go/examples/basic/main.go` exactly — same node types, same IDs, same edges, same output shape. The two examples should be directly comparable.
   - **Done when:** NodeRef shape matches, `npx tsx examples/basic.ts` runs cleanly and produces output matching the Go example.
