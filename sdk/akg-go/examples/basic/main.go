@@ -19,21 +19,21 @@ func main() {
 	must(err, "open store")
 
 	// Write nodes. Tags let you group nodes by any label you choose.
-	alice, err := store.PutNode("Person", "alice", akg.NodeFields{
+	alice, err := store.PutNode("person", "alice", akg.NodeFields{
 		Title: "Alice",
 		Body:  "A researcher in knowledge graphs.",
 		Meta:  map[string]any{"role": "lead"},
 	}, []string{"active", "researcher"})
 	must(err, "put alice")
 
-	bob, err := store.PutNode("Person", "bob", akg.NodeFields{
+	bob, err := store.PutNode("person", "bob", akg.NodeFields{
 		Title: "Bob",
 		Body:  "A software engineer.",
 		Meta:  map[string]any{"role": "engineer"},
 	}, []string{"active"})
 	must(err, "put bob")
 
-	paper, err := store.PutNode("Paper", "paper-001", akg.NodeFields{
+	paper, err := store.PutNode("paper", "paper-001", akg.NodeFields{
 		Title: "Graph-Based Context Compression",
 		Body:  "Explores AKG as an agent memory substrate.",
 	}, []string{"published"})
@@ -46,7 +46,7 @@ func main() {
 	err = store.PutEdge(bob, "reviewed", paper, akg.EdgeFields{Strength: 0.8})
 	must(err, "put reviewed edge")
 
-	err = store.PutEdge(alice, "collaborates-with", bob, akg.EdgeFields{})
+	err = store.PutEdge(alice, "collaborates_with", bob, akg.EdgeFields{})
 	must(err, "put collaborates-with edge")
 
 	// Commit and close. Reopen to show durability.
@@ -57,7 +57,7 @@ func main() {
 	defer store.Close()
 
 	// Read a single node by type and ID.
-	node, err := store.GetNode("Person", "alice")
+	node, err := store.GetNode("person", "alice")
 	must(err, "get alice")
 	fmt.Printf("Node: %s/%s — %q\n", node.Type, node.ID, node.Title)
 	fmt.Printf("  body: %s\n", node.Body)

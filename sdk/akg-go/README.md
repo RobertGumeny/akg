@@ -23,17 +23,36 @@ store, err := akg.Open("memory.akg")
 if err != nil { ... }
 defer store.Close()
 
-alice, err := store.PutNode("Person", "alice", akg.NodeFields{
+alice, err := store.PutNode("person", "alice", akg.NodeFields{
     Title: "Alice",
     Body:  "A researcher.",
 }, []string{"active"})
 
-bob, err := store.PutNode("Person", "bob", akg.NodeFields{
+bob, err := store.PutNode("person", "bob", akg.NodeFields{
     Title: "Bob",
 }, nil)
 
 err = store.PutEdge(alice, "knows", bob, akg.EdgeFields{})
 ```
+
+## Naming rules
+
+AKG enforces naming constraints on type names, relation names, and tags. Node IDs
+follow a separate, more permissive rule.
+
+| Component | Rule |
+|---|---|
+| Type names | Lowercase `[a-z0-9_]`; no leading, trailing, or consecutive underscores |
+| Relation names | Same as type names |
+| Tags | Same as type names |
+| Node IDs | Any valid UTF-8 string up to 64 characters; colons (`:`) are not allowed |
+
+Node IDs are deliberately more permissive — they may be user-supplied slugs, hex
+strings, UUIDs, or anything else that avoids `:`, which is reserved as a key
+delimiter. Type names, relation names, and tags share the same stricter rule because
+they are used as structural labels in the graph's key space.
+
+Invalid values are rejected at write time with `ErrInvalidInput`.
 
 ## API
 
@@ -63,8 +82,7 @@ generated. Returns a `NodeRef` you can pass directly to `PutEdge`.
 | `Body`  | no       | `string`        |
 | `Meta`  | no       | `map[string]any`|
 
-Tags must be lowercase `[a-z0-9_]` with no leading, trailing, or consecutive
-underscores. Invalid tags are rejected at write time.
+See [Naming rules](#naming-rules) for the constraints on `typeName` and tags.
 
 ### Writing edges
 
@@ -73,7 +91,8 @@ err := store.PutEdge(fromRef NodeRef, relation string, toRef NodeRef, fields Edg
 ```
 
 Writes or replaces the edge at `(fromRef, relation, toRef)`. Both referenced
-nodes must already exist.
+nodes must already exist. See [Naming rules](#naming-rules) for the constraints
+on `relation`.
 
 `EdgeFields`:
 
@@ -91,6 +110,10 @@ node, err := store.GetNode(typeName, id string) (*Node, error)
 
 // Returns all nodes carrying the given tag, sorted by key.
 nodes, err := store.ListNodesByTag(tag string) ([]Node, error)
+
+// Returns all nodes, optionally filtered to typeName. Pass "" to return all types.
+// An unknown type returns an empty slice and nil error. Results are sorted by key.
+nodes, err := store.ListNodes(typeName string) ([]Node, error)
 
 // Pass an empty relation to return all edges regardless of relation.
 edges, err := store.OutboundEdges(nodeRef NodeRef, relation string) ([]Edge, error)
@@ -115,7 +138,7 @@ Three sentinel errors are exported for callers that need to branch on error type
 |---|---|
 | `akg.ErrNotFound` | A `GetNode`, `DeleteNode`, or `DeleteEdge` call targets a node or edge that does not exist. |
 | `akg.ErrInvalidInput` | A caller passes an argument that violates a format or semantic constraint — invalid type name, missing required field, or an operation that would leave the graph inconsistent (e.g. deleting a node that still has live edges). |
-| `akg.ErrMissingRequiredField` | A decoded record is structurally valid but omits a field the format requires. Callers see this when opening a malformed file written by a buggy writer. |
+| `akg.ErrMissingRequiredField` | A required field is absent. Returned in two situations: (1) a `PutNode` call omits `Title`, or a `PutEdge` call omits a required identity field; (2) a decoded record in a file is structurally valid but missing a required field — callers see this when opening a malformed file written by a buggy writer. |
 
 Use `errors.Is` to test:
 

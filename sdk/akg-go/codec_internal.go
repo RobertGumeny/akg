@@ -51,15 +51,7 @@ func nodePayloadMap(n coreNode) (map[string]any, error) {
 	return m, nil
 }
 
-func decodeNodePayload(b []byte) (coreNode, error) {
-	v, n, err := decodeMsgpack(b)
-	if err != nil || n != len(b) {
-		return coreNode{}, errInvalidPayload
-	}
-	m, ok := v.(map[string]any)
-	if !ok {
-		return coreNode{}, errInvalidPayload
-	}
+func nodeFromMap(m map[string]any) (coreNode, error) {
 	typ, ok := m["type"].(string)
 	if !ok || typ == "" {
 		return coreNode{}, ErrMissingRequiredField
@@ -98,11 +90,19 @@ func decodeNodePayload(b []byte) (coreNode, error) {
 	return node, nil
 }
 
-func decodeNodePutPayload(b []byte) (nodePut, error) {
-	node, err := decodeNodePayload(b)
-	if err != nil {
-		return nodePut{}, err
+func decodeNodePayload(b []byte) (coreNode, error) {
+	v, n, err := decodeMsgpack(b)
+	if err != nil || n != len(b) {
+		return coreNode{}, errInvalidPayload
 	}
+	m, ok := v.(map[string]any)
+	if !ok {
+		return coreNode{}, errInvalidPayload
+	}
+	return nodeFromMap(m)
+}
+
+func decodeNodePutPayload(b []byte) (nodePut, error) {
 	v, n, err := decodeMsgpack(b)
 	if err != nil || n != len(b) {
 		return nodePut{}, errInvalidPayload
@@ -114,6 +114,10 @@ func decodeNodePutPayload(b []byte) (nodePut, error) {
 	id, ok := m["id"].(string)
 	if !ok || id == "" {
 		return nodePut{}, ErrMissingRequiredField
+	}
+	node, err := nodeFromMap(m)
+	if err != nil {
+		return nodePut{}, err
 	}
 	return nodePut{ID: nodeID(id), Node: node}, nil
 }

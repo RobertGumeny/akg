@@ -23,18 +23,18 @@ go run ./examples/basic
 Expected output:
 
 ```
-Node: Person/alice — "Alice"
+Node: person/alice — "Alice"
   body: A researcher in knowledge graphs.
   tags: [active, researcher]
   meta: map[role:lead]
 
 Active people:
-  Person/alice — "Alice"
-  Person/bob — "Bob"
+  person/alice — "Alice"
+  person/bob — "Bob"
 
-Outbound edges from Person/alice:
-  -[authored]-> Paper/paper-001 (strength 1.0)
-  -[collaborates-with]-> Person/bob (strength 0.5)
+Outbound edges from person/alice:
+  -[authored]-> paper/paper-001 (strength 1.0)
+  -[collaborates_with]-> person/bob (strength 0.0)
 ```
 
 The store is written to a temp file (`$TMPDIR/akg-basic-example.akg`) and cleaned up at the start of each run, so repeated runs always produce the same output.
