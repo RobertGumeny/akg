@@ -250,6 +250,37 @@ func (s *Store) InboundEdges(nodeRef NodeRef, relationValue string) ([]Edge, err
 	return edges, nil
 }
 
+// DeleteNode removes the node identified by (typeName, id).
+// Returns errNotFound if the node does not exist.
+// Returns errInvalidInput if the node has any live inbound or outbound edges.
+func (s *Store) DeleteNode(typeName, id string) error {
+	if s == nil || s.closed {
+		return errInvalidInput
+	}
+	if _, err := buildNodeKey(typeName, nodeID(id)); err != nil {
+		return err
+	}
+	return s.deleteNode(typeName, nodeID(id))
+}
+
+// DeleteEdge removes the edge identified by (fromRef, relation, toRef).
+// Returns errNotFound if the edge does not exist.
+func (s *Store) DeleteEdge(fromRef NodeRef, relationValue string, toRef NodeRef) error {
+	if s == nil || s.closed {
+		return errInvalidInput
+	}
+	if _, err := buildNodeKey(fromRef.Type, nodeID(fromRef.ID)); err != nil {
+		return err
+	}
+	if _, err := buildNodeKey(toRef.Type, nodeID(toRef.ID)); err != nil {
+		return err
+	}
+	if err := validateComponent(relationValue); err != nil {
+		return err
+	}
+	return s.deleteEdge(nodeID(fromRef.ID), relation(relationValue), nodeID(toRef.ID))
+}
+
 // Commit durably writes pending mutations and a COMMIT record.
 func (s *Store) Commit() error {
 	if s == nil {
@@ -337,6 +368,39 @@ func (s *Store) putEdge(e coreEdge) (coreEdge, error) {
 	}
 	s.pending = append(s.pending, pendingWALRecord{op: walOpPutEdge, payload: payload})
 	return rec, nil
+}
+
+func (s *Store) deleteNode(typeName string, id nodeID) error {
+	ident := nodeIdentity{typeName: typeName, id: id}
+	if _, ok := s.state.nodes[ident]; !ok {
+		return errNotFound
+	}
+	for _, edge := range s.state.edges {
+		if edge.FromNode == id || edge.ToNode == id {
+			return errInvalidInput
+		}
+	}
+	delete(s.state.nodes, ident)
+	payload, err := encodeNodeDeletePayload(nodeDelete{Type: typeName, ID: id})
+	if err != nil {
+		return err
+	}
+	s.pending = append(s.pending, pendingWALRecord{op: walOpDeleteNode, payload: payload})
+	return nil
+}
+
+func (s *Store) deleteEdge(fromNode nodeID, rel relation, toNode nodeID) error {
+	ident := edgeIdentity{from: fromNode, relation: rel, to: toNode}
+	if _, ok := s.state.edges[ident]; !ok {
+		return errNotFound
+	}
+	delete(s.state.edges, ident)
+	payload, err := encodeEdgeDeletePayload(edgeDelete{FromNode: fromNode, Relation: rel, ToNode: toNode})
+	if err != nil {
+		return err
+	}
+	s.pending = append(s.pending, pendingWALRecord{op: walOpDeleteEdge, payload: payload})
+	return nil
 }
 
 func hydrateDataEntries(entries []dataEntry) (*storeState, error) {

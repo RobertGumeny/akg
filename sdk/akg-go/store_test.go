@@ -1,6 +1,7 @@
 package akg
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
@@ -220,6 +221,201 @@ func TestPutEdgeOutboundInboundAndRelationFilter(t *testing.T) {
 	}
 	if len(inbound) != 2 || inbound[0].From.ID != "n1" || inbound[1].From.ID != "n3" {
 		t.Fatalf("unexpected inbound edges: %#v", inbound)
+	}
+}
+
+func TestDeleteNodeBasicSemantics(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "delete-node.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	if _, err := st.PutNode("note", "n1", NodeFields{Title: "hello"}, nil); err != nil {
+		t.Fatalf("PutNode: %v", err)
+	}
+	if err := st.DeleteNode("note", "n1"); err != nil {
+		t.Fatalf("DeleteNode: %v", err)
+	}
+	node, err := st.GetNode("note", "n1")
+	if err != nil {
+		t.Fatalf("GetNode after delete: %v", err)
+	}
+	if node != nil {
+		t.Fatal("node should be absent after DeleteNode")
+	}
+
+	// errNotFound when node does not exist
+	if err := st.DeleteNode("note", "n1"); !errors.Is(err, errNotFound) {
+		t.Fatalf("expected errNotFound on second DeleteNode, got %v", err)
+	}
+	if err := st.DeleteNode("note", "nonexistent"); !errors.Is(err, errNotFound) {
+		t.Fatalf("expected errNotFound for nonexistent node, got %v", err)
+	}
+}
+
+func TestDeleteNodeBlockedByLiveEdges(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "delete-node-edges.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	if _, err := st.PutNode("note", "n1", NodeFields{Title: "one"}, nil); err != nil {
+		t.Fatalf("PutNode n1: %v", err)
+	}
+	if _, err := st.PutNode("note", "n2", NodeFields{Title: "two"}, nil); err != nil {
+		t.Fatalf("PutNode n2: %v", err)
+	}
+	if err := st.PutEdge(NodeRef{Type: "note", ID: "n1"}, "links_to", NodeRef{Type: "note", ID: "n2"}, EdgeFields{}); err != nil {
+		t.Fatalf("PutEdge: %v", err)
+	}
+
+	if err := st.DeleteNode("note", "n1"); !errors.Is(err, errInvalidInput) {
+		t.Fatalf("expected errInvalidInput for node with outbound edge, got %v", err)
+	}
+	if err := st.DeleteNode("note", "n2"); !errors.Is(err, errInvalidInput) {
+		t.Fatalf("expected errInvalidInput for node with inbound edge, got %v", err)
+	}
+
+	// After deleting the edge, node deletion should succeed.
+	if err := st.DeleteEdge(NodeRef{Type: "note", ID: "n1"}, "links_to", NodeRef{Type: "note", ID: "n2"}); err != nil {
+		t.Fatalf("DeleteEdge: %v", err)
+	}
+	if err := st.DeleteNode("note", "n1"); err != nil {
+		t.Fatalf("DeleteNode after edge removal: %v", err)
+	}
+}
+
+func TestDeleteNodeRoundTripReopen(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "delete-node-reopen.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	if _, err := st.PutNode("note", "n1", NodeFields{Title: "hello"}, nil); err != nil {
+		t.Fatalf("PutNode: %v", err)
+	}
+	if err := st.Commit(); err != nil {
+		t.Fatalf("Commit: %v", err)
+	}
+	if err := st.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+
+	st2, err := Open(path)
+	if err != nil {
+		t.Fatalf("second Open: %v", err)
+	}
+	if err := st2.DeleteNode("note", "n1"); err != nil {
+		t.Fatalf("DeleteNode: %v", err)
+	}
+	if err := st2.Commit(); err != nil {
+		t.Fatalf("second Commit: %v", err)
+	}
+	if err := st2.Close(); err != nil {
+		t.Fatalf("second Close: %v", err)
+	}
+
+	st3, err := Open(path)
+	if err != nil {
+		t.Fatalf("third Open: %v", err)
+	}
+	node, err := st3.GetNode("note", "n1")
+	if err != nil {
+		t.Fatalf("GetNode after reopen: %v", err)
+	}
+	if node != nil {
+		t.Fatal("deleted node should be absent after reopen")
+	}
+}
+
+func TestDeleteEdgeBasicSemantics(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "delete-edge.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	if _, err := st.PutNode("note", "n1", NodeFields{Title: "one"}, nil); err != nil {
+		t.Fatalf("PutNode n1: %v", err)
+	}
+	if _, err := st.PutNode("note", "n2", NodeFields{Title: "two"}, nil); err != nil {
+		t.Fatalf("PutNode n2: %v", err)
+	}
+	if err := st.PutEdge(NodeRef{Type: "note", ID: "n1"}, "links_to", NodeRef{Type: "note", ID: "n2"}, EdgeFields{}); err != nil {
+		t.Fatalf("PutEdge: %v", err)
+	}
+	if err := st.DeleteEdge(NodeRef{Type: "note", ID: "n1"}, "links_to", NodeRef{Type: "note", ID: "n2"}); err != nil {
+		t.Fatalf("DeleteEdge: %v", err)
+	}
+	out, err := st.OutboundEdges(NodeRef{Type: "note", ID: "n1"}, "")
+	if err != nil {
+		t.Fatalf("OutboundEdges: %v", err)
+	}
+	if len(out) != 0 {
+		t.Fatalf("expected 0 outbound edges after delete, got %d", len(out))
+	}
+
+	// errNotFound when edge does not exist
+	if err := st.DeleteEdge(NodeRef{Type: "note", ID: "n1"}, "links_to", NodeRef{Type: "note", ID: "n2"}); !errors.Is(err, errNotFound) {
+		t.Fatalf("expected errNotFound on second DeleteEdge, got %v", err)
+	}
+}
+
+func TestDeleteEdgeRoundTripReopen(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "delete-edge-reopen.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	if _, err := st.PutNode("note", "n1", NodeFields{Title: "one"}, nil); err != nil {
+		t.Fatalf("PutNode n1: %v", err)
+	}
+	if _, err := st.PutNode("note", "n2", NodeFields{Title: "two"}, nil); err != nil {
+		t.Fatalf("PutNode n2: %v", err)
+	}
+	if err := st.PutEdge(NodeRef{Type: "note", ID: "n1"}, "links_to", NodeRef{Type: "note", ID: "n2"}, EdgeFields{}); err != nil {
+		t.Fatalf("PutEdge: %v", err)
+	}
+	if err := st.Commit(); err != nil {
+		t.Fatalf("Commit: %v", err)
+	}
+	if err := st.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+
+	st2, err := Open(path)
+	if err != nil {
+		t.Fatalf("second Open: %v", err)
+	}
+	if err := st2.DeleteEdge(NodeRef{Type: "note", ID: "n1"}, "links_to", NodeRef{Type: "note", ID: "n2"}); err != nil {
+		t.Fatalf("DeleteEdge: %v", err)
+	}
+	if err := st2.Commit(); err != nil {
+		t.Fatalf("second Commit: %v", err)
+	}
+	if err := st2.Close(); err != nil {
+		t.Fatalf("second Close: %v", err)
+	}
+
+	st3, err := Open(path)
+	if err != nil {
+		t.Fatalf("third Open: %v", err)
+	}
+	out, err := st3.OutboundEdges(NodeRef{Type: "note", ID: "n1"}, "")
+	if err != nil {
+		t.Fatalf("OutboundEdges after reopen: %v", err)
+	}
+	if len(out) != 0 {
+		t.Fatalf("deleted edge should be absent after reopen, got %d edges", len(out))
+	}
+	// Both nodes should still exist
+	for _, id := range []string{"n1", "n2"} {
+		node, err := st3.GetNode("note", id)
+		if err != nil {
+			t.Fatalf("GetNode %s: %v", id, err)
+		}
+		if node == nil {
+			t.Fatalf("node %s should still exist after edge deletion", id)
+		}
 	}
 }
 

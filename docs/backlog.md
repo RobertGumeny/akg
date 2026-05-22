@@ -54,6 +54,51 @@ Three epics, in order. Don't start epic 2 until epic 1's conformance tests pass.
   - This is the template downstream consumers will copy — write it to be readable, not clever.
   - **Done when:** `go run ./examples/basic` runs cleanly from `sdk/akg-go/` and produces legible output.
 
+- [x] **1.8 Expose DeleteNode and DeleteEdge**
+  - The WAL already has `walOpDeleteNode` and `walOpDeleteEdge` with full replay logic in `inspectAndReplayWAL`, but neither is reachable from the public API. The codec already has `encodeNodeDeletePayload`/`decodeNodeDeletePayload` and `encodeEdgeDeletePayload`/`decodeEdgeDeletePayload`.
+  - Implement `DeleteNode(typeName, id string) error` and `DeleteEdge(fromRef NodeRef, relation string, toRef NodeRef) error` on `*Store`, following the same pending-WAL pattern as `PutNode`/`PutEdge` (update `s.state` immediately, append to `s.pending`).
+  - **Deletion semantics (SDK-level decisions, not spec-level):**
+    - `DeleteNode` must error if the node has any live inbound or outbound edges. Callers must delete edges first. This is intentionally strict for now; cascading delete is a future extension.
+    - `DeleteNode` must error if the node does not exist (`errNotFound`).
+    - `DeleteEdge` must error if the edge does not exist (`errNotFound`).
+  - Add internal `deleteNode` and `deleteEdge` helpers on `*Store` mirroring the existing `putNode`/`putEdge` pattern.
+  - Add conformance fixtures covering delete round-trips. Generate each fixture file programmatically using the SDK (create store, write mutations, commit, close — the resulting `.akg` file is the fixture). Copy the file to `testdata/conformance/`, compute its SHA256, and add an entry to `testdata/conformance/manifest.json`. Cover at minimum: node deleted before commit, node deletion reflected after reopen, edge deleted before commit, edge deletion reflected after reopen.
+  - **Done when:** both methods exist on `*Store`, deletion semantics above are enforced, pending WAL writes correctly, reopening a store reflects deletions, and conformance fixtures cover the new cases.
+
+- [ ] **1.9a Amend spec: carry full node identity in edge payloads and keys**
+  - Root cause of the `OutboundEdges`/`InboundEdges` contamination bug: edge payloads and keys reference nodes by bare `id` string, but the spec defines node identity as `(type, id)`. Edges cannot fully qualify which node they connect to. The fix is a breaking format change — carry `from_node_type` and `to_node_type` explicitly in edge payloads and keys.
+  - **Spec changes (all in `docs/spec/`):**
+    - `01-data-model.md`: Add `from_node_type: string` (required) and `to_node_type: string` (required) to the edge payload schema. Update the edge identity definition to `(from_node_type, from_node, relation, to_node_type, to_node)`.
+    - `03-encoding.md`: Mark `from_node_type` and `to_node_type` as required fields in edge payload encoding.
+    - `04-key-layout.md`: Update edge primary key to `e:{fromType}:{fromID}:{relation}:{toType}:{toID}`. Update edge index key to `ei:{toType}:{toID}:{relation}:{fromType}:{fromID}`. Update temporal edge key accordingly.
+    - `05-wal.md`: Update `PUT_EDGE` payload to require `from_node_type` and `to_node_type`. Update `DELETE_EDGE` payload to require `from_node_type` and `to_node_type` (in addition to existing identity fields).
+    - `09-appendix.md`: Update the WAL delete payload table for `DELETE_EDGE` to include the two new required type fields.
+  - No code changes in this task — spec only.
+  - **Done when:** all five spec files are updated consistently and the new edge format is unambiguous.
+
+- [ ] **1.9b Implement spec change from 1.9a in the Go SDK**
+  - Implement the breaking edge format change defined in 1.9a. All five spec files in `docs/spec/` are the authoritative source — read them before writing code.
+  - **`core_types.go`:** Add `FromType string` and `ToType string` to `coreEdge`. Expand `edgeIdentity` to `{fromType, from, relation, toType, to}`. Add `FromType`/`ToType` to `edgeDelete`. Update `coreEdge.validateForWrite()` to require non-empty `FromType` and `ToType`. Update `storeState.putEdge()` and `loadEdgeRecord()` to key on the new 5-field `edgeIdentity`.
+  - **`keys_internal.go`:** Update `parsedEdgeKey` and `parsedEdgeIndexKey` to include type fields. Update `buildEdgeKey` signature and format to `e:{fromType}:{fromID}:{relation}:{toType}:{toID}` (6 parts). Update `parseEdgeKey` to parse 6 parts. Update `buildEdgeIndexKey` and `parseEdgeIndexKey` similarly. Update `buildTemporalEdgeKey` to use the new `buildEdgeKey` signature.
+  - **`codec_internal.go`:** Add `from_node_type` and `to_node_type` as required fields in edge payload MessagePack encode/decode. Add them as required fields in `DELETE_EDGE` payload encode/decode.
+  - **`edge.go`:** Update `coreEdgeFromFields` to populate `FromType`/`ToType` from `fromRef.Type`/`toRef.Type`. Update `edgeFromRecord` to read types directly from the edge record instead of calling `resolveNodeType`. Delete `resolveNodeType` — it is no longer needed.
+  - **`store.go`:** Update `OutboundEdges` scan to filter on `rec.FromType == nodeRef.Type && rec.FromNode == nodeID(nodeRef.ID)`. Update `InboundEdges` to filter on `rec.ToType == nodeRef.Type && rec.ToNode == nodeID(nodeRef.ID)`. Update all `buildEdgeKey`/`buildEdgeIndexKey` callsites to pass type arguments. Update WAL `DELETE_EDGE` replay to use the new 5-field `edgeIdentity`.
+  - **Fixture regeneration:** Regenerate all conformance fixtures that contain edges — `m2-single-edge.akg`, `m2-small-graph.akg`, `m1-data-bloom-wal.akg`, `m2-deletes-before-compaction.akg`. Update their SHA256 values in `testdata/conformance/manifest.json`. Generate each file programmatically using the SDK (same pattern as prior fixture tasks).
+  - **New test:** Add a test that creates two nodes of different types sharing the same ID string, connects one via an edge, and verifies that `OutboundEdges` on the other type returns empty rather than the wrong edge.
+  - **Done when:** `go test ./...` passes, all affected conformance fixtures are regenerated with correct SHA256s in `manifest.json`, and the cross-type collision test passes.
+
+- [ ] **1.10 Add ListNodes (enumerate all nodes, optionally by type)**
+  - There is currently no way to enumerate all live nodes without knowing their tags. Agents iterating the full graph context have no entry point.
+  - Implement `ListNodes(typeName string) ([]Node, error)` on `*Store`. If `typeName` is empty, return all live nodes. If non-empty, return only nodes of that type. Results sorted by node key (consistent with `ListNodesByTag`).
+  - If `typeName` is non-empty, validate it with `validateComponent` before scanning — consistent with how other methods validate their inputs.
+  - A non-existent type returns an empty slice and `nil` error (not `errNotFound`) — consistent with `ListNodesByTag` returning empty for a tag with no matches.
+  - **Done when:** `go test ./...` passes with test cases covering: all-nodes (empty typeName), type-filtered, empty typeName returns all nodes, unknown type returns empty slice, invalid typeName returns error.
+
+- [ ] **1.11 Document Close and Commit semantics**
+  - `Close()` commits any pending mutations before closing — this is the intended, idiomatic behavior. `Commit()` is a no-op (returns `nil`) when there is nothing pending — also intentional. Calling `Close()` on an already-closed store returns `nil` silently — also intentional. All three behaviors are undocumented.
+  - Update the doc comment on `Close` to state: (1) it commits pending mutations before closing, (2) calling it on an already-closed store is a no-op. Update the doc comment on `Commit` to state that it is a no-op when there are no pending mutations.
+  - **Done when:** both doc comments are updated and tests cover: commit-on-close (mutations written after last `Commit` survive a `Close` + `Open` round-trip), no-op on empty pending (`Commit` called twice in a row returns `nil` and does not corrupt state), and close-on-already-closed (returns `nil`).
+
 ---
 
 ## Epic 2: TypeScript SDK

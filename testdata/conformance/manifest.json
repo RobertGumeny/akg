@@ -140,6 +140,64 @@
       "generated_by": "Go reference implementation fixture workflow documented in README.md"
     },
     {
+      "path": "m2-node-deleted-before-commit.akg",
+      "purpose": "PutNode and DeleteNode in a single commit. Node must be absent after open.",
+      "expected_result": "accept",
+      "validation_scope": "store",
+      "store_expectation": {
+        "nodes": 0,
+        "edges": 0,
+        "has_uncompacted_wal": true,
+        "next_wal_sequence": 4,
+        "absent_node": {"type": "note", "id": "n1"}
+      },
+      "sha256": "5eb7053000095aae583d06c51f01ab27ca4cdc18e4663dc9150a4bb271b44e71",
+      "generated_by": "Go SDK cmd/gen_delete_fixtures"
+    },
+    {
+      "path": "m2-node-deletion-survives-reopen.akg",
+      "purpose": "PutNode committed, then DeleteNode in a second commit. Node must be absent after reopen.",
+      "expected_result": "accept",
+      "validation_scope": "store",
+      "store_expectation": {
+        "nodes": 0,
+        "edges": 0,
+        "has_uncompacted_wal": true,
+        "next_wal_sequence": 5,
+        "absent_node": {"type": "note", "id": "n1"}
+      },
+      "sha256": "dde689ec0511a5303a9fd82d5bceaf92a66f5c16a89257061d8d5a5dc3242cd2",
+      "generated_by": "Go SDK cmd/gen_delete_fixtures"
+    },
+    {
+      "path": "m2-edge-deleted-before-commit.akg",
+      "purpose": "PutNode×2, PutEdge, and DeleteEdge in a single commit. Edge must be absent; nodes remain.",
+      "expected_result": "accept",
+      "validation_scope": "store",
+      "store_expectation": {
+        "nodes": 2,
+        "edges": 0,
+        "has_uncompacted_wal": true,
+        "next_wal_sequence": 6
+      },
+      "sha256": "b8d0241522a15503a521aa56ee4ecce9d0b7447ef5cb328e4649d4cd44c65927",
+      "generated_by": "Go SDK cmd/gen_delete_fixtures"
+    },
+    {
+      "path": "m2-edge-deletion-survives-reopen.akg",
+      "purpose": "PutNode×2+PutEdge committed, then DeleteEdge in a second commit. Edge must be absent after reopen; nodes remain.",
+      "expected_result": "accept",
+      "validation_scope": "store",
+      "store_expectation": {
+        "nodes": 2,
+        "edges": 0,
+        "has_uncompacted_wal": true,
+        "next_wal_sequence": 7
+      },
+      "sha256": "24c37191cae83b1a2337c7afe5915175a8539a58eefbf720c03d08dbc8e2cae9",
+      "generated_by": "Go SDK cmd/gen_delete_fixtures"
+    },
+    {
       "path": "m3-unknown-section-tolerated.akg",
       "purpose": "Store-level open tolerates a structurally valid unknown section while hydrating known Data/Bloom/WAL sections.",
       "expected_result": "accept",
