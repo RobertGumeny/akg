@@ -1,11 +1,5 @@
 # AKG TypeScript SDK — Execution PRD
 
-## Goal prompt
-
-> Please execute all steps outlined in `docs/PRD.md` and report back when done.
-
----
-
 ## Objective
 
 Build a TypeScript SDK for AKG (`sdk/akg-ts/`) that produces and consumes byte-identical `.akg` files to the Go SDK. The TS SDK is the second of two first-party SDKs; it must be independently implemented (no Go interop) and pass the shared conformance fixture suite.
