@@ -575,8 +575,8 @@ func TestListNodes(t *testing.T) {
 		t.Fatalf("expected empty for unknown type, got %d nodes", len(unknown))
 	}
 
-	// invalid typeName (contains colon) returns error
-	_, err = st.ListNodes("bad:type")
+	// invalid typeName (uppercase rejected by tightened validateComponent) returns error
+	_, err = st.ListNodes("BadType")
 	if err == nil {
 		t.Fatal("expected error for invalid typeName")
 	}

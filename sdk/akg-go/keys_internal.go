@@ -207,18 +207,11 @@ func validateNodeID(id nodeID) error {
 }
 
 func validateComponent(value string) error {
-	if value == "" || !utf8.ValidString(value) || strings.ContainsRune(value, ':') {
-		return errInvalidComponent
-	}
-	return nil
-}
-
-func validateTag(tag string) error {
-	if validateComponent(tag) != nil {
+	if value == "" {
 		return errInvalidComponent
 	}
 	prevUnderscore := false
-	for i, r := range tag {
+	for i, r := range value {
 		switch {
 		case r >= 'a' && r <= 'z', r >= '0' && r <= '9':
 			prevUnderscore = false
@@ -235,6 +228,10 @@ func validateTag(tag string) error {
 		return errInvalidComponent
 	}
 	return nil
+}
+
+func validateTag(tag string) error {
+	return validateComponent(tag)
 }
 
 func parseCanonicalTimestamp(value string) (timestampMicros, error) {
