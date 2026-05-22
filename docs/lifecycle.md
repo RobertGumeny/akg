@@ -5,7 +5,7 @@ status: release-candidate docs
 
 # AKG lifecycle guide
 
-The core AKG lifecycle is deliberately small:
+The AKG file lifecycle is deliberately small:
 
 1. create a file;
 2. add or delete nodes and edges;

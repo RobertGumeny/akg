@@ -5,7 +5,7 @@ status: release-candidate docs
 
 # AKG repository boundaries
 
-This repository should stay understandable as the AKG core project. The current
+This repository should stay understandable as the AKG project. The current
 release-candidate boundary is:
 
 ## Specification
@@ -23,20 +23,20 @@ Path: [`testdata/conformance`](../testdata/conformance/README.md)
 The conformance test collection contains `.akg` test fixtures plus a `manifest.json`. It lets alternate
 implementation SDKs test accept/reject behavior without depending on Go test names or Go error strings.
 
-## Reference implementation
+## Go Reference SDK
 
 Paths: [`akg.go`](../akg.go), [`internal`](../internal), [`cmd/akg`](../cmd/akg)
 
-The Go code is a minimal reference implementation. The root package
-exposes the small public API documented in [API.md](API.md). Internals may be
-organized however the reference implementation needs, but they are not a public
-SDK contract.
+The Go code is the Reference SDK — it lives here to prove the spec works and
+give implementers a concrete behavior target. The root package exposes the small
+public API documented in [API.md](API.md). Internals may be organized however
+the Reference SDK needs, but they are not a public SDK contract.
 
 ## Examples
 
 Path: [`examples`](../examples)
 
-Examples should demonstrate core AKG lifecycle or format usage. They should not
+Examples should demonstrate AKG file lifecycle or format usage. They should not
 become product prototypes or memory ingestion systems during v1 RC.
 
 ## Future SDKs
@@ -50,7 +50,7 @@ anchored to the spec and conformance tests.
 
 Use small linked Markdown documents instead of one large document:
 
-- [Core concepts](core.md)
+- [Overview](core.md)
 - [Lifecycle guide](lifecycle.md)
 - [Conformance guide](conformance.md)
 - [SDK author guide](sdk-author-guide.md)

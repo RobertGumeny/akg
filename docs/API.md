@@ -6,7 +6,7 @@ status: release-candidate docs
 # AKG v1 Public API
 
 The root Go package intentionally exposes the smallest useful boundary for the
-AKG v1 reference implementation.
+AKG v1 Go Reference SDK.
 
 ## Package choice
 
@@ -34,19 +34,19 @@ records, indexes, write logs, deleted records, and older replaced versions.
 
 ## v1 read-helper policy
 
-Milestone 3 keeps the core read surface to exact lookup plus whole-state lists:
+Milestone 3 keeps the read surface to exact lookup plus whole-state lists:
 
 - `GetNode(typeName, id)` and `GetEdge(fromNode, relation, toNode)` return one
   current live record by its authoritative identity.
 - `ListNodes()` and `ListEdges()` return current live records only, primarily so
-  callers can inspect, export, validate, or build their own indexes above core.
+  callers can inspect, export, validate, or build their own indexes above the format.
 
-The v1 core **does not add** helpers for tag lookup, outbound edge listing, or
+The v1 Reference SDK **does not add** helpers for tag lookup, outbound edge listing, or
 inbound edge listing. Those access patterns map to existing v1 derived keys
-(`t:`, `e:`, and `ei:`), but exposing them now would start turning the reference
-implementation into a convenience/query layer. SDKs and applications can build
+(`t:`, `e:`, and `ei:`), but exposing them now would start turning the Reference
+SDK into a convenience/query layer. The official SDKs and applications can build
 those helpers from `ListNodes`/`ListEdges` or maintain their own read indexes
-above AKG core without changing the file format.
+without changing the file format.
 
 This keeps the reference API aligned with the conformance role of the Go
 implementation: create/open/validate/mutate/commit/compact files and expose the

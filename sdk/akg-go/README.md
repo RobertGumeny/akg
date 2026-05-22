@@ -3,7 +3,10 @@
 Go SDK for reading and writing AKG knowledge graph files.
 
 - Module: `github.com/RobertGumeny/akg-go`
-- Implements AKG v1 independently — does not import the reference package.
+- Implements AKG v1 independently, without importing the Go Reference SDK — this
+  keeps the public API free to expose the full surface an application needs
+  (tag lookup, edge traversal, etc.) without being constrained by the Reference
+  SDK's intentionally minimal scope.
 
 ## Install
 

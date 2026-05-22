@@ -32,4 +32,4 @@ Accordingly, AKG is not any of the following:
 
 A conformant implementation may be used alongside those systems, but the AKG format does not attempt to subsume them.
 
-The reference implementation for AKG is written in Go. In Phase 1, its scope is limited to the format layer: reading, writing, compaction, WAL replay during ordinary open, and explicit recovery tooling. AKG v1 uses an accumulating WAL between compactions rather than rewriting the full file on every commit. The reference implementation lives alongside the conformance test suite, which is the cross-implementation test set for format behavior.
+The Go Reference SDK for AKG lives alongside this specification. In Phase 1, its scope is limited to the format layer: reading, writing, compaction, WAL replay during ordinary open, and explicit recovery tooling. AKG v1 uses an accumulating WAL between compactions rather than rewriting the full file on every commit. The Reference SDK lives alongside the conformance test suite, which is the cross-implementation test set for format behavior.

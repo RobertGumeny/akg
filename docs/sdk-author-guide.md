@@ -5,64 +5,37 @@ status: release-candidate docs
 
 # AKG SDK author guide
 
-AKG core defines the file format. An SDK builds useful behavior on top of it —
-ingestion pipelines, retrieval helpers, tagging utilities, traversal patterns,
-and any product-specific memory policy your users need. That work belongs in the
-SDK, not in the format layer.
+This guide is for anyone implementing AKG support in a new language.
 
-This guide is for anyone implementing an AKG SDK in any language.
+## What you are building
 
-## What an SDK does
+An AKG SDK implements the format layer: open, read, write, commit, and compact
+`.akg` files. That is the whole job. Product behavior — ingestion pipelines,
+retrieval policy, naming conventions, retention rules — belongs in the product,
+not the SDK.
 
-An SDK may provide:
+## How to implement it
 
-- application-specific create/open wrappers;
-- ingestion from notes, chats, files, issues, or product data;
-- tag, inbound-edge, outbound-edge, and traversal helpers;
-- caches or read indexes derived from current AKG state;
-- search, ranking, embeddings, or retrieval pipelines stored outside the core
-  format or represented as ordinary nodes and edges;
-- product policy for naming, retention, summarization, and permissions.
+Follow the [v1 specification](spec/00-introduction.md). The spec defines the
+on-disk format, encoding rules, validation requirements, and interoperability
+constraints. Your internal architecture is your business; the spec only constrains
+what you read and write.
 
-These are SDK choices. None of them are required for a conformant AKG reader or
-writer.
+## How to verify it
 
-## Suggested architecture
+Run your implementation against the conformance fixtures in `testdata/conformance/`.
+The `manifest.json` describes which `.akg` files must be accepted and which must
+be rejected. Passing those tests is the compatibility contract — you do not need
+to import any Go code or match any Go internals.
 
-```text
-Product or agent workflow
-        ↓
-SDK ingestion and retrieval policy
-        ↓
-SDK indexes/caches/search, if needed
-        ↓
-AKG core read/write/validate/compact
-        ↓
-.akg file
-```
+See the [Conformance guide](conformance.md) for setup details.
 
-AKG core is the durable interchange layer. Your SDK decides how to create nodes
-and edges, how to search them, whether to pair them with external retrieval
-systems, and how to surface them to users. Another SDK can make entirely
-different choices and still produce conformant `.akg` files.
+## The Go Reference SDK
 
-## Conformance testing
+The Go code in this repo (`github.com/RobertGumeny/akg-format`) exists to prove
+the spec works. Read it as a behavior target — what should happen when you open a
+file, replay a WAL, or compact. Do not treat it as a blueprint for your own
+internal structure, and do not import it.
 
-The conformance test suite lives in `testdata/conformance/`. It contains `.akg`
-fixture files and a `manifest.json` that describes accept/reject expectations for
-each one.
-
-Run your implementation against it to verify format compatibility. You do not
-need to import the Go package or match its internal structure — the contract is
-the spec plus the fixture expectations.
-
-See the [Conformance guide](conformance.md) for setup and usage details.
-
-## Reference implementation
-
-The Go package at `github.com/RobertGumeny/akg-go` is a minimal reference
-implementation. Treat it as the behavior to match at the format boundary, not as
-a blueprint for your own internal structure.
-
-For the current Go surface, see [Public API](API.md). For lifecycle behavior,
-see [Lifecycle guide](lifecycle.md).
+If you are building in Go specifically, use [akg-go](../sdk/akg-go/README.md)
+instead. It is the production Go SDK with the full public API.

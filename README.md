@@ -1,35 +1,43 @@
 ---
-title: AKG core
+title: AKG — Agent Knowledge Graph File Format
 status: release-candidate docs
 ---
 
-# AKG core
+# AKG — Agent Knowledge Graph File Format
 
-AKG is a structured, single-file knowledge graph format for durable agent memory.
-Knowledge graphs already work well for agent context, but they are often trapped
-inside graph servers, framework-specific stores, or app-specific schemas. AKG
-makes the knowledge graph a portable file an agent can carry with it.
+AKG is a portable, single-file knowledge graph format for persistent agent memory.
+The idea is simple: a knowledge graph is a great structure for what an agent
+knows, but most graph storage is trapped inside servers or framework-specific
+stores. AKG makes it a file — something an agent can open, update, compact, and
+carry across tools and hosts.
 
-This repository is the core/open-source home for the format: the v1 spec, the Go
-reference implementation, conformance tests, examples, and release-readiness
-docs.
+This repository is the open-source home for the format: the v1 spec, a Go
+Reference SDK that lives alongside the spec, conformance tests, and examples.
 
-AKG core is intentionally small. It defines how nodes and edges are represented
-on disk, how files are opened and validated, how committed mutations are stored,
-and how implementations can prove they agree on the format.
+## Who this is for
 
-AKG core is **not** a product SDK, memory-file ingestion system, query engine,
-traversal language, merge service, vector database, background daemon, or
-multi-writer coordination layer. Those systems can be useful alongside AKG; they
-belong above the portable file format rather than inside it.
+**Building an app in Go?** Use the [akg-go SDK](sdk/akg-go/README.md). It is
+the production Go library with the full public API — tag lookup, edge traversal,
+and everything you need to build on top of AKG.
 
-## Start here
+**Implementing AKG in another language?** Start with the
+[v1 specification](docs/spec/00-introduction.md) and the
+[conformance guide](docs/conformance.md). The conformance fixtures in
+`testdata/conformance/` are your compatibility contract — you do not need to
+import or copy any Go code. The Go Reference SDK in this repo exists to prove the
+spec works and to give you a concrete behavior target; study it, but do not treat
+it as a blueprint for your own internal architecture.
 
-- [Core concepts](docs/core.md) — what AKG is, what it is not, and the main repo pieces.
+**Exploring the format?** The [overview](docs/core.md) and
+[lifecycle guide](docs/lifecycle.md) are the best starting points.
+
+## Repo contents
+
+- [Overview](docs/core.md) — what AKG is, what it is not, and the main repo pieces.
 - [Lifecycle guide](docs/lifecycle.md) — create, mutate, commit, reopen, compact, and validate.
-- [Public API](docs/API.md) — intentionally minimal Go reference API.
+- [Public API](docs/API.md) — the minimal Go Reference SDK API.
 - [Conformance guide](docs/conformance.md) — using fixtures and `manifest.json` from another implementation.
-- [SDK author guide](docs/sdk-author-guide.md) — what to build above core without changing the format.
+- [SDK author guide](docs/sdk-author-guide.md) — implementing AKG support in a new language.
 - [Repository boundaries](docs/repository-boundaries.md) — how spec, conformance, reference code, SDKs, and examples fit together.
 - [v1 specification](docs/spec/00-introduction.md) — technical format details.
 

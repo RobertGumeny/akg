@@ -11,9 +11,9 @@ Three epics, in order. Don't start epic 2 until epic 1's conformance tests pass.
 
 ## Epic 1: Go SDK
 
-**Goal:** A standalone Go AKG SDK at `sdk/akg-go/`. Independent implementation — does not import the reference package. Conformance tests pass. NodeRef shape locked down for both SDKs.
+**Goal:** A standalone Go AKG SDK at `sdk/akg-go/`. Independent implementation — does not import the Go Reference SDK. Conformance tests pass. NodeRef shape locked down for both SDKs.
 
-**Architecture note:** The reference implementation (`akg.go`) is the spec made executable, not a library. The Go SDK reads it as reference material but does not import it. The conformance test fixtures are the shared contract.
+**Architecture note:** The Go Reference SDK (`akg.go`) is the spec made executable, not a library. The Go SDK reads it as reference material but does not import it. The conformance test fixtures are the shared contract.
 
 - [x] **1.1 Module setup**
   - Scaffold `sdk/akg-go/` with its own `go.mod`.
@@ -56,9 +56,9 @@ Three epics, in order. Don't start epic 2 until epic 1's conformance tests pass.
 
 ---
 
-## Epic 2: TypeScript SDK Core
+## Epic 2: TypeScript SDK
 
-**Goal:** From-scratch TS implementation of AKG core at `sdk/akg-ts/`. Produces and consumes byte-identical `.akg` files. Conformance tests pass.
+**Goal:** From-scratch TS implementation of AKG at `sdk/akg-ts/`. Produces and consumes byte-identical `.akg` files. Conformance tests pass.
 
 **Architecture note:** Same boundary as the Go SDK — does not import or wrap any Go code. The spec (`docs/spec/`) and the conformance test fixtures are the implementation contract.
 

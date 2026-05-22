@@ -53,7 +53,7 @@ Recovery is outside normal read semantics. A conformant ordinary reader must rej
 
 ## Conformance Test Suite
 
-The AKG conformance test suite lives in the reference implementation repository.
+The AKG conformance test suite lives in the Reference SDK repository.
 
 This is the cross-implementation standard for reader behavior. An implementation that claims AKG compatibility should be validated against it.
 
