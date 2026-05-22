@@ -79,13 +79,24 @@ type edgeIdentity struct {
 	to       nodeID
 }
 
+// ErrNotFound is returned when a requested node or edge does not exist.
+var ErrNotFound = errors.New("not found")
+
+// ErrInvalidInput is returned when a caller passes an argument that violates a
+// format or semantic constraint (e.g. an invalid type name, a missing required
+// field, or an operation that would leave the graph inconsistent).
+var ErrInvalidInput = errors.New("invalid input")
+
+// ErrMissingRequiredField is returned when a decoded record is structurally
+// valid but is missing a field that the format requires (e.g. a node with no
+// title, or an edge with no relation). Callers see this when opening a
+// malformed file or when a bug in a writer omitted a required field.
+var ErrMissingRequiredField = errors.New("missing required field")
+
 var (
-	errMissingRequiredField = errors.New("missing required field")
-	errInvalidPayload       = errors.New("invalid payload")
-	errInvalidInput         = errors.New("invalid input")
-	errNotFound             = errors.New("not found")
-	errDuplicateTags        = errors.New("duplicate tags")
-	errTooManyTags          = errors.New("too many tags")
+	errInvalidPayload = errors.New("invalid payload")
+	errDuplicateTags  = errors.New("duplicate tags")
+	errTooManyTags    = errors.New("too many tags")
 )
 
 func (n *coreNode) applyReadDefaults() {
@@ -102,7 +113,7 @@ func (n *coreNode) applyReadDefaults() {
 
 func (n coreNode) validateForWrite() error {
 	if n.Type == "" || n.Title == "" {
-		return errMissingRequiredField
+		return ErrMissingRequiredField
 	}
 	return nil
 }
@@ -121,7 +132,7 @@ func (e *coreEdge) applyReadDefaults() {
 
 func (e coreEdge) validateForWrite() error {
 	if e.FromType == "" || e.FromNode == "" || e.ToType == "" || e.ToNode == "" || e.Relation == "" {
-		return errMissingRequiredField
+		return ErrMissingRequiredField
 	}
 	return nil
 }
@@ -144,7 +155,7 @@ func newStoreState() *storeState {
 
 func (s *storeState) putNode(id nodeID, n coreNode) (nodeRecord, error) {
 	if s == nil {
-		return nodeRecord{}, errInvalidInput
+		return nodeRecord{}, ErrInvalidInput
 	}
 	if err := n.validateForWrite(); err != nil {
 		return nodeRecord{}, err
@@ -188,13 +199,13 @@ func (s *storeState) putNode(id nodeID, n coreNode) (nodeRecord, error) {
 
 func (s *storeState) loadNodeRecord(rec nodeRecord) error {
 	if s == nil {
-		return errInvalidInput
+		return ErrInvalidInput
 	}
 	if err := rec.Node.validateForWrite(); err != nil {
 		return err
 	}
 	if rec.Node.Type == "" || rec.ID == "" {
-		return errInvalidInput
+		return ErrInvalidInput
 	}
 	if err := validateTags(rec.Node.Tags); err != nil {
 		return err
@@ -211,7 +222,7 @@ func (s *storeState) loadNodeRecord(rec nodeRecord) error {
 
 func (s *storeState) putEdge(e coreEdge) (coreEdge, error) {
 	if s == nil {
-		return coreEdge{}, errInvalidInput
+		return coreEdge{}, ErrInvalidInput
 	}
 	if err := e.validateForWrite(); err != nil {
 		return coreEdge{}, err
@@ -241,7 +252,7 @@ func (s *storeState) putEdge(e coreEdge) (coreEdge, error) {
 
 func (s *storeState) loadEdgeRecord(e coreEdge) error {
 	if s == nil {
-		return errInvalidInput
+		return ErrInvalidInput
 	}
 	if err := e.validateForWrite(); err != nil {
 		return err
@@ -269,7 +280,7 @@ func (s *storeState) generateNodeID(typeName string) (nodeID, error) {
 			return id, nil
 		}
 	}
-	return "", errInvalidInput
+	return "", ErrInvalidInput
 }
 
 func validateTags(tags []string) error {

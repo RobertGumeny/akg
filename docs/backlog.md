@@ -113,6 +113,29 @@ Three epics, in order. Don't start epic 2 until epic 1's conformance tests pass.
   - Update the existing `TestListNodes` test: replace `"bad:type"` with a value that is invalid under the new rules but valid under the old ones (e.g. `"BadType"`) to ensure the tightened check is actually exercised.
   - **Done when:** `validateComponent` enforces lowercase-alphanumeric-underscore, `validateTag` contains no duplicate character logic, and `go test ./...` passes with updated test coverage.
 
+- [x] **1.14 Export public error sentinels**
+  - All SDK error values (`errNotFound`, `errInvalidInput`, `errMissingRequiredField`, etc.) are unexported. Callers cannot write `errors.Is(err, akg.ErrNotFound)` — they must treat all errors as opaque, which makes correct error handling in application code impractical.
+  - Export the three sentinels callers realistically need to branch on: `ErrNotFound`, `ErrInvalidInput`, and `ErrMissingRequiredField`. Rename them in place (capitalise the existing unexported vars) — no new symbols, no new files. Update all internal call sites.
+  - Add a section to `README.md` documenting what each exported error means and when it is returned.
+  - **Done when:** `ErrNotFound`, `ErrInvalidInput`, and `ErrMissingRequiredField` are exported, all internal call sites compile, and the README documents the three values.
+
+- [x] **1.15 Wrap error causes in data and WAL decode paths**
+  - Three places in `store.go` swallow the original decode error, returning a bare sentinel with no cause attached. This makes corrupt-file diagnostics useless — the caller sees `"invalid data payload"` with no indication of which field failed or why.
+  - In `hydrateDataEntries`: the two `return nil, errInvalidDataPayload` lines after `decodeNodePayload` and `decodeEdgePayload` fail. In `inspectAndReplayWAL`: the `return nil, 0, errInvalidWALPayload` line after `validateWALPayload` fails.
+  - Change each to `fmt.Errorf("…: %w", err)` using the existing sentinel as the message prefix. The outer sentinel type is preserved (callers using `errors.Is` still match), the inner cause becomes inspectable via `errors.Unwrap`.
+  - No API changes, no new tests required — this is a diagnostics-only improvement.
+  - **Done when:** all three sites use `%w` wrapping and `go test ./...` passes.
+
+- [ ] **1.16 Allow Strength 0.0 on edges**
+  - `applyReadDefaults` silently converts a zero `Strength` to `0.5`, making it impossible to write an edge with explicit strength `0.0`. `EdgeFields{}` also silently produces `0.5` rather than a true zero.
+  - Remove the `if e.Strength == 0 { e.Strength = 0.5 }` line from `applyReadDefaults`. `EdgeFields{}` now produces strength `0.0`. Update the `EdgeFields` table in `README.md` — the `Strength` default column should reflect that `0.0` is the zero value (remove the "defaults to 0.5" note). Update any tests that assert the old `0.5` default behaviour.
+  - **Done when:** `EdgeFields{}` produces an edge with `Strength == 0.0`, `go test ./...` passes, and the README is updated.
+
+- [ ] **1.17 Fix double msgpack decode in `decodeNodePutPayload`**
+  - `decodeNodePutPayload` in `codec_internal.go` currently decodes the full MessagePack payload twice: once via `decodeNodePayload` to build the `coreNode`, then again via `decodeMsgpack` directly to extract the `id` field.
+  - Refactor so the payload is decoded once. Extract both the `id` field and the node fields from the single decoded map, then call the existing `decodeNodePayload` field-extraction logic or inline it as appropriate.
+  - **Done when:** the payload is decoded exactly once, behaviour is unchanged, and `go test ./...` passes.
+
 ---
 
 ## Epic 2: TypeScript SDK

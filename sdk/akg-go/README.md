@@ -107,6 +107,25 @@ err := store.Close()  // commits outstanding mutations and closes the store
 Always close a store when done. `Close` is safe to call on a store with no
 pending mutations.
 
+## Error handling
+
+Three sentinel errors are exported for callers that need to branch on error type:
+
+| Sentinel | Returned when |
+|---|---|
+| `akg.ErrNotFound` | A `GetNode`, `DeleteNode`, or `DeleteEdge` call targets a node or edge that does not exist. |
+| `akg.ErrInvalidInput` | A caller passes an argument that violates a format or semantic constraint — invalid type name, missing required field, or an operation that would leave the graph inconsistent (e.g. deleting a node that still has live edges). |
+| `akg.ErrMissingRequiredField` | A decoded record is structurally valid but omits a field the format requires. Callers see this when opening a malformed file written by a buggy writer. |
+
+Use `errors.Is` to test:
+
+```go
+node, err := store.GetNode("Person", "alice")
+if errors.Is(err, akg.ErrNotFound) {
+    // node does not exist
+}
+```
+
 ## NodeRef
 
 `PutNode` returns a `NodeRef`:

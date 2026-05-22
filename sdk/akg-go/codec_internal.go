@@ -17,7 +17,7 @@ func encodeNodePayload(n coreNode) ([]byte, error) {
 
 func encodeNodePutPayload(p nodePut) ([]byte, error) {
 	if p.ID == "" {
-		return nil, errMissingRequiredField
+		return nil, ErrMissingRequiredField
 	}
 	m, err := nodePayloadMap(p.Node)
 	if err != nil {
@@ -62,11 +62,11 @@ func decodeNodePayload(b []byte) (coreNode, error) {
 	}
 	typ, ok := m["type"].(string)
 	if !ok || typ == "" {
-		return coreNode{}, errMissingRequiredField
+		return coreNode{}, ErrMissingRequiredField
 	}
 	title, ok := m["title"].(string)
 	if !ok || title == "" {
-		return coreNode{}, errMissingRequiredField
+		return coreNode{}, ErrMissingRequiredField
 	}
 	node := coreNode{Type: typ, Title: title}
 	if s, ok := m["body"].(string); ok {
@@ -113,14 +113,14 @@ func decodeNodePutPayload(b []byte) (nodePut, error) {
 	}
 	id, ok := m["id"].(string)
 	if !ok || id == "" {
-		return nodePut{}, errMissingRequiredField
+		return nodePut{}, ErrMissingRequiredField
 	}
 	return nodePut{ID: nodeID(id), Node: node}, nil
 }
 
 func encodeNodeDeletePayload(d nodeDelete) ([]byte, error) {
 	if d.Type == "" || d.ID == "" {
-		return nil, errMissingRequiredField
+		return nil, ErrMissingRequiredField
 	}
 	return encodeMsgpack(map[string]any{"type": d.Type, "id": string(d.ID)})
 }
@@ -136,11 +136,11 @@ func decodeNodeDeletePayload(b []byte) (nodeDelete, error) {
 	}
 	typeValue, ok := m["type"].(string)
 	if !ok || typeValue == "" {
-		return nodeDelete{}, errMissingRequiredField
+		return nodeDelete{}, ErrMissingRequiredField
 	}
 	idValue, ok := m["id"].(string)
 	if !ok || idValue == "" {
-		return nodeDelete{}, errMissingRequiredField
+		return nodeDelete{}, ErrMissingRequiredField
 	}
 	return nodeDelete{Type: typeValue, ID: nodeID(idValue)}, nil
 }
@@ -194,23 +194,23 @@ func decodeEdgePayload(b []byte) (coreEdge, error) {
 	}
 	fromTypeValue, ok := m["from_node_type"].(string)
 	if !ok || fromTypeValue == "" {
-		return coreEdge{}, errMissingRequiredField
+		return coreEdge{}, ErrMissingRequiredField
 	}
 	fromValue, ok := m["from_node"].(string)
 	if !ok || fromValue == "" {
-		return coreEdge{}, errMissingRequiredField
+		return coreEdge{}, ErrMissingRequiredField
 	}
 	toTypeValue, ok := m["to_node_type"].(string)
 	if !ok || toTypeValue == "" {
-		return coreEdge{}, errMissingRequiredField
+		return coreEdge{}, ErrMissingRequiredField
 	}
 	toValue, ok := m["to_node"].(string)
 	if !ok || toValue == "" {
-		return coreEdge{}, errMissingRequiredField
+		return coreEdge{}, ErrMissingRequiredField
 	}
 	relationValue, ok := m["relation"].(string)
 	if !ok || relationValue == "" {
-		return coreEdge{}, errMissingRequiredField
+		return coreEdge{}, ErrMissingRequiredField
 	}
 	edge := coreEdge{FromType: fromTypeValue, FromNode: nodeID(fromValue), ToType: toTypeValue, ToNode: nodeID(toValue), Relation: relation(relationValue)}
 	if f, ok := m["strength"].(float64); ok {
@@ -253,7 +253,7 @@ func decodeEdgePutPayload(b []byte) (edgePut, error) {
 
 func encodeEdgeDeletePayload(d edgeDelete) ([]byte, error) {
 	if d.FromType == "" || d.FromNode == "" || d.Relation == "" || d.ToType == "" || d.ToNode == "" {
-		return nil, errMissingRequiredField
+		return nil, ErrMissingRequiredField
 	}
 	return encodeMsgpack(map[string]any{
 		"from_node_type": d.FromType,
@@ -275,23 +275,23 @@ func decodeEdgeDeletePayload(b []byte) (edgeDelete, error) {
 	}
 	fromTypeValue, ok := m["from_node_type"].(string)
 	if !ok || fromTypeValue == "" {
-		return edgeDelete{}, errMissingRequiredField
+		return edgeDelete{}, ErrMissingRequiredField
 	}
 	fromValue, ok := m["from_node"].(string)
 	if !ok || fromValue == "" {
-		return edgeDelete{}, errMissingRequiredField
+		return edgeDelete{}, ErrMissingRequiredField
 	}
 	relationValue, ok := m["relation"].(string)
 	if !ok || relationValue == "" {
-		return edgeDelete{}, errMissingRequiredField
+		return edgeDelete{}, ErrMissingRequiredField
 	}
 	toTypeValue, ok := m["to_node_type"].(string)
 	if !ok || toTypeValue == "" {
-		return edgeDelete{}, errMissingRequiredField
+		return edgeDelete{}, ErrMissingRequiredField
 	}
 	toValue, ok := m["to_node"].(string)
 	if !ok || toValue == "" {
-		return edgeDelete{}, errMissingRequiredField
+		return edgeDelete{}, ErrMissingRequiredField
 	}
 	return edgeDelete{FromType: fromTypeValue, FromNode: nodeID(fromValue), Relation: relation(relationValue), ToType: toTypeValue, ToNode: nodeID(toValue)}, nil
 }

@@ -3,6 +3,7 @@ package akg
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
@@ -93,7 +94,7 @@ func openBytes(file []byte) (*Store, error) {
 // the node's current tag set. If id is empty, a new node ID is generated.
 func (s *Store) PutNode(typeName, id string, fields NodeFields, tags []string) (NodeRef, error) {
 	if s == nil || s.closed {
-		return NodeRef{}, errInvalidInput
+		return NodeRef{}, ErrInvalidInput
 	}
 	n, err := coreNodeFromFields(typeName, fields, tags)
 	if err != nil {
@@ -109,7 +110,7 @@ func (s *Store) PutNode(typeName, id string, fields NodeFields, tags []string) (
 // GetNode returns the current live node for (typeName, id), or nil if missing.
 func (s *Store) GetNode(typeName, id string) (*Node, error) {
 	if s == nil || s.closed {
-		return nil, errInvalidInput
+		return nil, ErrInvalidInput
 	}
 	if _, err := buildNodeKey(typeName, nodeID(id)); err != nil {
 		return nil, err
@@ -124,7 +125,7 @@ func (s *Store) GetNode(typeName, id string) (*Node, error) {
 // ListNodesByTag returns all current live nodes carrying tag.
 func (s *Store) ListNodesByTag(tag string) ([]Node, error) {
 	if s == nil || s.closed {
-		return nil, errInvalidInput
+		return nil, ErrInvalidInput
 	}
 	if err := validateTag(tag); err != nil {
 		return nil, err
@@ -155,7 +156,7 @@ func (s *Store) ListNodesByTag(tag string) ([]Node, error) {
 // empty slice and nil error.
 func (s *Store) ListNodes(typeName string) ([]Node, error) {
 	if s == nil || s.closed {
-		return nil, errInvalidInput
+		return nil, ErrInvalidInput
 	}
 	if typeName != "" {
 		if err := validateComponent(typeName); err != nil {
@@ -185,13 +186,13 @@ func (s *Store) ListNodes(typeName string) ([]Node, error) {
 // Both referenced nodes must already exist. Strength defaults to 0.5 if zero.
 func (s *Store) PutEdge(fromRef NodeRef, relationValue string, toRef NodeRef, fields EdgeFields) error {
 	if s == nil || s.closed {
-		return errInvalidInput
+		return ErrInvalidInput
 	}
 	if _, ok := s.state.nodes[nodeIdentity{typeName: fromRef.Type, id: nodeID(fromRef.ID)}]; !ok {
-		return errNotFound
+		return ErrNotFound
 	}
 	if _, ok := s.state.nodes[nodeIdentity{typeName: toRef.Type, id: nodeID(toRef.ID)}]; !ok {
-		return errNotFound
+		return ErrNotFound
 	}
 	e, err := coreEdgeFromFields(fromRef, relationValue, toRef, fields)
 	if err != nil {
@@ -205,7 +206,7 @@ func (s *Store) PutEdge(fromRef NodeRef, relationValue string, toRef NodeRef, fi
 // If relationValue is non-empty, results are filtered to that relation.
 func (s *Store) OutboundEdges(nodeRef NodeRef, relationValue string) ([]Edge, error) {
 	if s == nil || s.closed {
-		return nil, errInvalidInput
+		return nil, ErrInvalidInput
 	}
 	if _, err := buildNodeKey(nodeRef.Type, nodeID(nodeRef.ID)); err != nil {
 		return nil, err
@@ -241,7 +242,7 @@ func (s *Store) OutboundEdges(nodeRef NodeRef, relationValue string) ([]Edge, er
 // If relationValue is non-empty, results are filtered to that relation.
 func (s *Store) InboundEdges(nodeRef NodeRef, relationValue string) ([]Edge, error) {
 	if s == nil || s.closed {
-		return nil, errInvalidInput
+		return nil, ErrInvalidInput
 	}
 	if _, err := buildNodeKey(nodeRef.Type, nodeID(nodeRef.ID)); err != nil {
 		return nil, err
@@ -274,11 +275,11 @@ func (s *Store) InboundEdges(nodeRef NodeRef, relationValue string) ([]Edge, err
 }
 
 // DeleteNode removes the node identified by (typeName, id).
-// Returns errNotFound if the node does not exist.
-// Returns errInvalidInput if the node has any live inbound or outbound edges.
+// Returns ErrNotFound if the node does not exist.
+// Returns ErrInvalidInput if the node has any live inbound or outbound edges.
 func (s *Store) DeleteNode(typeName, id string) error {
 	if s == nil || s.closed {
-		return errInvalidInput
+		return ErrInvalidInput
 	}
 	if _, err := buildNodeKey(typeName, nodeID(id)); err != nil {
 		return err
@@ -287,10 +288,10 @@ func (s *Store) DeleteNode(typeName, id string) error {
 }
 
 // DeleteEdge removes the edge identified by (fromRef, relation, toRef).
-// Returns errNotFound if the edge does not exist.
+// Returns ErrNotFound if the edge does not exist.
 func (s *Store) DeleteEdge(fromRef NodeRef, relationValue string, toRef NodeRef) error {
 	if s == nil || s.closed {
-		return errInvalidInput
+		return ErrInvalidInput
 	}
 	if _, err := buildNodeKey(fromRef.Type, nodeID(fromRef.ID)); err != nil {
 		return err
@@ -309,10 +310,10 @@ func (s *Store) DeleteEdge(fromRef NodeRef, relationValue string, toRef NodeRef)
 // calling it on a store with nothing pending is safe and does not alter state.
 func (s *Store) Commit() error {
 	if s == nil {
-		return errInvalidInput
+		return ErrInvalidInput
 	}
 	if s.closed {
-		return errInvalidInput
+		return ErrInvalidInput
 	}
 	if len(s.pending) == 0 {
 		return nil
@@ -336,7 +337,7 @@ func (s *Store) Commit() error {
 // a no-op: it returns nil and leaves the store unchanged.
 func (s *Store) Close() error {
 	if s == nil {
-		return errInvalidInput
+		return ErrInvalidInput
 	}
 	if s.closed {
 		return nil
@@ -401,11 +402,11 @@ func (s *Store) putEdge(e coreEdge) (coreEdge, error) {
 func (s *Store) deleteNode(typeName string, id nodeID) error {
 	ident := nodeIdentity{typeName: typeName, id: id}
 	if _, ok := s.state.nodes[ident]; !ok {
-		return errNotFound
+		return ErrNotFound
 	}
 	for _, edge := range s.state.edges {
 		if (edge.FromType == typeName && edge.FromNode == id) || (edge.ToType == typeName && edge.ToNode == id) {
-			return errInvalidInput
+			return ErrInvalidInput
 		}
 	}
 	delete(s.state.nodes, ident)
@@ -420,7 +421,7 @@ func (s *Store) deleteNode(typeName string, id nodeID) error {
 func (s *Store) deleteEdge(fromType string, fromNode nodeID, rel relation, toType string, toNode nodeID) error {
 	ident := edgeIdentity{fromType: fromType, from: fromNode, relation: rel, toType: toType, to: toNode}
 	if _, ok := s.state.edges[ident]; !ok {
-		return errNotFound
+		return ErrNotFound
 	}
 	delete(s.state.edges, ident)
 	payload, err := encodeEdgeDeletePayload(edgeDelete{FromType: fromType, FromNode: fromNode, Relation: rel, ToType: toType, ToNode: toNode})
@@ -452,24 +453,24 @@ func hydrateDataEntries(entries []dataEntry) (*storeState, error) {
 			}
 			node, err := decodeNodePayload(entry.Value)
 			if err != nil {
-				return nil, errInvalidDataPayload
+				return nil, fmt.Errorf("%w: %w", errInvalidDataPayload, err)
 			}
 			if node.Type != parsed.Type {
-				return nil, errInvalidInput
+				return nil, ErrInvalidInput
 			}
 			if err := s.loadNodeRecord(nodeRecord{ID: parsed.ID, Node: node}); err != nil {
 				return nil, err
 			}
 		case strings.HasPrefix(string(key), "t:"):
 			if len(entry.Value) != 0 {
-				return nil, errInvalidInput
+				return nil, ErrInvalidInput
 			}
 			if _, _, err := parseTagKey(key); err != nil {
 				return nil, err
 			}
 		case strings.HasPrefix(string(key), "ts:"):
 			if len(entry.Value) != 0 {
-				return nil, errInvalidInput
+				return nil, ErrInvalidInput
 			}
 			if err := parseTemporalKey(key); err != nil {
 				return nil, err
@@ -481,23 +482,23 @@ func hydrateDataEntries(entries []dataEntry) (*storeState, error) {
 			}
 			edge, err := decodeEdgePayload(entry.Value)
 			if err != nil {
-				return nil, errInvalidDataPayload
+				return nil, fmt.Errorf("%w: %w", errInvalidDataPayload, err)
 			}
 			if edge.FromType != parsed.FromType || edge.FromNode != parsed.FromNode || edge.Relation != parsed.Relation || edge.ToType != parsed.ToType || edge.ToNode != parsed.ToNode {
-				return nil, errInvalidInput
+				return nil, ErrInvalidInput
 			}
 			if err := s.loadEdgeRecord(edge); err != nil {
 				return nil, err
 			}
 		case strings.HasPrefix(string(key), "ei:"):
 			if len(entry.Value) != 0 {
-				return nil, errInvalidInput
+				return nil, ErrInvalidInput
 			}
 			if _, err := parseEdgeIndexKey(key); err != nil {
 				return nil, err
 			}
 		default:
-			return nil, errInvalidInput
+			return nil, ErrInvalidInput
 		}
 	}
 	if err := validateDerivedKeys(s, entries); err != nil {
@@ -524,7 +525,7 @@ func validateDerivedKeys(s *storeState, entries []dataEntry) error {
 
 func materializeDataEntries(s *storeState) ([]dataEntry, error) {
 	if s == nil {
-		return nil, errInvalidInput
+		return nil, ErrInvalidInput
 	}
 	var entries []dataEntry
 	seen := map[string]struct{}{}
@@ -629,7 +630,7 @@ func inspectAndReplayWAL(state *storeState, payload []byte) ([]walRecord, walSeq
 		}
 		prev = r.Sequence
 		if err := validateWALPayload(r); err != nil {
-			return nil, 0, errInvalidWALPayload
+			return nil, 0, fmt.Errorf("%w: %w", errInvalidWALPayload, err)
 		}
 		switch r.Operation {
 		case walOpPutNode:

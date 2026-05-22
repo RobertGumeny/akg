@@ -244,12 +244,12 @@ func TestDeleteNodeBasicSemantics(t *testing.T) {
 		t.Fatal("node should be absent after DeleteNode")
 	}
 
-	// errNotFound when node does not exist
-	if err := st.DeleteNode("note", "n1"); !errors.Is(err, errNotFound) {
-		t.Fatalf("expected errNotFound on second DeleteNode, got %v", err)
+	// ErrNotFound when node does not exist
+	if err := st.DeleteNode("note", "n1"); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("expected ErrNotFound on second DeleteNode, got %v", err)
 	}
-	if err := st.DeleteNode("note", "nonexistent"); !errors.Is(err, errNotFound) {
-		t.Fatalf("expected errNotFound for nonexistent node, got %v", err)
+	if err := st.DeleteNode("note", "nonexistent"); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("expected ErrNotFound for nonexistent node, got %v", err)
 	}
 }
 
@@ -269,11 +269,11 @@ func TestDeleteNodeBlockedByLiveEdges(t *testing.T) {
 		t.Fatalf("PutEdge: %v", err)
 	}
 
-	if err := st.DeleteNode("note", "n1"); !errors.Is(err, errInvalidInput) {
-		t.Fatalf("expected errInvalidInput for node with outbound edge, got %v", err)
+	if err := st.DeleteNode("note", "n1"); !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("expected ErrInvalidInput for node with outbound edge, got %v", err)
 	}
-	if err := st.DeleteNode("note", "n2"); !errors.Is(err, errInvalidInput) {
-		t.Fatalf("expected errInvalidInput for node with inbound edge, got %v", err)
+	if err := st.DeleteNode("note", "n2"); !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("expected ErrInvalidInput for node with inbound edge, got %v", err)
 	}
 
 	// After deleting the edge, node deletion should succeed.
@@ -354,9 +354,9 @@ func TestDeleteEdgeBasicSemantics(t *testing.T) {
 		t.Fatalf("expected 0 outbound edges after delete, got %d", len(out))
 	}
 
-	// errNotFound when edge does not exist
-	if err := st.DeleteEdge(NodeRef{Type: "note", ID: "n1"}, "links_to", NodeRef{Type: "note", ID: "n2"}); !errors.Is(err, errNotFound) {
-		t.Fatalf("expected errNotFound on second DeleteEdge, got %v", err)
+	// ErrNotFound when edge does not exist
+	if err := st.DeleteEdge(NodeRef{Type: "note", ID: "n1"}, "links_to", NodeRef{Type: "note", ID: "n2"}); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("expected ErrNotFound on second DeleteEdge, got %v", err)
 	}
 }
 
