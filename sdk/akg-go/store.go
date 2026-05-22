@@ -304,7 +304,9 @@ func (s *Store) DeleteEdge(fromRef NodeRef, relationValue string, toRef NodeRef)
 	return s.deleteEdge(fromRef.Type, nodeID(fromRef.ID), relation(relationValue), toRef.Type, nodeID(toRef.ID))
 }
 
-// Commit durably writes pending mutations and a COMMIT record.
+// Commit durably writes all pending mutations to disk, followed by a COMMIT
+// record. It is a no-op (returns nil) when there are no pending mutations —
+// calling it on a store with nothing pending is safe and does not alter state.
 func (s *Store) Commit() error {
 	if s == nil {
 		return errInvalidInput
@@ -328,7 +330,10 @@ func (s *Store) Commit() error {
 	return s.writeFile()
 }
 
-// Close commits outstanding mutations.
+// Close commits any pending mutations and then marks the store as closed.
+// Pending mutations are committed exactly as if Commit had been called — they
+// are durable after Close returns. Calling Close on an already-closed store is
+// a no-op: it returns nil and leaves the store unchanged.
 func (s *Store) Close() error {
 	if s == nil {
 		return errInvalidInput

@@ -592,3 +592,77 @@ func TestListNodes(t *testing.T) {
 		}
 	}
 }
+
+func TestCloseCommitsPendingMutations(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "close-commits.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	_, err = st.PutNode("note", "n1", NodeFields{Title: "hello"}, nil)
+	if err != nil {
+		t.Fatalf("PutNode: %v", err)
+	}
+	// Close without an explicit Commit — Close must commit the pending mutation.
+	if err := st.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+
+	reopened, err := Open(path)
+	if err != nil {
+		t.Fatalf("reopen: %v", err)
+	}
+	node, err := reopened.GetNode("note", "n1")
+	if err != nil {
+		t.Fatalf("GetNode: %v", err)
+	}
+	if node == nil {
+		t.Fatal("mutation written after last Commit not durable after Close + Open")
+	}
+	if err := reopened.Close(); err != nil {
+		t.Fatalf("Close reopened: %v", err)
+	}
+}
+
+func TestCommitIsNoOpWhenNothingPending(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "commit-noop.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	_, err = st.PutNode("note", "n1", NodeFields{Title: "hello"}, nil)
+	if err != nil {
+		t.Fatalf("PutNode: %v", err)
+	}
+	if err := st.Commit(); err != nil {
+		t.Fatalf("first Commit: %v", err)
+	}
+	// Second Commit with nothing pending — must return nil without corrupting state.
+	if err := st.Commit(); err != nil {
+		t.Fatalf("second Commit (no-op): %v", err)
+	}
+	node, err := st.GetNode("note", "n1")
+	if err != nil {
+		t.Fatalf("GetNode after double Commit: %v", err)
+	}
+	if node == nil {
+		t.Fatal("node missing after double Commit — state corrupted")
+	}
+	if err := st.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+}
+
+func TestCloseOnAlreadyClosedStoreIsNoOp(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "close-twice.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	if err := st.Close(); err != nil {
+		t.Fatalf("first Close: %v", err)
+	}
+	if err := st.Close(); err != nil {
+		t.Fatalf("second Close on already-closed store: %v", err)
+	}
+}

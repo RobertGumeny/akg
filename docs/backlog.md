@@ -94,7 +94,7 @@ Three epics, in order. Don't start epic 2 until epic 1's conformance tests pass.
   - A non-existent type returns an empty slice and `nil` error (not `errNotFound`) — consistent with `ListNodesByTag` returning empty for a tag with no matches.
   - **Done when:** `go test ./...` passes with test cases covering: all-nodes (empty typeName), type-filtered, empty typeName returns all nodes, unknown type returns empty slice, invalid typeName returns error.
 
-- [ ] **1.11 Document Close and Commit semantics**
+- [x] **1.11 Document Close and Commit semantics**
   - `Close()` commits any pending mutations before closing — this is the intended, idiomatic behavior. `Commit()` is a no-op (returns `nil`) when there is nothing pending — also intentional. Calling `Close()` on an already-closed store returns `nil` silently — also intentional. All three behaviors are undocumented.
   - Update the doc comment on `Close` to state: (1) it commits pending mutations before closing, (2) calling it on an already-closed store is a no-op. Update the doc comment on `Commit` to state that it is a no-op when there are no pending mutations.
   - **Done when:** both doc comments are updated and tests cover: commit-on-close (mutations written after last `Commit` survive a `Close` + `Open` round-trip), no-op on empty pending (`Commit` called twice in a row returns `nil` and does not corrupt state), and close-on-already-closed (returns `nil`).
