@@ -35,6 +35,67 @@ bob, err := store.PutNode("person", "bob", akg.NodeFields{
 err = store.PutEdge(alice, "knows", bob, akg.EdgeFields{})
 ```
 
+## Getting started
+
+Create a project, write a graph, run it.
+
+**1. Create a project directory and initialize a module:**
+
+```sh
+mkdir mygraph && cd mygraph
+go mod init mygraph
+```
+
+**2. Install akg-go:**
+
+```sh
+go get github.com/RobertGumeny/akg-go
+```
+
+**3. Create `main.go`:**
+
+```go
+package main
+
+import (
+	"fmt"
+	akg "github.com/RobertGumeny/akg-go"
+)
+
+func main() {
+	store, _ := akg.Open("mygraph.akg")
+	defer store.Close()
+
+	alice, _ := store.PutNode("person", "alice", akg.NodeFields{Title: "Alice"}, nil)
+	bob, _ := store.PutNode("person", "bob", akg.NodeFields{Title: "Bob"}, nil)
+	store.PutEdge(alice, "knows", bob, akg.EdgeFields{})
+	store.Commit()
+
+	node, _ := store.GetNode("person", "alice")
+	fmt.Printf("node: %s/%s — %q\n", node.Type, node.ID, node.Title)
+
+	edges, _ := store.OutboundEdges(alice, "")
+	for _, e := range edges {
+		fmt.Printf("  -[%s]-> %s/%s\n", e.Relation, e.To.Type, e.To.ID)
+	}
+}
+```
+
+**4. Run it:**
+
+```sh
+go run .
+```
+
+**Expected output:**
+
+```
+node: person/alice — "Alice"
+  -[knows]-> person/bob
+```
+
+A `mygraph.akg` file is now in your directory. Open it again later — the graph persists.
+
 ## Naming rules
 
 AKG enforces naming constraints on type names, relation names, and tags. Node IDs

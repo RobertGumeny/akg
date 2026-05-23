@@ -5,57 +5,91 @@ status: release-candidate docs
 
 # AKG — Agent Knowledge Graph File Format
 
-AKG is a portable, single-file knowledge graph format for persistent agent memory.
-The idea is simple: a knowledge graph is a great structure for what an agent
-knows, but most graph storage is trapped inside servers or framework-specific
-stores. AKG makes it a file — something an agent can open, update, compact, and
-carry across tools and hosts.
+AKG is a file format for a knowledge graph — open it, read and write nodes and edges, close it. No server, no query language, no setup.
 
-This repository is the open-source home for the format: the v1 spec, a Go
-Reference SDK that lives alongside the spec, conformance tests, and examples.
+Think of it as SQLite for agent memory: a portable, single-file graph your agent can open, update, and carry across tools and hosts.
+
+## Non-goals
+
+AKG is deliberately narrow. It does not provide:
+
+- **Query language or traversal planner** — there is no AQL, Cypher, or graph analytics layer. Traversal is done in your application code.
+- **Server or background service** — AKG is a file, not a daemon. One writer at a time.
+- **Semantic search or embeddings** — no vector index, no ranking, no retrieval pipeline.
+- **Multi-writer sync or conflict resolution** — AKG is single-writer. Merging concurrent mutations is out of scope.
+
+If any of those are hard requirements, AKG is not the right tool.
+
+## Quick start
+
+**Go**
+
+```go
+import akg "github.com/RobertGumeny/akg-go"
+
+store, err := akg.Open("memory.akg")
+if err != nil { log.Fatal(err) }
+defer store.Close()
+
+alice, _ := store.PutNode("person", "alice", akg.NodeFields{Title: "Alice"}, nil)
+bob, _ := store.PutNode("person", "bob", akg.NodeFields{Title: "Bob"}, nil)
+store.PutEdge(alice, "knows", bob, akg.EdgeFields{})
+store.Commit()
+
+node, _ := store.GetNode("person", "alice")
+fmt.Println(node.Title) // Alice
+```
+
+**TypeScript**
+
+```typescript
+import { open } from 'akg-ts';
+
+const store = await open('memory.akg');
+const alice = store.putNode('person', 'alice', { title: 'Alice' }, []);
+const bob = store.putNode('person', 'bob', { title: 'Bob' }, []);
+store.putEdge(alice, 'knows', bob, {});
+await store.commit();
+
+const node = store.getNode('person', 'alice');
+console.log(node.title); // Alice
+await store.close();
+```
 
 ## Who this is for
 
-**Building an app in Go?** Use the [akg-go SDK](sdk/akg-go/README.md). It is
-the production Go library with the full public API — tag lookup, edge traversal,
-and everything you need to build on top of AKG.
+**Building an app in Go?** Use the [akg-go SDK](sdk/akg-go/README.md). It is the production Go library with the full public API — tag lookup, edge traversal, and everything you need to build on top of AKG.
 
-**Implementing AKG in another language?** Start with the
-[v1 specification](docs/spec/00-introduction.md) and the
-[conformance guide](docs/conformance.md). The conformance fixtures in
-`testdata/conformance/` are your compatibility contract — you do not need to
-import or copy any Go code. The Go Reference SDK in this repo exists to prove the
-spec works and to give you a concrete behavior target; study it, but do not treat
-it as a blueprint for your own internal architecture.
+**Building an app in TypeScript?** Use the [akg-ts SDK](sdk/akg-ts/README.md). It exposes an identical graph API with `async/await` I/O and full TypeScript types.
 
-**Exploring the format?** The [overview](docs/core.md) and
-[lifecycle guide](docs/lifecycle.md) are the best starting points.
+**Implementing AKG in another language?** Start with the [v1 specification](docs/spec/00-introduction.md) and the [conformance guide](docs/conformance.md). The conformance fixtures in `testdata/conformance/` are your compatibility contract — you do not need to import or copy any Go code. The Go Reference SDK in this repo exists to prove the spec works and to give you a concrete behavior target; study it, but do not treat it as a blueprint for your own internal architecture.
 
 ## Repo contents
 
-- [Overview](docs/core.md) — what AKG is, what it is not, and the main repo pieces.
-- [Lifecycle guide](docs/lifecycle.md) — create, mutate, commit, reopen, compact, and validate.
-- [Public API](docs/API.md) — the minimal Go Reference SDK API.
-- [Conformance guide](docs/conformance.md) — using fixtures and `manifest.json` from another implementation.
-- [SDK author guide](docs/sdk-author-guide.md) — implementing AKG support in a new language.
-- [Repository boundaries](docs/repository-boundaries.md) — how spec, conformance, reference code, SDKs, and examples fit together.
-- [v1 specification](docs/spec/00-introduction.md) — technical format details.
+| Path | What it contains |
+|---|---|
+| `docs/spec/` | v1 binary format specification |
+| `docs/core.md` | Overview, non-goals, and project structure |
+| `docs/lifecycle.md` | File lifecycle: create, mutate, commit, compact |
+| `docs/conformance.md` | How to run conformance tests from another implementation |
+| `docs/sdk-author-guide.md` | Implementing AKG support in a new language |
+| `sdk/akg-go/` | Go SDK — full public API for application development |
+| `sdk/akg-ts/` | TypeScript SDK — full public API for application development |
+| `testdata/conformance/` | Conformance fixtures (accepted and rejected files) |
+| `examples/` | Runnable format lifecycle examples |
 
-## Try the example
+## Contributing
 
-```sh
-go run ./examples/lifecycle
-```
-
-The example creates a tiny graph, commits it, reopens it, reads records back,
-compacts the file, and validates the result. See
-[`examples/lifecycle/README.md`](examples/lifecycle/README.md).
-
-## Validate the repo
+Run the full test suite (conformance fixtures included):
 
 ```sh
 go test -count=1 ./...
 ```
 
-Conformance fixture checks are described in
-[`testdata/conformance/README.md`](testdata/conformance/README.md).
+Run the Go lifecycle example:
+
+```sh
+go run ./examples/lifecycle
+```
+
+See [`examples/lifecycle/README.md`](examples/lifecycle/README.md) for expected output.

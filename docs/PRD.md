@@ -44,38 +44,38 @@ Agents: fill in your task's section before marking it done. Keep entries concise
 
 ### 4.1 Rewrite root README as a "SQLite for agents" landing page
 
-_Status:_ pending
+_Status:_ done
 
-_Decisions:_ —
+_Decisions:_ Pitch is "AKG is a file format for a knowledge graph — open it, read and write nodes and edges, close it. No server, no query language, no setup." Non-goals section placed immediately after pitch, before snippets. "Try the example" and "Validate the repo" collapsed into a single Contributing section at the bottom.
 
-_Notes for 4.2:_ —
+_Notes for 4.2:_ Quick-start snippets use `import { open } from 'akg-ts'` — that's the package name.
 
 ---
 
 ### 4.2 Add TypeScript SDK README
 
-_Status:_ pending
+_Status:_ done
 
-_Decisions:_ —
+_Decisions:_ Created `sdk/akg-ts/README.md`. Matched Go README section structure exactly (Install, Quick start, Getting started, Naming rules, API, Error handling, NodeRef, Non-goals, Run the example). Key TS differences: `open` / `commit` / `close` are async; `putNode` / `putEdge` / read methods are synchronous; `getNode` returns `Node | null`, not an error. Error handling uses `instanceof`. Included Getting Started section here (satisfies 4.4 requirements in the same file).
 
-_Notes for 4.3:_ —
+_Notes for 4.3:_ Go README Getting Started section added above Naming rules.
 
 ---
 
 ### 4.3 Getting Started: Go — new project from scratch
 
-_Status:_ pending
+_Status:_ done
 
-_Decisions:_ —
+_Decisions:_ Added Getting Started section to `sdk/akg-go/README.md` above Naming rules. Steps: `go mod init`, `go get`, write `main.go`, `go run .`, expected output shown. Example is ~20 lines including package/import boilerplate.
 
-_Notes for 4.4:_ —
+_Notes for 4.4:_ TS Getting Started was already included in the 4.2 TS README creation.
 
 ---
 
 ### 4.4 Getting Started: TypeScript — new project from scratch
 
-_Status:_ pending
+_Status:_ done
 
-_Decisions:_ —
+_Decisions:_ Getting Started section included in `sdk/akg-ts/README.md` (created as part of 4.2). Steps: `npm init -y`, `npm install akg-ts`, write `index.ts`, `npx tsx index.ts`, expected output shown.
 
-_Notes for human review:_ —
+_Notes for human review:_ `akg-ts` is not yet published to npm — the install step (`npm install akg-ts`) will fail until it is published. The Getting Started section is accurate for when the package is published.
