@@ -1,8 +1,3 @@
----
-title: AKG — Agent Knowledge Graph File Format
-status: release-candidate docs
----
-
 # AKG — Agent Knowledge Graph File Format
 
 [![CI](https://github.com/RobertGumeny/akg/actions/workflows/ci.yml/badge.svg)](https://github.com/RobertGumeny/akg/actions/workflows/ci.yml)
