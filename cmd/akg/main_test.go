@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/RobertGumeny/akg-format"
+	"github.com/RobertGumeny/akg"
 )
 
 func TestCLIValidateSucceedsAndFailsClearly(t *testing.T) {

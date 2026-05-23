@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/RobertGumeny/akg-format"
+	"github.com/RobertGumeny/akg"
 )
 
 func TestPublicAPIExposesOnlyCurrentLogicalState(t *testing.T) {

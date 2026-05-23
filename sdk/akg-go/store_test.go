@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -664,5 +665,204 @@ func TestCloseOnAlreadyClosedStoreIsNoOp(t *testing.T) {
 	}
 	if err := st.Close(); err != nil {
 		t.Fatalf("second Close on already-closed store: %v", err)
+	}
+}
+
+func TestEmptyStoreRoundTrip(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "empty.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	if err := st.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+
+	reopened, err := Open(path)
+	if err != nil {
+		t.Fatalf("reopen Open: %v", err)
+	}
+	defer reopened.Close()
+
+	nodes, err := reopened.ListNodes("")
+	if err != nil {
+		t.Fatalf("ListNodes: %v", err)
+	}
+	if len(nodes) != 0 {
+		t.Fatalf("expected 0 nodes after reopen of empty store, got %d", len(nodes))
+	}
+}
+
+func TestValidationErrorsErrInvalidInput(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "validation.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	defer st.Close()
+
+	// Invalid type name (uppercase) → ErrInvalidInput
+	if _, err := st.PutNode("BadType", "id", NodeFields{Title: "t"}, nil); !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("invalid type name: expected ErrInvalidInput, got %v", err)
+	}
+	// Invalid type name (contains colon) → ErrInvalidInput
+	if _, err := st.PutNode("bad:type", "id", NodeFields{Title: "t"}, nil); !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("colon in type name: expected ErrInvalidInput, got %v", err)
+	}
+
+	// Set up two valid nodes to test invalid relation name in PutEdge.
+	n1, err := st.PutNode("note", "n1", NodeFields{Title: "one"}, nil)
+	if err != nil {
+		t.Fatalf("PutNode n1: %v", err)
+	}
+	n2, err := st.PutNode("note", "n2", NodeFields{Title: "two"}, nil)
+	if err != nil {
+		t.Fatalf("PutNode n2: %v", err)
+	}
+	// Invalid relation name (uppercase) → ErrInvalidInput
+	if err := st.PutEdge(n1, "BadRelation", n2, EdgeFields{}); !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("invalid relation name: expected ErrInvalidInput, got %v", err)
+	}
+
+	// Invalid tag (uppercase) → ErrInvalidInput
+	if _, err := st.PutNode("note", "n3", NodeFields{Title: "three"}, []string{"BadTag"}); !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("invalid tag: expected ErrInvalidInput, got %v", err)
+	}
+}
+
+func TestMissingRequiredFieldTitle(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "missing-title.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	defer st.Close()
+
+	if _, err := st.PutNode("note", "n1", NodeFields{Title: ""}, nil); !errors.Is(err, ErrMissingRequiredField) {
+		t.Fatalf("empty title: expected ErrMissingRequiredField, got %v", err)
+	}
+}
+
+func TestPutEdgeNonexistentNodes(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "edge-nonexistent.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	defer st.Close()
+
+	existing, err := st.PutNode("note", "n1", NodeFields{Title: "one"}, nil)
+	if err != nil {
+		t.Fatalf("PutNode: %v", err)
+	}
+	ghost := NodeRef{Type: "note", ID: "ghost"}
+
+	// Source node does not exist
+	if err := st.PutEdge(ghost, "links_to", existing, EdgeFields{}); err == nil {
+		t.Fatal("expected error for nonexistent source node, got nil")
+	}
+	// Target node does not exist
+	if err := st.PutEdge(existing, "links_to", ghost, EdgeFields{}); err == nil {
+		t.Fatal("expected error for nonexistent target node, got nil")
+	}
+}
+
+func TestPutNodeAutoID(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "auto-id.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	defer st.Close()
+
+	ref, err := st.PutNode("note", "", NodeFields{Title: "auto"}, nil)
+	if err != nil {
+		t.Fatalf("PutNode with empty id: %v", err)
+	}
+	if ref.ID == "" {
+		t.Fatal("expected non-empty generated ID, got empty string")
+	}
+}
+
+func TestNodeIDConstraints(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "id-constraints.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	defer st.Close()
+
+	// Node ID containing a colon
+	if _, err := st.PutNode("note", "bad:id", NodeFields{Title: "t"}, nil); err == nil {
+		t.Fatal("expected error for node ID with colon, got nil")
+	}
+
+	// Node ID longer than 64 characters
+	longID := strings.Repeat("a", 65)
+	if _, err := st.PutNode("note", longID, NodeFields{Title: "t"}, nil); err == nil {
+		t.Fatal("expected error for node ID longer than 64 chars, got nil")
+	}
+}
+
+func TestOpenMalformedNodePayloadReturnsErrMissingRequiredField(t *testing.T) {
+	// Build a node data payload that is structurally valid msgpack but missing "title".
+	// msgpack fixmap with 1 key: {type: "note"}
+	badNodePayload := []byte{
+		0x81,                         // fixmap, 1 pair
+		0xa4, 't', 'y', 'p', 'e',    // key "type"
+		0xa4, 'n', 'o', 't', 'e',    // value "note"
+	}
+
+	nodeKey, err := buildNodeKey("note", "n1")
+	if err != nil {
+		t.Fatalf("buildNodeKey: %v", err)
+	}
+	entries, err := encodeDataEntries([]dataEntry{{Key: nodeKey, Value: badNodePayload}})
+	if err != nil {
+		t.Fatalf("encodeDataEntries: %v", err)
+	}
+	file, err := encodeContainer(container{
+		Data:  entries,
+		Bloom: encodeBloom([][]byte{nodeKey}),
+	})
+	if err != nil {
+		t.Fatalf("encodeContainer: %v", err)
+	}
+
+	path := filepath.Join(t.TempDir(), "malformed.akg")
+	if err := os.WriteFile(path, file, 0o666); err != nil {
+		t.Fatalf("WriteFile: %v", err)
+	}
+
+	_, err = Open(path)
+	if err == nil {
+		t.Fatal("expected error opening malformed file, got nil")
+	}
+	if !errors.Is(err, ErrMissingRequiredField) {
+		t.Fatalf("expected errors.Is(err, ErrMissingRequiredField) = true, got error: %v", err)
+	}
+}
+
+func TestTagArrayConstraints(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "tag-constraints.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	defer st.Close()
+
+	// More than 32 tags
+	tooMany := make([]string, 33)
+	for i := range tooMany {
+		tooMany[i] = "tag" + string(rune('a'+i%26))
+	}
+	if _, err := st.PutNode("note", "n1", NodeFields{Title: "t"}, tooMany); !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("too many tags: expected ErrInvalidInput, got %v", err)
+	}
+
+	// Duplicate tags
+	dups := []string{"alpha", "beta", "alpha"}
+	if _, err := st.PutNode("note", "n2", NodeFields{Title: "t"}, dups); !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("duplicate tags: expected ErrInvalidInput, got %v", err)
 	}
 }

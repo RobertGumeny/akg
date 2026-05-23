@@ -8,9 +8,9 @@
 package akg
 
 import (
-	"github.com/RobertGumeny/akg-format/internal/record"
-	"github.com/RobertGumeny/akg-format/internal/state"
-	"github.com/RobertGumeny/akg-format/internal/store"
+	"github.com/RobertGumeny/akg/internal/record"
+	"github.com/RobertGumeny/akg/internal/state"
+	"github.com/RobertGumeny/akg/internal/store"
 )
 
 // Node is the public current-state node payload. The node ID is carried by

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/RobertGumeny/akg-format/internal/record"
+	"github.com/RobertGumeny/akg/internal/record"
 )
 
 const (

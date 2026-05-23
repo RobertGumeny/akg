@@ -279,7 +279,7 @@ function decodeEdgeFromMap(m: Record<string, MsgpackValue>): CoreEdge {
     toType,
     toNode,
     relation,
-    strength: 0.5,
+    strength: 0,
     confidence: null,
     meta: {},
     createdAt: 0n,

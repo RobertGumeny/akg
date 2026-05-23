@@ -17,6 +17,18 @@ afterEach(() => {
   rmSync(dir, { recursive: true });
 });
 
+describe('empty-store round-trip', () => {
+  it('reopens an immediately-closed store with zero nodes and zero edges', async () => {
+    const s = await open(storePath);
+    await s.close();
+
+    const s2 = await open(storePath);
+    expect(s2.listNodes().length).toBe(0);
+    expect(s2.outboundEdges({ type: 'note', id: 'ghost' }).length).toBe(0);
+    await s2.close();
+  });
+});
+
 describe('store lifecycle', () => {
   it('creates a new store and reopens it', async () => {
     const s = await open(storePath);
@@ -315,6 +327,114 @@ describe('error handling', () => {
       caught = e as Error;
     }
     expect(caught).toBeInstanceOf(InvalidInputError);
+    await s.close();
+  });
+});
+
+describe('cross-type contamination', () => {
+  it('outboundEdges returns no results for a different type sharing the same ID', async () => {
+    const s = await open(storePath);
+    const noteShared = s.putNode('note', 'shared', { title: 'Note' }, []);
+    const conceptShared = s.putNode('concept', 'shared', { title: 'Concept' }, []);
+    const target = s.putNode('note', 'target', { title: 'Target' }, []);
+    s.putEdge(noteShared, 'links_to', target, {});
+
+    // concept/shared must see zero outbound edges — different type, same ID string
+    expect(s.outboundEdges(conceptShared).length).toBe(0);
+    // note/shared must see the one edge
+    expect(s.outboundEdges(noteShared).length).toBe(1);
+    await s.close();
+  });
+
+  it('inboundEdges returns no results for a different type sharing the same ID', async () => {
+    const s = await open(storePath);
+    const source = s.putNode('note', 'src', { title: 'Source' }, []);
+    const noteTarget = s.putNode('note', 'shared', { title: 'Note Target' }, []);
+    s.putNode('concept', 'shared', { title: 'Concept Target' }, []);
+    s.putEdge(source, 'links_to', noteTarget, {});
+
+    // concept/shared must see zero inbound edges
+    expect(s.inboundEdges({ type: 'concept', id: 'shared' }).length).toBe(0);
+    // note/shared must see the one inbound edge
+    expect(s.inboundEdges(noteTarget).length).toBe(1);
+    await s.close();
+  });
+});
+
+describe('deleteNode inbound edge guard', () => {
+  it('throws InvalidInputError when the node has only inbound edges', async () => {
+    const s = await open(storePath);
+    const alice = s.putNode('person', 'alice', { title: 'Alice' }, []);
+    const bob = s.putNode('person', 'bob', { title: 'Bob' }, []);
+    s.putEdge(alice, 'knows', bob, {});
+
+    // bob has no outbound edges — only an inbound edge from alice
+    expect(() => s.deleteNode('person', 'bob')).toThrow(InvalidInputError);
+    await s.close();
+  });
+});
+
+describe('confidence field', () => {
+  it('sets confidence to a number and reads it back correctly', async () => {
+    const s = await open(storePath);
+    const alice = s.putNode('person', 'alice', { title: 'Alice' }, []);
+    const bob = s.putNode('person', 'bob', { title: 'Bob' }, []);
+    s.putEdge(alice, 'knows', bob, { confidence: 0.85 });
+
+    const edges = s.outboundEdges(alice);
+    expect(edges[0].confidence).toBe(0.85);
+    await s.close();
+  });
+
+  it('confidence defaults to null when not provided', async () => {
+    const s = await open(storePath);
+    const alice = s.putNode('person', 'alice', { title: 'Alice' }, []);
+    const bob = s.putNode('person', 'bob', { title: 'Bob' }, []);
+    s.putEdge(alice, 'knows', bob, {});
+
+    const edges = s.outboundEdges(alice);
+    expect(edges[0].confidence).toBeNull();
+    await s.close();
+  });
+
+  it('confidence survives close/reopen cycle', async () => {
+    const s = await open(storePath);
+    const alice = s.putNode('person', 'alice', { title: 'Alice' }, []);
+    const bob = s.putNode('person', 'bob', { title: 'Bob' }, []);
+    s.putEdge(alice, 'knows', bob, { confidence: 0.72 });
+    await s.close();
+
+    const s2 = await open(storePath);
+    const edges = s2.outboundEdges({ type: 'person', id: 'alice' });
+    expect(edges[0].confidence).toBe(0.72);
+    await s2.close();
+  });
+});
+
+describe('node ID and tag constraints', () => {
+  it('rejects a node ID containing a colon', async () => {
+    const s = await open(storePath);
+    expect(() => s.putNode('note', 'bad:id', { title: 'T' }, [])).toThrow(InvalidInputError);
+    await s.close();
+  });
+
+  it('rejects a node ID longer than 64 characters', async () => {
+    const s = await open(storePath);
+    const longID = 'a'.repeat(65);
+    expect(() => s.putNode('note', longID, { title: 'T' }, [])).toThrow(InvalidInputError);
+    await s.close();
+  });
+
+  it('rejects a tags array with more than 32 entries', async () => {
+    const s = await open(storePath);
+    const tooMany = Array.from({ length: 33 }, (_, i) => `tag${i}`);
+    expect(() => s.putNode('note', 'n1', { title: 'T' }, tooMany)).toThrow(InvalidInputError);
+    await s.close();
+  });
+
+  it('rejects a tags array with duplicate values', async () => {
+    const s = await open(storePath);
+    expect(() => s.putNode('note', 'n1', { title: 'T' }, ['alpha', 'beta', 'alpha'])).toThrow(InvalidInputError);
     await s.close();
   });
 });

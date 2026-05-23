@@ -2,7 +2,7 @@
 
 Go SDK for reading and writing AKG knowledge graph files.
 
-- Module: `github.com/RobertGumeny/akg-go`
+- Module: `github.com/RobertGumeny/akg/sdk/akg-go`
 - Implements AKG v1 independently, without importing the Go Reference SDK — this
   keeps the public API free to expose the full surface an application needs
   (tag lookup, edge traversal, etc.) without being constrained by the Reference
@@ -11,13 +11,13 @@ Go SDK for reading and writing AKG knowledge graph files.
 ## Install
 
 ```sh
-go get github.com/RobertGumeny/akg-go
+go get github.com/RobertGumeny/akg/sdk/akg-go
 ```
 
 ## Quick start
 
 ```go
-import akg "github.com/RobertGumeny/akg-go"
+import akg "github.com/RobertGumeny/akg/sdk/akg-go"
 
 store, err := akg.Open("memory.akg")
 if err != nil { ... }
@@ -49,7 +49,7 @@ go mod init mygraph
 **2. Install akg-go:**
 
 ```sh
-go get github.com/RobertGumeny/akg-go
+go get github.com/RobertGumeny/akg/sdk/akg-go
 ```
 
 **3. Create `main.go`:**
@@ -59,7 +59,7 @@ package main
 
 import (
 	"fmt"
-	akg "github.com/RobertGumeny/akg-go"
+	akg "github.com/RobertGumeny/akg/sdk/akg-go"
 )
 
 func main() {

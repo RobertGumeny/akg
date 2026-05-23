@@ -497,6 +497,9 @@ function inspectAndReplayWAL(state: StoreState, walPayload: Uint8Array | null): 
     try {
       validateWALPayload(r.operation, r.payload);
     } catch (e) {
+      if (e instanceof MissingRequiredFieldError) {
+        throw new MissingRequiredFieldError(`invalid wal payload: ${e.message}`);
+      }
       throw new InvalidInputError(`invalid wal payload: ${e instanceof Error ? e.message : String(e)}`);
     }
 

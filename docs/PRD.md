@@ -1,10 +1,8 @@
-# AKG Developer Experience — Execution PRD
+# AKG — Execution PRD
 
 ## Objective
 
-Make AKG discoverable and immediately usable. A developer landing on the repo for the first time should be able to determine within 30 seconds whether AKG is for them, and have a working `.akg` file written and read back in under 5 minutes.
-
-The TS SDK (Epic 2 & 3) is complete. Both SDKs produce byte-identical `.akg` files and pass all 36 conformance fixtures. The remaining gap is documentation — neither SDK has a first-time onboarding path, and the root README is structured for maintainers rather than adopters.
+Ship AKG as a real, production-ready open-source project. Both SDKs are implemented, all 36 conformance fixtures pass, and the developer experience documentation is complete. The remaining work is everything that separates a working implementation from something you can announce: correct module paths, a license, CI, repo infrastructure, test coverage gaps, and a code quality audit.
 
 ---
 
@@ -13,12 +11,11 @@ The TS SDK (Epic 2 & 3) is complete. Both SDKs produce byte-identical `.akg` fil
 | Source | What it contains |
 |---|---|
 | `docs/PRD.md` | This file. Objective, execution rules, per-task handoff notes. |
-| `docs/backlog.md` | Full task list with acceptance criteria. Epic 4 = developer experience. |
+| `docs/backlog.md` | Full task list with acceptance criteria. Epics 5–8 = current work. |
 | `docs/spec/` | Authoritative format specification. |
-| `sdk/akg-go/README.md` | Go SDK public API documentation — the reference for 4.2 and 4.4. |
-| `sdk/akg-go/examples/basic/main.go` | Go quick-start example to port for README snippets. |
-| `sdk/akg-ts/` | TypeScript SDK source. Read for accurate API signatures and package name. |
-| `README.md` | Root README — primary target for 4.1. |
+| `sdk/akg-go/` | Go SDK source and README. |
+| `sdk/akg-ts/` | TypeScript SDK source and README. |
+| `testdata/conformance/` | Conformance fixtures — the correctness contract for both SDKs. |
 
 ---
 
@@ -26,13 +23,13 @@ The TS SDK (Epic 2 & 3) is complete. Both SDKs produce byte-identical `.akg` fil
 
 Follow these throughout. They apply across all tasks.
 
-1. **Execute tasks in order.** 4.1 → 4.2 → 4.3 → 4.4. 4.4 depends on 4.2 existing; complete 4.2 before starting 4.4.
+1. **Execute tasks in order within each epic.** 5.1 → 5.2 → 5.3 before moving to Epic 6. Within Epic 8, complete the audits (8.1, 8.2) before fixes (8.3, 8.4) so findings from the audit can inform the fix tasks.
 
-2. **Do not invent API behavior.** Read the SDK source or existing README before writing any code snippet or method description. Every snippet must be runnable as written.
+2. **Do not invent API behavior.** Read the SDK source before writing any test or snippet. Every code example must be runnable as written.
 
-3. **Write for the first-time reader.** Assume zero prior AKG knowledge. The reader has 30 seconds before they bounce — structure serves that, not internal repo organization.
+3. **Tests must be real.** No mocks of the file system or store internals. Every new test should use a real temp file and make real assertions about state — not just assert that nothing threw.
 
-4. **Update handoff notes before moving to the next task.** Record decisions, surprises, and anything the next task needs to know. These are the only communication channel between tasks.
+4. **Update handoff notes before moving to the next task.** Record decisions, surprises, and anything the next task needs to know.
 
 ---
 
@@ -42,40 +39,140 @@ Agents: fill in your task's section before marking it done. Keep entries concise
 
 ---
 
-### 4.1 Rewrite root README as a "SQLite for agents" landing page
+### 5.1 Update Go SDK module path
 
 _Status:_ done
 
-_Decisions:_ Pitch is "AKG is a file format for a knowledge graph — open it, read and write nodes and edges, close it. No server, no query language, no setup." Non-goals section placed immediately after pitch, before snippets. "Try the example" and "Validate the repo" collapsed into a single Contributing section at the bottom.
+_Decisions:_ New module path is `github.com/RobertGumeny/akg/sdk/akg-go`. Updated go.mod, examples/basic/main.go, sdk/akg-go/README.md, and root README.md.
 
-_Notes for 4.2:_ Quick-start snippets use `import { open } from 'akg-ts'` — that's the package name.
+_Notes for 5.2:_ No surprises. `go test ./...` passes after the rename.
 
 ---
 
-### 4.2 Add TypeScript SDK README
+### 5.2 Release prep
 
 _Status:_ done
 
-_Decisions:_ Created `sdk/akg-ts/README.md`. Matched Go README section structure exactly (Install, Quick start, Getting started, Naming rules, API, Error handling, NodeRef, Non-goals, Run the example). Key TS differences: `open` / `commit` / `close` are async; `putNode` / `putEdge` / read methods are synchronous; `getNode` returns `Node | null`, not an error. Error handling uses `instanceof`. Included Getting Started section here (satisfies 4.4 requirements in the same file).
+_Decisions:_ Apache 2.0 LICENSE added. Added `"files": ["dist", "README.md"]` to akg-ts/package.json.
 
-_Notes for 4.3:_ Go README Getting Started section added above Naming rules.
+_Notes for 5.3:_ npm pack --dry-run confirms only dist/ and README.md ship.
 
 ---
 
-### 4.3 Getting Started: Go — new project from scratch
+### 5.3 Docs cleanup
 
 _Status:_ done
 
-_Decisions:_ Added Getting Started section to `sdk/akg-go/README.md` above Naming rules. Steps: `go mod init`, `go get`, write `main.go`, `go run .`, expected output shown. Example is ~20 lines including package/import boilerplate.
+_Decisions:_ Deleted docs/akg-sdk-requirements.md, docs/repository-boundaries.md, docs/core.md, docs/API.md. Removed docs/core.md row from README repo contents table.
 
-_Notes for 4.4:_ TS Getting Started was already included in the 4.2 TS README creation.
+_Notes for Epic 6:_ docs/ now contains only spec/, conformance.md, sdk-author-guide.md, lifecycle.md (plus PRD.md and backlog.md which are current-work artifacts).
 
 ---
 
-### 4.4 Getting Started: TypeScript — new project from scratch
+### 6.1 GitHub Actions CI workflow
 
 _Status:_ done
 
-_Decisions:_ Getting Started section included in `sdk/akg-ts/README.md` (created as part of 4.2). Steps: `npm init -y`, `npm install akg-ts`, write `index.ts`, `npx tsx index.ts`, expected output shown.
+_Decisions:_ Workflow file named `ci.yml`. Triggers on push and pull_request. Go job runs root tests, sdk/akg-go tests, and vet. TS job runs npm ci, test, build, tsc --noEmit from sdk/akg-ts/.
 
-_Notes for human review:_ `akg-ts` is not yet published to npm — the install step (`npm install akg-ts`) will fail until it is published. The Getting Started section is accurate for when the package is published.
+_Notes for 6.2:_ Workflow name is "CI" — use this name for the badge URL in 6.4.
+
+---
+
+### 6.2 Issue templates and PR template
+
+_Status:_ done
+
+_Decisions:_ Bug report and feature request templates in .github/ISSUE_TEMPLATE/. Minimal PR template at .github/PULL_REQUEST_TEMPLATE.md.
+
+_Notes for 6.3:_ No surprises.
+
+---
+
+### 6.3 Repo root files
+
+_Status:_ done
+
+_Decisions:_ AGENTS.md describes full repo structure and what is authoritative. CLAUDE.md contains only `@AGENTS.md`. SECURITY.md directs to email. CHANGELOG.md seeded with v0.1.0 entry.
+
+_Notes for 6.4:_ Workflow filename is `ci.yml`, workflow name is "CI". npm package name is `akg-ts`. Go module is `github.com/RobertGumeny/akg/sdk/akg-go`.
+
+---
+
+### 6.4 README badges
+
+_Status:_ done
+
+_Decisions:_ CI badge points to ci.yml workflow. Go Reference points to pkg.go.dev for new module path. npm badge for `akg-ts`. Apache 2.0 license badge points to LICENSE file.
+
+_Notes for Epic 7:_ Epic 6 complete.
+
+---
+
+### 7.1 Go SDK test gaps
+
+_Status:_ done
+
+_Decisions:_ Had to fix errInvalidComponent and errTooManyTags/errDuplicateTags to wrap ErrInvalidInput (they were opaque errors). Added TestValidationErrorsErrInvalidInput, TestMissingRequiredFieldTitle, TestPutEdgeNonexistentNodes, TestPutNodeAutoID. 7.3 tests added in same file (TestNodeIDConstraints, TestTagArrayConstraints).
+
+_Notes for 7.2:_ TS SDK already has most tests; missing: cross-type contamination for inboundEdges, deleteNode with only inbound edges, confidence field tests.
+
+---
+
+### 7.2 TypeScript SDK test gaps
+
+_Status:_ done
+
+_Decisions:_ Added cross-type contamination tests (outboundEdges and inboundEdges), deleteNode with only inbound edges → InvalidInputError, and three confidence field tests. 7.3 TS tests added in same block (node ID colon/length, tags count/duplicate).
+
+_Notes for 7.3:_ Go 7.3 tests already added in 7.1. TS 7.3 tests already added in 7.2. Task 7.3 is complete.
+
+---
+
+### 7.3 Shared validation gaps (both SDKs)
+
+_Status:_ done
+
+_Decisions:_ Go tests added in 7.1 (TestNodeIDConstraints, TestTagArrayConstraints). TS tests added in 7.2 (node ID and tag constraints describe block). All pass.
+
+_Notes for Epic 8:_ Both SDKs already had the constraint enforcement in place; only tests were missing.
+
+---
+
+### 8.1 Go SDK audit
+
+_Status:_ done
+
+_Decisions:_ No logic bugs found. The errInvalidComponent/errTooManyTags/errDuplicateTags sentinel wrapping (fixed in 7.1) was the main quality issue. Data hydration and WAL replay paths use fmt.Errorf multi-wrap correctly. dir.Sync() discards are intentional. Unreachable decode paths in WAL replay (after validateWALPayload) are not a concern.
+
+_Notes for 8.2:_ TS SDK has two bugs: (1) WAL validateWALPayload errors converted from MissingRequiredFieldError to InvalidInputError — loses the sentinel; (2) decodeEdgeFromMap default strength is 0.5 (should be 0.0).
+
+---
+
+### 8.2 TypeScript SDK audit
+
+_Status:_ done
+
+_Decisions:_ Fixed two bugs found in audit: (1) WAL error wrapping now preserves MissingRequiredFieldError class through the chain; (2) default strength in decodeEdgeFromMap changed from 0.5 to 0.0.
+
+_Notes for 8.3:_ Go SDK data hydration path already uses fmt.Errorf multi-wrap for ErrMissingRequiredField — the chain is intact. Add a test to prove it.
+
+---
+
+### 8.3 Fix Go error sentinel debt
+
+_Status:_ done
+
+_Decisions:_ Data hydration path already uses fmt.Errorf("%w: %w", errInvalidDataPayload, err) multi-wrap — ErrMissingRequiredField is already preserved. WAL replay path uses the same pattern. Added TestOpenMalformedNodePayloadReturnsErrMissingRequiredField which crafts a msgpack payload with {type: "note"} (no title) and confirms errors.Is(err, ErrMissingRequiredField) = true.
+
+_Notes for 8.4:_ Empty-store test needs to verify both zero nodes and zero edges after reopen. No unspecified behavioral divergences remain after 8.2 fixes.
+
+---
+
+### 8.4 Behavior parity and empty-store edge case
+
+_Status:_ done
+
+_Decisions:_ Added TestEmptyStoreRoundTrip to Go SDK and a matching describe block to TS SDK — both open, close without mutations, reopen, assert zero nodes. Cross-checked all methods: no unspecified divergences remain after 8.2 fixes (WAL error class and default strength). Behavioral parity is confirmed.
+
+_Notes for human review:_ Epics 5–8 complete. All tests pass in both SDKs and the root Go package.

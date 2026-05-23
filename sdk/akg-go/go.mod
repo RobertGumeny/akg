@@ -1,3 +1,3 @@
-module github.com/RobertGumeny/akg-go
+module github.com/RobertGumeny/akg/sdk/akg-go
 
 go 1.22

@@ -2,7 +2,7 @@ package akg
 
 import (
 	"bytes"
-	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -11,8 +11,8 @@ import (
 const maxNodeIDLen = 64
 
 var (
-	errMalformedKey     = errors.New("malformed key")
-	errInvalidComponent = errors.New("invalid key component")
+	errMalformedKey     = fmt.Errorf("malformed key")
+	errInvalidComponent = fmt.Errorf("invalid key component: %w", ErrInvalidInput)
 )
 
 type parsedNodeKey struct {

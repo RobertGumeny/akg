@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	akg "github.com/RobertGumeny/akg-format"
+	akg "github.com/RobertGumeny/akg"
 )
 
 func main() {

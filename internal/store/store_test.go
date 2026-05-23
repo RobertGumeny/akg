@@ -6,9 +6,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/RobertGumeny/akg-format/internal/format"
-	"github.com/RobertGumeny/akg-format/internal/record"
-	"github.com/RobertGumeny/akg-format/internal/state"
+	"github.com/RobertGumeny/akg/internal/format"
+	"github.com/RobertGumeny/akg/internal/record"
+	"github.com/RobertGumeny/akg/internal/state"
 )
 
 func fixedClock(values ...record.TimestampMicros) func() record.TimestampMicros {

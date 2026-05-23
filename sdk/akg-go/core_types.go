@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -95,8 +96,8 @@ var ErrMissingRequiredField = errors.New("missing required field")
 
 var (
 	errInvalidPayload = errors.New("invalid payload")
-	errDuplicateTags  = errors.New("duplicate tags")
-	errTooManyTags    = errors.New("too many tags")
+	errDuplicateTags  = fmt.Errorf("duplicate tags: %w", ErrInvalidInput)
+	errTooManyTags    = fmt.Errorf("too many tags: %w", ErrInvalidInput)
 )
 
 func (n *coreNode) applyReadDefaults() {

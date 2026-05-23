@@ -9,9 +9,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/RobertGumeny/akg-format/internal/format"
-	"github.com/RobertGumeny/akg-format/internal/record"
-	"github.com/RobertGumeny/akg-format/internal/wal"
+	"github.com/RobertGumeny/akg/internal/format"
+	"github.com/RobertGumeny/akg/internal/record"
+	"github.com/RobertGumeny/akg/internal/wal"
 )
 
 func TestConformanceManifestSync(t *testing.T) {

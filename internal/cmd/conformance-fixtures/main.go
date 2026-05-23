@@ -12,11 +12,11 @@ import (
 	"path/filepath"
 	"sort"
 
-	"github.com/RobertGumeny/akg-format/internal/format"
-	"github.com/RobertGumeny/akg-format/internal/keys"
-	"github.com/RobertGumeny/akg-format/internal/record"
-	"github.com/RobertGumeny/akg-format/internal/store"
-	"github.com/RobertGumeny/akg-format/internal/wal"
+	"github.com/RobertGumeny/akg/internal/format"
+	"github.com/RobertGumeny/akg/internal/keys"
+	"github.com/RobertGumeny/akg/internal/record"
+	"github.com/RobertGumeny/akg/internal/store"
+	"github.com/RobertGumeny/akg/internal/wal"
 )
 
 func main() {

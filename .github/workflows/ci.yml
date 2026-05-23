@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  go:
+    name: Go
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      - name: Test root package
+        run: go test -count=1 ./...
+      - name: Test Go SDK
+        run: cd sdk/akg-go && go test ./...
+      - name: Vet Go SDK
+        run: cd sdk/akg-go && go vet ./...
+
+  typescript:
+    name: TypeScript
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        working-directory: sdk/akg-ts
+        run: npm ci
+      - name: Test
+        working-directory: sdk/akg-ts
+        run: npm test
+      - name: Build
+        working-directory: sdk/akg-ts
+        run: npm run build
+      - name: Type check
+        working-directory: sdk/akg-ts
+        run: npx tsc --noEmit

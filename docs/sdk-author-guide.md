@@ -32,7 +32,7 @@ See the [Conformance guide](conformance.md) for setup details.
 
 ## The Go Reference SDK
 
-The Go code in this repo (`github.com/RobertGumeny/akg-format`) exists to prove
+The Go code in this repo (`github.com/RobertGumeny/akg`) exists to prove
 the spec works. Read it as a behavior target — what should happen when you open a
 file, replay a WAL, or compact. Do not treat it as a blueprint for your own
 internal structure, and do not import it.

@@ -6,8 +6,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/RobertGumeny/akg-format/internal/keys"
-	"github.com/RobertGumeny/akg-format/internal/record"
+	"github.com/RobertGumeny/akg/internal/keys"
+	"github.com/RobertGumeny/akg/internal/record"
 )
 
 const maxTags = 32

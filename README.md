@@ -5,6 +5,11 @@ status: release-candidate docs
 
 # AKG — Agent Knowledge Graph File Format
 
+[![CI](https://github.com/RobertGumeny/akg/actions/workflows/ci.yml/badge.svg)](https://github.com/RobertGumeny/akg/actions/workflows/ci.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/RobertGumeny/akg/sdk/akg-go.svg)](https://pkg.go.dev/github.com/RobertGumeny/akg/sdk/akg-go)
+[![npm](https://img.shields.io/npm/v/akg-ts)](https://www.npmjs.com/package/akg-ts)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+
 AKG is a file format for a knowledge graph — open it, read and write nodes and edges, close it. No server, no query language, no setup.
 
 Think of it as SQLite for agent memory: a portable, single-file graph your agent can open, update, and carry across tools and hosts.
@@ -25,7 +30,7 @@ If any of those are hard requirements, AKG is not the right tool.
 **Go**
 
 ```go
-import akg "github.com/RobertGumeny/akg-go"
+import akg "github.com/RobertGumeny/akg/sdk/akg-go"
 
 store, err := akg.Open("memory.akg")
 if err != nil { log.Fatal(err) }
@@ -69,7 +74,6 @@ await store.close();
 | Path | What it contains |
 |---|---|
 | `docs/spec/` | v1 binary format specification |
-| `docs/core.md` | Overview, non-goals, and project structure |
 | `docs/lifecycle.md` | File lifecycle: create, mutate, commit, compact |
 | `docs/conformance.md` | How to run conformance tests from another implementation |
 | `docs/sdk-author-guide.md` | Implementing AKG support in a new language |

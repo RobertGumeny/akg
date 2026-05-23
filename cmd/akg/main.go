@@ -6,7 +6,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/RobertGumeny/akg-format"
+	"github.com/RobertGumeny/akg"
 )
 
 type inspectOutput struct {
