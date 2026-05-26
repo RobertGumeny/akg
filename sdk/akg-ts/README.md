@@ -167,6 +167,24 @@ const edges: Edge[] = store.outboundEdges(nodeRef: NodeRef, relation?: string)
 const edges: Edge[] = store.inboundEdges(nodeRef: NodeRef, relation?: string)
 ```
 
+To filter by both type and tag, call `listNodes(typeName)` and filter the result:
+
+```typescript
+const activeResearchers = store.listNodes('person').filter(n => n.tags.includes('researcher'));
+```
+
+### Metadata fields
+
+`Node` and `Edge` carry three read-only fields set by the SDK:
+
+| Field       | Type     | Description                                       |
+|-------------|----------|---------------------------------------------------|
+| `createdAt` | `number` | Unix timestamp in **microseconds** when first written |
+| `updatedAt` | `number` | Unix timestamp in **microseconds** of last `putNode`/`putEdge` |
+| `version`   | `number` | Starts at `1`, increments by `1` on each overwrite |
+
+These are set automatically and cannot be supplied by the caller.
+
 ### Committing and closing
 
 ```typescript
@@ -174,7 +192,9 @@ await store.commit(): Promise<void>  // durably writes all pending mutations
 await store.close(): Promise<void>   // commits outstanding mutations and closes the store
 ```
 
-Always close a store when done. `close` is safe to call on a store with no pending mutations.
+Mutations (`putNode`, `putEdge`, `deleteNode`, `deleteEdge`) are held in memory until `commit` or `close` is called. They are not visible to other processes and will be lost if the process exits without committing.
+
+Call `commit` periodically in long-running processes where losing a batch of work would be costly. Call `close` when you're done with the store — it commits any outstanding mutations and releases the file handle. `close` is safe to call on a store with no pending mutations.
 
 ## Deleting nodes and edges
 
@@ -234,6 +254,20 @@ interface NodeRef {
 ```
 
 This shape is part of the public SDK contract and is identical across the Go and TypeScript SDKs, including field names and JSON keys. `NodeRef` values are safe to serialize and pass between systems.
+
+A `NodeRef` returned by `putNode` can be passed directly to `putEdge`, `outboundEdges`, `inboundEdges`, `deleteNode`, and `deleteEdge` without re-fetching the node. You can also construct one manually from a known type and ID:
+
+```typescript
+const ref: NodeRef = { type: 'person', id: 'alice' };
+const edges = store.outboundEdges(ref);
+```
+
+When an empty string is passed as `id` to `putNode`, the SDK generates a unique ID. The generated ID is available on the returned `NodeRef`:
+
+```typescript
+const ref = store.putNode('person', '', { title: 'New person' }, []);
+console.log(ref.id); // e.g. "01J2K3..."
+```
 
 ## Concurrency
 

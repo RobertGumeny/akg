@@ -170,7 +170,7 @@ on `relation`.
 ### Reading
 
 ```go
-// Returns nil (not an error) if the node does not exist.
+// Returns (nil, nil) if the node does not exist — not an error.
 node, err := store.GetNode(typeName, id string) (*Node, error)
 
 // Returns all nodes carrying the given tag, sorted by key.
@@ -185,6 +185,34 @@ edges, err := store.OutboundEdges(nodeRef NodeRef, relation string) ([]Edge, err
 edges, err := store.InboundEdges(nodeRef NodeRef, relation string) ([]Edge, error)
 ```
 
+To filter by both type and tag, call `ListNodes` and filter the result:
+
+```go
+nodes, err := store.ListNodes("person")
+// filter by tag in the caller
+var researchers []akg.Node
+for _, n := range nodes {
+    for _, t := range n.Tags {
+        if t == "researcher" {
+            researchers = append(researchers, n)
+            break
+        }
+    }
+}
+```
+
+### Metadata fields
+
+`Node` and `Edge` carry three read-only fields set by the SDK:
+
+| Field       | Type     | Description                                           |
+|-------------|----------|-------------------------------------------------------|
+| `CreatedAt` | `uint64` | Unix timestamp in **microseconds** when first written |
+| `UpdatedAt` | `uint64` | Unix timestamp in **microseconds** of last `PutNode`/`PutEdge` |
+| `Version`   | `uint32` | Starts at `1`, increments by `1` on each overwrite    |
+
+These are set automatically and cannot be supplied by the caller.
+
 ### Committing and closing
 
 ```go
@@ -192,8 +220,9 @@ err := store.Commit() // durably writes all pending mutations
 err := store.Close()  // commits outstanding mutations and closes the store
 ```
 
-Always close a store when done. `Close` is safe to call on a store with no
-pending mutations.
+Mutations (`PutNode`, `PutEdge`, `DeleteNode`, `DeleteEdge`) are held in memory until `Commit` or `Close` is called. They are not visible to other processes and will be lost if the process exits without committing.
+
+Call `Commit` periodically in long-running processes where losing a batch of work would be costly. Call `Close` when you're done with the store — it commits any outstanding mutations and releases the file handle. `Close` is safe to call on a store with no pending mutations.
 
 ## Deleting nodes and edges
 
@@ -221,16 +250,28 @@ Three sentinel errors are exported for callers that need to branch on error type
 
 | Sentinel | Returned when |
 |---|---|
-| `akg.ErrNotFound` | A `GetNode`, `DeleteNode`, or `DeleteEdge` call targets a node or edge that does not exist. |
+| `akg.ErrNotFound` | A `DeleteNode` or `DeleteEdge` call targets a node or edge that does not exist. |
 | `akg.ErrInvalidInput` | A caller passes an argument that violates a format or semantic constraint — invalid type name, missing required field, or attempting to delete a node that still has live edges. |
 | `akg.ErrMissingRequiredField` | A required field is absent. Returned in two situations: (1) a `PutNode` call omits `Title`, or a `PutEdge` call omits a required identity field; (2) a decoded record in a file is structurally valid but missing a required field — callers see this when opening a malformed file written by a buggy writer. |
 
-Use `errors.Is` to test:
+`GetNode` is a special case: a missing node returns `(nil, nil)`, not `ErrNotFound`. Check the pointer, not the error:
 
 ```go
-node, err := store.GetNode("Person", "alice")
-if errors.Is(err, akg.ErrNotFound) {
+node, err := store.GetNode("person", "alice")
+if err != nil {
+    // I/O or decode error
+}
+if node == nil {
     // node does not exist
+}
+```
+
+Use `errors.Is` for the delete sentinels:
+
+```go
+err := store.DeleteNode("person", "alice")
+if errors.Is(err, akg.ErrNotFound) {
+    // node did not exist
 }
 ```
 
@@ -248,6 +289,24 @@ type NodeRef struct {
 This shape is part of the public SDK contract and is identical across the Go and
 TypeScript SDKs, including field names and JSON keys. `NodeRef` values are safe
 to serialize and pass between systems.
+
+A `NodeRef` returned by `PutNode` can be passed directly to `PutEdge`,
+`OutboundEdges`, `InboundEdges`, `DeleteNode`, and `DeleteEdge` without
+re-fetching the node. You can also construct one manually from a known type
+and ID:
+
+```go
+ref := akg.NodeRef{Type: "person", ID: "alice"}
+edges, err := store.OutboundEdges(ref, "")
+```
+
+When an empty string is passed as `id` to `PutNode`, the SDK generates a unique
+ID. The generated ID is available on the returned `NodeRef`:
+
+```go
+ref, err := store.PutNode("person", "", akg.NodeFields{Title: "New person"}, nil)
+fmt.Println(ref.ID) // e.g. "01J2K3..."
+```
 
 ## Concurrency
 
