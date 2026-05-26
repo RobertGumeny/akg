@@ -145,6 +145,10 @@ Writes or replaces the edge at `(fromRef, relation, toRef)`. Both referenced nod
 | `confidence` | no       | `number \| null`          | `null`  |
 | `meta`       | no       | `Record<string, unknown>` | `{}`    |
 
+**`strength`** is a caller-defined weight for the edge — how strongly the relationship holds. The SDK stores and returns it as-is; no semantic is imposed. Use it for ranking, sorting, or filtering (e.g. `0.0`–`1.0` for weak-to-strong, or an integer priority). Default `0`.
+
+**`confidence`** represents how certain you are that the edge is correct — for example when it was inferred rather than asserted. `null` means no confidence value was recorded (i.e. the edge was asserted directly). When set, the convention is `0.0`–`1.0`. The SDK does not enforce a range. Default `null`.
+
 ### Reading
 
 ```typescript
@@ -172,6 +176,26 @@ await store.close(): Promise<void>   // commits outstanding mutations and closes
 
 Always close a store when done. `close` is safe to call on a store with no pending mutations.
 
+## Deleting nodes and edges
+
+```typescript
+store.deleteNode(typeName: string, id: string): void
+store.deleteEdge(fromRef: NodeRef, relation: string, toRef: NodeRef): void
+```
+
+Both throw `NotFoundError` if the target does not exist.
+
+**You must delete all edges before deleting a node.** Attempting to delete a node that still has live edges — inbound or outbound — throws `InvalidInputError`. The graph does not cascade-delete edges automatically; this is intentional so that deletions are explicit and auditable.
+
+```typescript
+// correct order: edges first, then the node
+store.deleteEdge(alice, 'knows', bob);
+store.deleteNode('person', 'bob');
+
+// wrong order — throws InvalidInputError
+store.deleteNode('person', 'bob'); // bob still has a 'knows' edge
+```
+
 ## Error handling
 
 Three error classes are exported for callers that need to branch on error type:
@@ -179,7 +203,7 @@ Three error classes are exported for callers that need to branch on error type:
 | Class | Thrown when |
 |---|---|
 | `NotFoundError` | A `deleteNode` or `deleteEdge` call targets a node or edge that does not exist. |
-| `InvalidInputError` | A caller passes an argument that violates a format or semantic constraint — invalid type name, missing required field, or an operation that would leave the graph inconsistent (e.g. deleting a node that still has live edges). |
+| `InvalidInputError` | A caller passes an argument that violates a format or semantic constraint — invalid type name, missing required field, or attempting to delete a node that still has live edges. |
 | `MissingRequiredFieldError` | A required field is absent. Returned in two situations: (1) a `putNode` call omits `title`; (2) a decoded record in a file is structurally valid but missing a required field — callers see this when opening a malformed file written by a buggy writer. |
 
 Use `instanceof` to test:
@@ -211,9 +235,9 @@ interface NodeRef {
 
 This shape is part of the public SDK contract and is identical across the Go and TypeScript SDKs, including field names and JSON keys. `NodeRef` values are safe to serialize and pass between systems.
 
-## Non-goals
+## Concurrency
 
-AKG does not provide a query language, server, semantic search, or multi-writer sync. See the [root README](../../README.md#non-goals) for the full list.
+A store is not safe for concurrent access. Only one process should open a given `.akg` file at a time. Opening the same file from two processes simultaneously produces undefined behavior — there is no lock file or advisory lock. If you need concurrent access, serialize it at the application layer.
 
 ## Run the example
 
