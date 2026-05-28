@@ -1,0 +1,18 @@
+# Changelog
+
+## v0.1.1
+
+### Added
+
+- **Filtering** — `ListNodesFiltered(NodeFilter)` and `ListEdges(EdgeFilter)` let callers filter live nodes/edges by type, tag, relation, and metadata key-value pairs. Multiple fields combine with AND semantics.
+- **Snapshot** — `Snapshot()` returns a point-in-time `Snapshot{Nodes, Edges}` of all live records; the struct is JSON-serializable.
+- **Batch get** — `GetNodes([]NodeRef)` fetches multiple nodes in one call; missing refs return nil slots (no error).
+- **Recency queries** — `RecentNodes(RecencyFilter)` and `RecentEdges(EdgeRecencyFilter)` return records ordered by `updatedAt` descending. Support time-window bounds (`SinceUpdatedAt`, `UntilUpdatedAt`) and `Limit` (negative limit returns `ErrInvalidInput`).
+- **Compaction** — `Compact()` rewrites the `.akg` file to a minimal snapshot, removing superseded WAL entries and reducing file size.
+- **Reconcile** — `ReconcileOutboundEdges(source, relation, desired, fields)` atomically syncs the outbound edge set for a source node to exactly `desired`, adding and removing as needed. Returns a `ReconcileResult{Added, Removed, Unchanged}`.
+- **Cascade delete** — `DeleteNodeCascade(type, id)` deletes a node and all its inbound/outbound edges in one operation. Returns a `CascadeDeleteResult` with counts.
+- **Behavioral parity test suite** — shared fixtures in `testdata/behavior/` (`parity-graph.akg`, `parity-spec.json`) and a `behavior_parity_test.go` that asserts Go SDK behavior against the spec.
+
+## v0.1.0
+
+Initial release. Core store operations: `Open`, `PutNode`, `GetNode`, `DeleteNode`, `PutEdge`, `GetEdge`, `DeleteEdge`, `ListNodes`, `ListEdgesFrom`, `ListEdgesTo`, `AddTag`, `RemoveTag`, `Close`.
