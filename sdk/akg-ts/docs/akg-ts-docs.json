@@ -1,0 +1,1532 @@
+{
+  "nodes": [
+    {
+      "type": "api_symbol",
+      "id": "CascadeDeleteResult",
+      "title": "CascadeDeleteResult",
+      "body": "Result of deleteNodeCascade: counts of deleted inbound edges, outbound edges, and node.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "Cascade delete",
+        "anchor": "cascade-delete",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "Edge",
+      "title": "Edge",
+      "body": "An edge record returned by read operations; includes from, relation, to, strength, confidence, meta, and timestamps.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "Reading",
+        "anchor": "reading",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "EdgeFields",
+      "title": "EdgeFields",
+      "body": "Input fields for putEdge: strength (default 0.5), confidence (default null), meta (optional).",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "Writing edges",
+        "anchor": "writing-edges",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "EdgeFilter",
+      "title": "EdgeFilter",
+      "body": "Filter criteria for listEdges: relation and meta.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "listEdges",
+        "anchor": "listedges",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "InvalidInputError",
+      "title": "InvalidInputError",
+      "body": "Thrown when a caller passes an argument that violates a format or semantic constraint.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "Error handling",
+        "anchor": "error-handling",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "MissingRequiredFieldError",
+      "title": "MissingRequiredFieldError",
+      "body": "Thrown when a required field is absent, such as omitting title in putNode.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "Error handling",
+        "anchor": "error-handling",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "Node",
+      "title": "Node",
+      "body": "A node record returned by read operations; includes id, type, title, body, meta, tags, and SDK-managed timestamps.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "Reading",
+        "anchor": "reading",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "NodeFields",
+      "title": "NodeFields",
+      "body": "Input fields for putNode: title (required), body (optional), meta (optional).",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "Writing nodes",
+        "anchor": "writing-nodes",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "NodeFilter",
+      "title": "NodeFilter",
+      "body": "Filter criteria for listNodesFiltered: type, tag, and meta with AND semantics.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "listNodesFiltered",
+        "anchor": "listnodesfiltered",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "NodeRef",
+      "title": "NodeRef",
+      "body": "Identifies a node by type and id; returned by putNode and accepted by edge and query methods.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "NodeRef",
+        "anchor": "noderef",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "NotFoundError",
+      "title": "NotFoundError",
+      "body": "Thrown when a deleteNode or deleteEdge target does not exist.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "Error handling",
+        "anchor": "error-handling",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "ReconcileResult",
+      "title": "ReconcileResult",
+      "body": "Result of reconcileOutboundEdges: counts of added, removed, and unchanged edges.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "Edge reconciliation",
+        "anchor": "edge-reconciliation",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "Snapshot",
+      "title": "Snapshot",
+      "body": "JSON-serializable record of all live nodes and edges returned by store.snapshot().",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "snapshot",
+        "anchor": "snapshot",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "Store",
+      "title": "Store",
+      "body": "The main class for reading and writing an AKG knowledge graph.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "API",
+        "anchor": "api",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "close",
+      "title": "close",
+      "body": "Commits outstanding mutations and closes the store; safe to call with no pending mutations.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "Committing and closing",
+        "anchor": "committing-and-closing",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "api",
+        "typescript",
+        "lifecycle"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "commit",
+      "title": "commit",
+      "body": "Durably writes all pending in-memory mutations to the .akg file.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "Committing and closing",
+        "anchor": "committing-and-closing",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "api",
+        "typescript",
+        "lifecycle"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "compact",
+      "title": "compact",
+      "body": "Rewrites the .akg file with only live records, discarding WAL history and tombstones.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "Compaction",
+        "anchor": "compaction",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "api",
+        "typescript",
+        "lifecycle"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "deleteEdge",
+      "title": "deleteEdge",
+      "body": "Deletes an edge; throws NotFoundError if the edge does not exist.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "Deleting nodes and edges",
+        "anchor": "deleting-nodes-and-edges",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "deleteNode",
+      "title": "deleteNode",
+      "body": "Deletes a node; throws NotFoundError if missing, InvalidInputError if live edges remain.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "Deleting nodes and edges",
+        "anchor": "deleting-nodes-and-edges",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "deleteNodeCascade",
+      "title": "deleteNodeCascade",
+      "body": "Deletes all inbound and outbound edges then deletes the node; returns a CascadeDeleteResult.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "Cascade delete",
+        "anchor": "cascade-delete",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "getNode",
+      "title": "getNode",
+      "body": "Returns the node at (typeName, id), or null if it does not exist.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "Reading",
+        "anchor": "reading",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "getNodes",
+      "title": "getNodes",
+      "body": "Batch-fetches nodes by NodeRef array; returns null at positions where a node does not exist.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "getNodes",
+        "anchor": "getnodes",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "inboundEdges",
+      "title": "inboundEdges",
+      "body": "Returns all inbound edges to a node, optionally filtered by relation.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "Reading",
+        "anchor": "reading",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "listEdges",
+      "title": "listEdges",
+      "body": "Returns all edges, optionally filtered by relation or metadata.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "listEdges",
+        "anchor": "listedges",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "listNodes",
+      "title": "listNodes",
+      "body": "Returns all nodes, optionally filtered to a given type name, sorted by key.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "Reading",
+        "anchor": "reading",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "listNodesByTag",
+      "title": "listNodesByTag",
+      "body": "Returns all nodes carrying the given tag, sorted by key.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "Reading",
+        "anchor": "reading",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "listNodesFiltered",
+      "title": "listNodesFiltered",
+      "body": "Returns nodes matching a NodeFilter combining type, tag, and metadata criteria.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "listNodesFiltered",
+        "anchor": "listnodesfiltered",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "open",
+      "title": "open",
+      "body": "Opens an existing .akg file or creates a new empty one; returns a Store.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "Opening a store",
+        "anchor": "opening-a-store",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "api",
+        "typescript",
+        "lifecycle"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "outboundEdges",
+      "title": "outboundEdges",
+      "body": "Returns all outbound edges from a node, optionally filtered by relation.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "Reading",
+        "anchor": "reading",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "putEdge",
+      "title": "putEdge",
+      "body": "Writes or replaces an edge between two existing nodes.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "Writing edges",
+        "anchor": "writing-edges",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "putNode",
+      "title": "putNode",
+      "body": "Writes or replaces a node at (typeName, id); returns a NodeRef.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "Writing nodes",
+        "anchor": "writing-nodes",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "recentEdges",
+      "title": "recentEdges",
+      "body": "Returns edges sorted newest-first by updatedAt, with optional source, relation, and limit filters.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "Recency helpers",
+        "anchor": "recency-helpers",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "recentNodes",
+      "title": "recentNodes",
+      "body": "Returns nodes sorted newest-first by updatedAt, with optional type, tag, and limit filters.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "Recency helpers",
+        "anchor": "recency-helpers",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "reconcileOutboundEdges",
+      "title": "reconcileOutboundEdges",
+      "body": "Synchronizes the outbound edges for a source node and relation to exactly the desired target set.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "Edge reconciliation",
+        "anchor": "edge-reconciliation",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "snapshot",
+      "title": "snapshot",
+      "body": "Returns a JSON-serializable Snapshot of all live nodes and edges in deterministic order.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "snapshot",
+        "anchor": "snapshot",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "concept",
+      "id": "compaction",
+      "title": "Compaction",
+      "body": "Rewrites the file to contain only live records, discarding WAL history; caller-triggered, never automatic.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "Compaction",
+        "anchor": "compaction",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "concept",
+        "lifecycle",
+        "typescript",
+        "normative"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "concept",
+      "id": "naming_rules",
+      "title": "Naming rules",
+      "body": "Type names, relation names, and tags must be lowercase [a-z0-9_] with no leading, trailing, or consecutive underscores.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "Naming rules",
+        "anchor": "naming-rules",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "concept",
+        "normative",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "concept",
+      "id": "single_writer",
+      "title": "Single-writer semantics",
+      "body": "Only one process should have a store open for writing at a time; concurrent access produces undefined behavior.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "Concurrency and single-writer semantics",
+        "anchor": "concurrency-and-single-writer-semantics",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "concept",
+        "normative",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "concept",
+      "id": "wal",
+      "title": "Write-Ahead Log (WAL)",
+      "body": "Mutations are held in memory and appended to a WAL on commit; not visible to other processes until committed.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "Committing and closing",
+        "anchor": "committing-and-closing",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "concept",
+        "lifecycle",
+        "typescript",
+        "normative"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "warning",
+      "id": "delete_edges_before_nodes",
+      "title": "Delete edges before nodes",
+      "body": "You must delete all inbound and outbound edges before deleting a node; the graph does not cascade-delete automatically.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "Deleting nodes and edges",
+        "anchor": "deleting-nodes-and-edges",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "warning",
+        "typescript",
+        "normative"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "warning",
+      "id": "uncommitted_mutations",
+      "title": "Uncommitted mutations are lost",
+      "body": "Mutations held in memory are lost if the process exits without calling commit or close.",
+      "meta": {
+        "source_path": "sdk/akg-ts/README.md",
+        "heading": "Committing and closing",
+        "anchor": "committing-and-closing",
+        "language": "typescript",
+        "package": "akg-ts",
+        "version": "0.1.1",
+        "generated_at": "2026-05-28T00:00:00Z"
+      },
+      "tags": [
+        "warning",
+        "typescript",
+        "lifecycle"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    }
+  ],
+  "edges": [
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "close"
+      },
+      "relation": "implements",
+      "to": {
+        "type": "concept",
+        "id": "wal"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "close"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "commit"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "close"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "warning",
+        "id": "uncommitted_mutations"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "commit"
+      },
+      "relation": "implements",
+      "to": {
+        "type": "concept",
+        "id": "wal"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "commit"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "close"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "compact"
+      },
+      "relation": "depends_on",
+      "to": {
+        "type": "api_symbol",
+        "id": "commit"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "compact"
+      },
+      "relation": "implements",
+      "to": {
+        "type": "concept",
+        "id": "compaction"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "deleteEdge"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "deleteNode"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "deleteNode"
+      },
+      "relation": "depends_on",
+      "to": {
+        "type": "api_symbol",
+        "id": "deleteEdge"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "deleteNode"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "warning",
+        "id": "delete_edges_before_nodes"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "deleteNodeCascade"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "deleteNode"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "deleteNodeCascade"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "warning",
+        "id": "delete_edges_before_nodes"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "getNodes"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "getNode"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "listEdges"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "EdgeFilter"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "listNodesFiltered"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "NodeFilter"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "listNodesFiltered"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "listNodes"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "open"
+      },
+      "relation": "implements",
+      "to": {
+        "type": "concept",
+        "id": "wal"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "open"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "Store"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "putEdge"
+      },
+      "relation": "depends_on",
+      "to": {
+        "type": "api_symbol",
+        "id": "putNode"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "putEdge"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "EdgeFields"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "putEdge"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "NodeRef"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "putNode"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "NodeFields"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "putNode"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "NodeRef"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "putNode"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "putEdge"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "recentEdges"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "outboundEdges"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "recentNodes"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "listNodes"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "reconcileOutboundEdges"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "deleteEdge"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "reconcileOutboundEdges"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "putEdge"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "snapshot"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "Snapshot"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "concept",
+        "id": "compaction"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "compact"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "concept",
+        "id": "wal"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "close"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "concept",
+        "id": "wal"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "commit"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "warning",
+        "id": "delete_edges_before_nodes"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "deleteEdge"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "warning",
+        "id": "delete_edges_before_nodes"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "deleteNode"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "warning",
+        "id": "uncommitted_mutations"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "close"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "warning",
+        "id": "uncommitted_mutations"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "commit"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    }
+  ]
+}

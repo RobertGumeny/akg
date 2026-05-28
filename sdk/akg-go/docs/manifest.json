@@ -1,0 +1,448 @@
+{
+  "meta": {
+    "language": "go",
+    "package": "akg-go",
+    "version": "0.1.1",
+    "source_path": "sdk/akg-go/README.md",
+    "generated_at": "2026-05-28T00:00:00Z"
+  },
+  "nodes": [
+    {
+      "id": "api_symbol:Open",
+      "type": "api_symbol",
+      "title": "Open",
+      "body": "Opens an existing .akg file or creates a new empty one; returns a *Store.",
+      "tags": ["api", "go", "lifecycle"],
+      "anchor": "opening-a-store",
+      "heading": "Opening a store"
+    },
+    {
+      "id": "api_symbol:Store",
+      "type": "api_symbol",
+      "title": "Store",
+      "body": "The main type for reading and writing an AKG knowledge graph, bound to one filesystem path.",
+      "tags": ["api", "go"],
+      "anchor": "api",
+      "heading": "API"
+    },
+    {
+      "id": "api_symbol:PutNode",
+      "type": "api_symbol",
+      "title": "PutNode",
+      "body": "Writes or replaces the node at (typeName, id); returns a NodeRef.",
+      "tags": ["api", "go"],
+      "anchor": "writing-nodes",
+      "heading": "Writing nodes"
+    },
+    {
+      "id": "api_symbol:PutEdge",
+      "type": "api_symbol",
+      "title": "PutEdge",
+      "body": "Writes or replaces the edge at (fromRef, relation, toRef); both nodes must already exist.",
+      "tags": ["api", "go"],
+      "anchor": "writing-edges",
+      "heading": "Writing edges"
+    },
+    {
+      "id": "api_symbol:GetNode",
+      "type": "api_symbol",
+      "title": "GetNode",
+      "body": "Returns the node at (typeName, id), or (nil, nil) if it does not exist.",
+      "tags": ["api", "go"],
+      "anchor": "reading",
+      "heading": "Reading"
+    },
+    {
+      "id": "api_symbol:GetNodes",
+      "type": "api_symbol",
+      "title": "GetNodes",
+      "body": "Batch-fetches nodes by NodeRef slice; returns nil at positions where a node does not exist.",
+      "tags": ["api", "go"],
+      "anchor": "getnodes",
+      "heading": "GetNodes"
+    },
+    {
+      "id": "api_symbol:ListNodes",
+      "type": "api_symbol",
+      "title": "ListNodes",
+      "body": "Returns all nodes, optionally filtered to a given type name, sorted by key.",
+      "tags": ["api", "go"],
+      "anchor": "reading",
+      "heading": "Reading"
+    },
+    {
+      "id": "api_symbol:ListNodesByTag",
+      "type": "api_symbol",
+      "title": "ListNodesByTag",
+      "body": "Returns all nodes carrying the given tag, sorted by key.",
+      "tags": ["api", "go"],
+      "anchor": "reading",
+      "heading": "Reading"
+    },
+    {
+      "id": "api_symbol:ListNodesFiltered",
+      "type": "api_symbol",
+      "title": "ListNodesFiltered",
+      "body": "Returns nodes matching a NodeFilter combining type, tag, and metadata criteria with AND semantics.",
+      "tags": ["api", "go"],
+      "anchor": "listnodesfiltered",
+      "heading": "ListNodesFiltered"
+    },
+    {
+      "id": "api_symbol:OutboundEdges",
+      "type": "api_symbol",
+      "title": "OutboundEdges",
+      "body": "Returns all outbound edges from a node, optionally filtered by relation.",
+      "tags": ["api", "go"],
+      "anchor": "reading",
+      "heading": "Reading"
+    },
+    {
+      "id": "api_symbol:InboundEdges",
+      "type": "api_symbol",
+      "title": "InboundEdges",
+      "body": "Returns all inbound edges to a node, optionally filtered by relation.",
+      "tags": ["api", "go"],
+      "anchor": "reading",
+      "heading": "Reading"
+    },
+    {
+      "id": "api_symbol:ListEdges",
+      "type": "api_symbol",
+      "title": "ListEdges",
+      "body": "Returns all edges, optionally filtered by relation or metadata.",
+      "tags": ["api", "go"],
+      "anchor": "listedges",
+      "heading": "ListEdges"
+    },
+    {
+      "id": "api_symbol:Commit",
+      "type": "api_symbol",
+      "title": "Commit",
+      "body": "Durably writes all pending in-memory mutations to the .akg file; no-op when nothing is pending.",
+      "tags": ["api", "go", "lifecycle"],
+      "anchor": "committing-and-closing",
+      "heading": "Committing and closing"
+    },
+    {
+      "id": "api_symbol:Close",
+      "type": "api_symbol",
+      "title": "Close",
+      "body": "Commits outstanding mutations and closes the store; safe to call with no pending mutations.",
+      "tags": ["api", "go", "lifecycle"],
+      "anchor": "committing-and-closing",
+      "heading": "Committing and closing"
+    },
+    {
+      "id": "api_symbol:DeleteNode",
+      "type": "api_symbol",
+      "title": "DeleteNode",
+      "body": "Deletes a node; returns ErrNotFound if missing, ErrInvalidInput if live edges remain.",
+      "tags": ["api", "go"],
+      "anchor": "deleting-nodes-and-edges",
+      "heading": "Deleting nodes and edges"
+    },
+    {
+      "id": "api_symbol:DeleteEdge",
+      "type": "api_symbol",
+      "title": "DeleteEdge",
+      "body": "Deletes an edge; returns ErrNotFound if the edge does not exist.",
+      "tags": ["api", "go"],
+      "anchor": "deleting-nodes-and-edges",
+      "heading": "Deleting nodes and edges"
+    },
+    {
+      "id": "api_symbol:Compact",
+      "type": "api_symbol",
+      "title": "Compact",
+      "body": "Rewrites the .akg file with only live records, discarding WAL history and tombstones; always caller-triggered.",
+      "tags": ["api", "go", "lifecycle"],
+      "anchor": "compaction",
+      "heading": "Compaction"
+    },
+    {
+      "id": "api_symbol:Snapshot",
+      "type": "api_symbol",
+      "title": "Snapshot",
+      "body": "Returns a JSON-serializable Snapshot of all live nodes and edges in deterministic order.",
+      "tags": ["api", "go"],
+      "anchor": "snapshot",
+      "heading": "Snapshot"
+    },
+    {
+      "id": "api_symbol:RecentNodes",
+      "type": "api_symbol",
+      "title": "RecentNodes",
+      "body": "Returns nodes sorted newest-first by UpdatedAt, with optional type, tag, time-window, and Limit filters.",
+      "tags": ["api", "go"],
+      "anchor": "recency-helpers",
+      "heading": "Recency helpers"
+    },
+    {
+      "id": "api_symbol:RecentEdges",
+      "type": "api_symbol",
+      "title": "RecentEdges",
+      "body": "Returns edges sorted newest-first by UpdatedAt, with optional source, relation, time-window, and Limit filters.",
+      "tags": ["api", "go"],
+      "anchor": "recency-helpers",
+      "heading": "Recency helpers"
+    },
+    {
+      "id": "api_symbol:ReconcileOutboundEdges",
+      "type": "api_symbol",
+      "title": "ReconcileOutboundEdges",
+      "body": "Synchronizes the outbound edges for a source node and relation to exactly the desired target set.",
+      "tags": ["api", "go"],
+      "anchor": "edge-reconciliation",
+      "heading": "Edge reconciliation"
+    },
+    {
+      "id": "api_symbol:DeleteNodeCascade",
+      "type": "api_symbol",
+      "title": "DeleteNodeCascade",
+      "body": "Deletes all inbound and outbound edges then deletes the node; returns a CascadeDeleteResult.",
+      "tags": ["api", "go"],
+      "anchor": "cascade-delete",
+      "heading": "Cascade delete"
+    },
+    {
+      "id": "api_symbol:StrengthOf",
+      "type": "api_symbol",
+      "title": "StrengthOf",
+      "body": "Returns a *float64 pointer to the given value; idiomatic helper for supplying EdgeFields.Strength.",
+      "tags": ["api", "go"],
+      "anchor": "writing-edges",
+      "heading": "Writing edges"
+    },
+    {
+      "id": "api_symbol:NodeRef",
+      "type": "api_symbol",
+      "title": "NodeRef",
+      "body": "Identifies a node by Type and ID; returned by PutNode and accepted by edge and query methods.",
+      "tags": ["api", "go"],
+      "anchor": "noderef",
+      "heading": "NodeRef"
+    },
+    {
+      "id": "api_symbol:NodeFields",
+      "type": "api_symbol",
+      "title": "NodeFields",
+      "body": "Input fields for PutNode: Title (required), Body (optional), Meta (optional).",
+      "tags": ["api", "go"],
+      "anchor": "writing-nodes",
+      "heading": "Writing nodes"
+    },
+    {
+      "id": "api_symbol:Node",
+      "type": "api_symbol",
+      "title": "Node",
+      "body": "A node record returned by read operations; includes Type, ID, Title, Body, Meta, Tags, and SDK-managed timestamps.",
+      "tags": ["api", "go"],
+      "anchor": "reading",
+      "heading": "Reading"
+    },
+    {
+      "id": "api_symbol:EdgeFields",
+      "type": "api_symbol",
+      "title": "EdgeFields",
+      "body": "Input fields for PutEdge: Strength (*float64, default 0.5), Confidence (*float64, default nil), Meta (optional).",
+      "tags": ["api", "go"],
+      "anchor": "writing-edges",
+      "heading": "Writing edges"
+    },
+    {
+      "id": "api_symbol:Edge",
+      "type": "api_symbol",
+      "title": "Edge",
+      "body": "An edge record returned by read operations; includes From, Relation, To, Strength, Confidence, Meta, and timestamps.",
+      "tags": ["api", "go"],
+      "anchor": "reading",
+      "heading": "Reading"
+    },
+    {
+      "id": "api_symbol:NodeFilter",
+      "type": "api_symbol",
+      "title": "NodeFilter",
+      "body": "Filter criteria for ListNodesFiltered: Type, Tag, and Meta with AND semantics.",
+      "tags": ["api", "go"],
+      "anchor": "listnodesfiltered",
+      "heading": "ListNodesFiltered"
+    },
+    {
+      "id": "api_symbol:EdgeFilter",
+      "type": "api_symbol",
+      "title": "EdgeFilter",
+      "body": "Filter criteria for ListEdges: Relation and Meta.",
+      "tags": ["api", "go"],
+      "anchor": "listedges",
+      "heading": "ListEdges"
+    },
+    {
+      "id": "api_symbol:SnapshotType",
+      "type": "api_symbol",
+      "title": "Snapshot (type)",
+      "body": "JSON-serializable record of all live nodes and edges returned by store.Snapshot().",
+      "tags": ["api", "go"],
+      "anchor": "snapshot",
+      "heading": "Snapshot"
+    },
+    {
+      "id": "api_symbol:RecencyFilter",
+      "type": "api_symbol",
+      "title": "RecencyFilter",
+      "body": "Filter for RecentNodes: Type, Tag, SinceUpdatedAt, UntilUpdatedAt, and Limit.",
+      "tags": ["api", "go"],
+      "anchor": "recency-helpers",
+      "heading": "Recency helpers"
+    },
+    {
+      "id": "api_symbol:EdgeRecencyFilter",
+      "type": "api_symbol",
+      "title": "EdgeRecencyFilter",
+      "body": "Filter for RecentEdges: Relation, From, To, SinceUpdatedAt, UntilUpdatedAt, and Limit.",
+      "tags": ["api", "go"],
+      "anchor": "recency-helpers",
+      "heading": "Recency helpers"
+    },
+    {
+      "id": "api_symbol:ReconcileResult",
+      "type": "api_symbol",
+      "title": "ReconcileResult",
+      "body": "Result of ReconcileOutboundEdges: counts of Added, Removed, and Unchanged edges.",
+      "tags": ["api", "go"],
+      "anchor": "edge-reconciliation",
+      "heading": "Edge reconciliation"
+    },
+    {
+      "id": "api_symbol:CascadeDeleteResult",
+      "type": "api_symbol",
+      "title": "CascadeDeleteResult",
+      "body": "Result of DeleteNodeCascade: counts of deleted inbound edges, outbound edges, and the node.",
+      "tags": ["api", "go"],
+      "anchor": "cascade-delete",
+      "heading": "Cascade delete"
+    },
+    {
+      "id": "api_symbol:ErrNotFound",
+      "type": "api_symbol",
+      "title": "ErrNotFound",
+      "body": "Returned when a DeleteNode or DeleteEdge target does not exist.",
+      "tags": ["api", "go"],
+      "anchor": "error-handling",
+      "heading": "Error handling"
+    },
+    {
+      "id": "api_symbol:ErrInvalidInput",
+      "type": "api_symbol",
+      "title": "ErrInvalidInput",
+      "body": "Returned when a caller passes an argument that violates a format or semantic constraint.",
+      "tags": ["api", "go"],
+      "anchor": "error-handling",
+      "heading": "Error handling"
+    },
+    {
+      "id": "api_symbol:ErrMissingRequiredField",
+      "type": "api_symbol",
+      "title": "ErrMissingRequiredField",
+      "body": "Returned when a required field is absent, such as omitting Title in PutNode.",
+      "tags": ["api", "go"],
+      "anchor": "error-handling",
+      "heading": "Error handling"
+    },
+    {
+      "id": "concept:wal",
+      "type": "concept",
+      "title": "Write-Ahead Log (WAL)",
+      "body": "Mutations are held in memory and appended to a WAL on Commit; not visible to other processes until committed.",
+      "tags": ["concept", "lifecycle", "go", "normative"],
+      "anchor": "committing-and-closing",
+      "heading": "Committing and closing"
+    },
+    {
+      "id": "concept:compaction",
+      "type": "concept",
+      "title": "Compaction",
+      "body": "Rewrites the file to contain only live records, discarding WAL history; caller-triggered, never automatic.",
+      "tags": ["concept", "lifecycle", "go", "normative"],
+      "anchor": "compaction",
+      "heading": "Compaction"
+    },
+    {
+      "id": "concept:single_writer",
+      "type": "concept",
+      "title": "Single-writer semantics",
+      "body": "Only one process should have a store open for writing at a time; concurrent access produces undefined behavior.",
+      "tags": ["concept", "normative", "go"],
+      "anchor": "concurrency-and-single-writer-semantics",
+      "heading": "Concurrency and single-writer semantics"
+    },
+    {
+      "id": "concept:naming_rules",
+      "type": "concept",
+      "title": "Naming rules",
+      "body": "Type names, relation names, and tags must be lowercase [a-z0-9_] with no leading, trailing, or consecutive underscores.",
+      "tags": ["concept", "normative", "go"],
+      "anchor": "naming-rules",
+      "heading": "Naming rules"
+    },
+    {
+      "id": "warning:delete_edges_before_nodes",
+      "type": "warning",
+      "title": "Delete edges before nodes",
+      "body": "You must delete all inbound and outbound edges before deleting a node; the graph does not cascade-delete automatically.",
+      "tags": ["warning", "go", "normative"],
+      "anchor": "deleting-nodes-and-edges",
+      "heading": "Deleting nodes and edges"
+    },
+    {
+      "id": "warning:uncommitted_mutations",
+      "type": "warning",
+      "title": "Uncommitted mutations are lost",
+      "body": "Mutations held in memory are lost if the process exits without calling Commit or Close.",
+      "tags": ["warning", "go", "lifecycle"],
+      "anchor": "committing-and-closing",
+      "heading": "Committing and closing"
+    }
+  ],
+  "edges": [
+    { "from": "api_symbol:Open", "relation": "implements", "to": "concept:wal" },
+    { "from": "api_symbol:Open", "relation": "see_also", "to": "api_symbol:Store" },
+    { "from": "api_symbol:PutNode", "relation": "see_also", "to": "api_symbol:NodeRef" },
+    { "from": "api_symbol:PutNode", "relation": "see_also", "to": "api_symbol:NodeFields" },
+    { "from": "api_symbol:PutNode", "relation": "see_also", "to": "api_symbol:PutEdge" },
+    { "from": "api_symbol:PutEdge", "relation": "depends_on", "to": "api_symbol:PutNode" },
+    { "from": "api_symbol:PutEdge", "relation": "see_also", "to": "api_symbol:EdgeFields" },
+    { "from": "api_symbol:PutEdge", "relation": "see_also", "to": "api_symbol:NodeRef" },
+    { "from": "api_symbol:PutEdge", "relation": "see_also", "to": "api_symbol:StrengthOf" },
+    { "from": "api_symbol:DeleteNode", "relation": "depends_on", "to": "api_symbol:DeleteEdge" },
+    { "from": "api_symbol:DeleteNode", "relation": "see_also", "to": "warning:delete_edges_before_nodes" },
+    { "from": "api_symbol:DeleteEdge", "relation": "see_also", "to": "api_symbol:DeleteNode" },
+    { "from": "api_symbol:Commit", "relation": "implements", "to": "concept:wal" },
+    { "from": "api_symbol:Commit", "relation": "see_also", "to": "api_symbol:Close" },
+    { "from": "api_symbol:Close", "relation": "implements", "to": "concept:wal" },
+    { "from": "api_symbol:Close", "relation": "see_also", "to": "api_symbol:Commit" },
+    { "from": "api_symbol:Close", "relation": "see_also", "to": "warning:uncommitted_mutations" },
+    { "from": "api_symbol:Compact", "relation": "implements", "to": "concept:compaction" },
+    { "from": "api_symbol:Compact", "relation": "depends_on", "to": "api_symbol:Commit" },
+    { "from": "api_symbol:DeleteNodeCascade", "relation": "see_also", "to": "api_symbol:DeleteNode" },
+    { "from": "api_symbol:DeleteNodeCascade", "relation": "see_also", "to": "warning:delete_edges_before_nodes" },
+    { "from": "api_symbol:ReconcileOutboundEdges", "relation": "see_also", "to": "api_symbol:PutEdge" },
+    { "from": "api_symbol:ReconcileOutboundEdges", "relation": "see_also", "to": "api_symbol:DeleteEdge" },
+    { "from": "api_symbol:ListNodesFiltered", "relation": "see_also", "to": "api_symbol:ListNodes" },
+    { "from": "api_symbol:ListNodesFiltered", "relation": "see_also", "to": "api_symbol:NodeFilter" },
+    { "from": "api_symbol:ListEdges", "relation": "see_also", "to": "api_symbol:EdgeFilter" },
+    { "from": "api_symbol:RecentNodes", "relation": "see_also", "to": "api_symbol:ListNodes" },
+    { "from": "api_symbol:RecentNodes", "relation": "see_also", "to": "api_symbol:RecencyFilter" },
+    { "from": "api_symbol:RecentEdges", "relation": "see_also", "to": "api_symbol:OutboundEdges" },
+    { "from": "api_symbol:RecentEdges", "relation": "see_also", "to": "api_symbol:EdgeRecencyFilter" },
+    { "from": "api_symbol:Snapshot", "relation": "see_also", "to": "api_symbol:SnapshotType" },
+    { "from": "api_symbol:GetNodes", "relation": "see_also", "to": "api_symbol:GetNode" },
+    { "from": "warning:delete_edges_before_nodes", "relation": "see_also", "to": "api_symbol:DeleteNode" },
+    { "from": "warning:delete_edges_before_nodes", "relation": "see_also", "to": "api_symbol:DeleteEdge" },
+    { "from": "warning:uncommitted_mutations", "relation": "see_also", "to": "api_symbol:Commit" },
+    { "from": "warning:uncommitted_mutations", "relation": "see_also", "to": "api_symbol:Close" },
+    { "from": "concept:wal", "relation": "see_also", "to": "api_symbol:Commit" },
+    { "from": "concept:wal", "relation": "see_also", "to": "api_symbol:Close" },
+    { "from": "concept:compaction", "relation": "see_also", "to": "api_symbol:Compact" }
+  ]
+}

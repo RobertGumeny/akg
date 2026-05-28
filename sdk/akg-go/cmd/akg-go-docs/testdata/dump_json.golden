@@ -1,0 +1,1649 @@
+{
+  "nodes": [
+    {
+      "Type": "api_symbol",
+      "ID": "CascadeDeleteResult",
+      "Title": "CascadeDeleteResult",
+      "Body": "Result of DeleteNodeCascade: counts of deleted inbound edges, outbound edges, and the node.",
+      "Meta": {
+        "anchor": "cascade-delete",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Cascade delete",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "api_symbol",
+      "ID": "Close",
+      "Title": "Close",
+      "Body": "Commits outstanding mutations and closes the store; safe to call with no pending mutations.",
+      "Meta": {
+        "anchor": "committing-and-closing",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Committing and closing",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go",
+        "lifecycle"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "api_symbol",
+      "ID": "Commit",
+      "Title": "Commit",
+      "Body": "Durably writes all pending in-memory mutations to the .akg file; no-op when nothing is pending.",
+      "Meta": {
+        "anchor": "committing-and-closing",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Committing and closing",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go",
+        "lifecycle"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "api_symbol",
+      "ID": "Compact",
+      "Title": "Compact",
+      "Body": "Rewrites the .akg file with only live records, discarding WAL history and tombstones; always caller-triggered.",
+      "Meta": {
+        "anchor": "compaction",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Compaction",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go",
+        "lifecycle"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "api_symbol",
+      "ID": "DeleteEdge",
+      "Title": "DeleteEdge",
+      "Body": "Deletes an edge; returns ErrNotFound if the edge does not exist.",
+      "Meta": {
+        "anchor": "deleting-nodes-and-edges",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Deleting nodes and edges",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "api_symbol",
+      "ID": "DeleteNode",
+      "Title": "DeleteNode",
+      "Body": "Deletes a node; returns ErrNotFound if missing, ErrInvalidInput if live edges remain.",
+      "Meta": {
+        "anchor": "deleting-nodes-and-edges",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Deleting nodes and edges",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "api_symbol",
+      "ID": "DeleteNodeCascade",
+      "Title": "DeleteNodeCascade",
+      "Body": "Deletes all inbound and outbound edges then deletes the node; returns a CascadeDeleteResult.",
+      "Meta": {
+        "anchor": "cascade-delete",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Cascade delete",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "api_symbol",
+      "ID": "Edge",
+      "Title": "Edge",
+      "Body": "An edge record returned by read operations; includes From, Relation, To, Strength, Confidence, Meta, and timestamps.",
+      "Meta": {
+        "anchor": "reading",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Reading",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "api_symbol",
+      "ID": "EdgeFields",
+      "Title": "EdgeFields",
+      "Body": "Input fields for PutEdge: Strength (*float64, default 0.5), Confidence (*float64, default nil), Meta (optional).",
+      "Meta": {
+        "anchor": "writing-edges",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Writing edges",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "api_symbol",
+      "ID": "EdgeFilter",
+      "Title": "EdgeFilter",
+      "Body": "Filter criteria for ListEdges: Relation and Meta.",
+      "Meta": {
+        "anchor": "listedges",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "ListEdges",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "api_symbol",
+      "ID": "EdgeRecencyFilter",
+      "Title": "EdgeRecencyFilter",
+      "Body": "Filter for RecentEdges: Relation, From, To, SinceUpdatedAt, UntilUpdatedAt, and Limit.",
+      "Meta": {
+        "anchor": "recency-helpers",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Recency helpers",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "api_symbol",
+      "ID": "ErrInvalidInput",
+      "Title": "ErrInvalidInput",
+      "Body": "Returned when a caller passes an argument that violates a format or semantic constraint.",
+      "Meta": {
+        "anchor": "error-handling",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Error handling",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "api_symbol",
+      "ID": "ErrMissingRequiredField",
+      "Title": "ErrMissingRequiredField",
+      "Body": "Returned when a required field is absent, such as omitting Title in PutNode.",
+      "Meta": {
+        "anchor": "error-handling",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Error handling",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "api_symbol",
+      "ID": "ErrNotFound",
+      "Title": "ErrNotFound",
+      "Body": "Returned when a DeleteNode or DeleteEdge target does not exist.",
+      "Meta": {
+        "anchor": "error-handling",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Error handling",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "api_symbol",
+      "ID": "GetNode",
+      "Title": "GetNode",
+      "Body": "Returns the node at (typeName, id), or (nil, nil) if it does not exist.",
+      "Meta": {
+        "anchor": "reading",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Reading",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "api_symbol",
+      "ID": "GetNodes",
+      "Title": "GetNodes",
+      "Body": "Batch-fetches nodes by NodeRef slice; returns nil at positions where a node does not exist.",
+      "Meta": {
+        "anchor": "getnodes",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "GetNodes",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "api_symbol",
+      "ID": "InboundEdges",
+      "Title": "InboundEdges",
+      "Body": "Returns all inbound edges to a node, optionally filtered by relation.",
+      "Meta": {
+        "anchor": "reading",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Reading",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "api_symbol",
+      "ID": "ListEdges",
+      "Title": "ListEdges",
+      "Body": "Returns all edges, optionally filtered by relation or metadata.",
+      "Meta": {
+        "anchor": "listedges",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "ListEdges",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "api_symbol",
+      "ID": "ListNodes",
+      "Title": "ListNodes",
+      "Body": "Returns all nodes, optionally filtered to a given type name, sorted by key.",
+      "Meta": {
+        "anchor": "reading",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Reading",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "api_symbol",
+      "ID": "ListNodesByTag",
+      "Title": "ListNodesByTag",
+      "Body": "Returns all nodes carrying the given tag, sorted by key.",
+      "Meta": {
+        "anchor": "reading",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Reading",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "api_symbol",
+      "ID": "ListNodesFiltered",
+      "Title": "ListNodesFiltered",
+      "Body": "Returns nodes matching a NodeFilter combining type, tag, and metadata criteria with AND semantics.",
+      "Meta": {
+        "anchor": "listnodesfiltered",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "ListNodesFiltered",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "api_symbol",
+      "ID": "Node",
+      "Title": "Node",
+      "Body": "A node record returned by read operations; includes Type, ID, Title, Body, Meta, Tags, and SDK-managed timestamps.",
+      "Meta": {
+        "anchor": "reading",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Reading",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "api_symbol",
+      "ID": "NodeFields",
+      "Title": "NodeFields",
+      "Body": "Input fields for PutNode: Title (required), Body (optional), Meta (optional).",
+      "Meta": {
+        "anchor": "writing-nodes",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Writing nodes",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "api_symbol",
+      "ID": "NodeFilter",
+      "Title": "NodeFilter",
+      "Body": "Filter criteria for ListNodesFiltered: Type, Tag, and Meta with AND semantics.",
+      "Meta": {
+        "anchor": "listnodesfiltered",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "ListNodesFiltered",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "api_symbol",
+      "ID": "NodeRef",
+      "Title": "NodeRef",
+      "Body": "Identifies a node by Type and ID; returned by PutNode and accepted by edge and query methods.",
+      "Meta": {
+        "anchor": "noderef",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "NodeRef",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "api_symbol",
+      "ID": "Open",
+      "Title": "Open",
+      "Body": "Opens an existing .akg file or creates a new empty one; returns a *Store.",
+      "Meta": {
+        "anchor": "opening-a-store",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Opening a store",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go",
+        "lifecycle"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "api_symbol",
+      "ID": "OutboundEdges",
+      "Title": "OutboundEdges",
+      "Body": "Returns all outbound edges from a node, optionally filtered by relation.",
+      "Meta": {
+        "anchor": "reading",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Reading",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "api_symbol",
+      "ID": "PutEdge",
+      "Title": "PutEdge",
+      "Body": "Writes or replaces the edge at (fromRef, relation, toRef); both nodes must already exist.",
+      "Meta": {
+        "anchor": "writing-edges",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Writing edges",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "api_symbol",
+      "ID": "PutNode",
+      "Title": "PutNode",
+      "Body": "Writes or replaces the node at (typeName, id); returns a NodeRef.",
+      "Meta": {
+        "anchor": "writing-nodes",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Writing nodes",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "api_symbol",
+      "ID": "RecencyFilter",
+      "Title": "RecencyFilter",
+      "Body": "Filter for RecentNodes: Type, Tag, SinceUpdatedAt, UntilUpdatedAt, and Limit.",
+      "Meta": {
+        "anchor": "recency-helpers",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Recency helpers",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "api_symbol",
+      "ID": "RecentEdges",
+      "Title": "RecentEdges",
+      "Body": "Returns edges sorted newest-first by UpdatedAt, with optional source, relation, time-window, and Limit filters.",
+      "Meta": {
+        "anchor": "recency-helpers",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Recency helpers",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "api_symbol",
+      "ID": "RecentNodes",
+      "Title": "RecentNodes",
+      "Body": "Returns nodes sorted newest-first by UpdatedAt, with optional type, tag, time-window, and Limit filters.",
+      "Meta": {
+        "anchor": "recency-helpers",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Recency helpers",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "api_symbol",
+      "ID": "ReconcileOutboundEdges",
+      "Title": "ReconcileOutboundEdges",
+      "Body": "Synchronizes the outbound edges for a source node and relation to exactly the desired target set.",
+      "Meta": {
+        "anchor": "edge-reconciliation",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Edge reconciliation",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "api_symbol",
+      "ID": "ReconcileResult",
+      "Title": "ReconcileResult",
+      "Body": "Result of ReconcileOutboundEdges: counts of Added, Removed, and Unchanged edges.",
+      "Meta": {
+        "anchor": "edge-reconciliation",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Edge reconciliation",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "api_symbol",
+      "ID": "Snapshot",
+      "Title": "Snapshot",
+      "Body": "Returns a JSON-serializable Snapshot of all live nodes and edges in deterministic order.",
+      "Meta": {
+        "anchor": "snapshot",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Snapshot",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "api_symbol",
+      "ID": "SnapshotType",
+      "Title": "Snapshot (type)",
+      "Body": "JSON-serializable record of all live nodes and edges returned by store.Snapshot().",
+      "Meta": {
+        "anchor": "snapshot",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Snapshot",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "api_symbol",
+      "ID": "Store",
+      "Title": "Store",
+      "Body": "The main type for reading and writing an AKG knowledge graph, bound to one filesystem path.",
+      "Meta": {
+        "anchor": "api",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "API",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "api_symbol",
+      "ID": "StrengthOf",
+      "Title": "StrengthOf",
+      "Body": "Returns a *float64 pointer to the given value; idiomatic helper for supplying EdgeFields.Strength.",
+      "Meta": {
+        "anchor": "writing-edges",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Writing edges",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "api",
+        "go"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "concept",
+      "ID": "compaction",
+      "Title": "Compaction",
+      "Body": "Rewrites the file to contain only live records, discarding WAL history; caller-triggered, never automatic.",
+      "Meta": {
+        "anchor": "compaction",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Compaction",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "concept",
+        "lifecycle",
+        "go",
+        "normative"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "concept",
+      "ID": "naming_rules",
+      "Title": "Naming rules",
+      "Body": "Type names, relation names, and tags must be lowercase [a-z0-9_] with no leading, trailing, or consecutive underscores.",
+      "Meta": {
+        "anchor": "naming-rules",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Naming rules",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "concept",
+        "normative",
+        "go"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "concept",
+      "ID": "single_writer",
+      "Title": "Single-writer semantics",
+      "Body": "Only one process should have a store open for writing at a time; concurrent access produces undefined behavior.",
+      "Meta": {
+        "anchor": "concurrency-and-single-writer-semantics",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Concurrency and single-writer semantics",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "concept",
+        "normative",
+        "go"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "concept",
+      "ID": "wal",
+      "Title": "Write-Ahead Log (WAL)",
+      "Body": "Mutations are held in memory and appended to a WAL on Commit; not visible to other processes until committed.",
+      "Meta": {
+        "anchor": "committing-and-closing",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Committing and closing",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "concept",
+        "lifecycle",
+        "go",
+        "normative"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "warning",
+      "ID": "delete_edges_before_nodes",
+      "Title": "Delete edges before nodes",
+      "Body": "You must delete all inbound and outbound edges before deleting a node; the graph does not cascade-delete automatically.",
+      "Meta": {
+        "anchor": "deleting-nodes-and-edges",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Deleting nodes and edges",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "warning",
+        "go",
+        "normative"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "Type": "warning",
+      "ID": "uncommitted_mutations",
+      "Title": "Uncommitted mutations are lost",
+      "Body": "Mutations held in memory are lost if the process exits without calling Commit or Close.",
+      "Meta": {
+        "anchor": "committing-and-closing",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Committing and closing",
+        "language": "go",
+        "package": "akg-go",
+        "source_path": "sdk/akg-go/README.md",
+        "version": "0.1.1"
+      },
+      "Tags": [
+        "warning",
+        "go",
+        "lifecycle"
+      ],
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    }
+  ],
+  "edges": [
+    {
+      "From": {
+        "type": "api_symbol",
+        "id": "Close"
+      },
+      "Relation": "implements",
+      "To": {
+        "type": "concept",
+        "id": "wal"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "api_symbol",
+        "id": "Close"
+      },
+      "Relation": "see_also",
+      "To": {
+        "type": "api_symbol",
+        "id": "Commit"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "api_symbol",
+        "id": "Close"
+      },
+      "Relation": "see_also",
+      "To": {
+        "type": "warning",
+        "id": "uncommitted_mutations"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "api_symbol",
+        "id": "Commit"
+      },
+      "Relation": "implements",
+      "To": {
+        "type": "concept",
+        "id": "wal"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "api_symbol",
+        "id": "Commit"
+      },
+      "Relation": "see_also",
+      "To": {
+        "type": "api_symbol",
+        "id": "Close"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "api_symbol",
+        "id": "Compact"
+      },
+      "Relation": "depends_on",
+      "To": {
+        "type": "api_symbol",
+        "id": "Commit"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "api_symbol",
+        "id": "Compact"
+      },
+      "Relation": "implements",
+      "To": {
+        "type": "concept",
+        "id": "compaction"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "api_symbol",
+        "id": "DeleteEdge"
+      },
+      "Relation": "see_also",
+      "To": {
+        "type": "api_symbol",
+        "id": "DeleteNode"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "api_symbol",
+        "id": "DeleteNode"
+      },
+      "Relation": "depends_on",
+      "To": {
+        "type": "api_symbol",
+        "id": "DeleteEdge"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "api_symbol",
+        "id": "DeleteNode"
+      },
+      "Relation": "see_also",
+      "To": {
+        "type": "warning",
+        "id": "delete_edges_before_nodes"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "api_symbol",
+        "id": "DeleteNodeCascade"
+      },
+      "Relation": "see_also",
+      "To": {
+        "type": "api_symbol",
+        "id": "DeleteNode"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "api_symbol",
+        "id": "DeleteNodeCascade"
+      },
+      "Relation": "see_also",
+      "To": {
+        "type": "warning",
+        "id": "delete_edges_before_nodes"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "api_symbol",
+        "id": "GetNodes"
+      },
+      "Relation": "see_also",
+      "To": {
+        "type": "api_symbol",
+        "id": "GetNode"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "api_symbol",
+        "id": "ListEdges"
+      },
+      "Relation": "see_also",
+      "To": {
+        "type": "api_symbol",
+        "id": "EdgeFilter"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "api_symbol",
+        "id": "ListNodesFiltered"
+      },
+      "Relation": "see_also",
+      "To": {
+        "type": "api_symbol",
+        "id": "ListNodes"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "api_symbol",
+        "id": "ListNodesFiltered"
+      },
+      "Relation": "see_also",
+      "To": {
+        "type": "api_symbol",
+        "id": "NodeFilter"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "api_symbol",
+        "id": "Open"
+      },
+      "Relation": "implements",
+      "To": {
+        "type": "concept",
+        "id": "wal"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "api_symbol",
+        "id": "Open"
+      },
+      "Relation": "see_also",
+      "To": {
+        "type": "api_symbol",
+        "id": "Store"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "api_symbol",
+        "id": "PutEdge"
+      },
+      "Relation": "depends_on",
+      "To": {
+        "type": "api_symbol",
+        "id": "PutNode"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "api_symbol",
+        "id": "PutEdge"
+      },
+      "Relation": "see_also",
+      "To": {
+        "type": "api_symbol",
+        "id": "EdgeFields"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "api_symbol",
+        "id": "PutEdge"
+      },
+      "Relation": "see_also",
+      "To": {
+        "type": "api_symbol",
+        "id": "NodeRef"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "api_symbol",
+        "id": "PutEdge"
+      },
+      "Relation": "see_also",
+      "To": {
+        "type": "api_symbol",
+        "id": "StrengthOf"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "api_symbol",
+        "id": "PutNode"
+      },
+      "Relation": "see_also",
+      "To": {
+        "type": "api_symbol",
+        "id": "NodeFields"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "api_symbol",
+        "id": "PutNode"
+      },
+      "Relation": "see_also",
+      "To": {
+        "type": "api_symbol",
+        "id": "NodeRef"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "api_symbol",
+        "id": "PutNode"
+      },
+      "Relation": "see_also",
+      "To": {
+        "type": "api_symbol",
+        "id": "PutEdge"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "api_symbol",
+        "id": "RecentEdges"
+      },
+      "Relation": "see_also",
+      "To": {
+        "type": "api_symbol",
+        "id": "EdgeRecencyFilter"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "api_symbol",
+        "id": "RecentEdges"
+      },
+      "Relation": "see_also",
+      "To": {
+        "type": "api_symbol",
+        "id": "OutboundEdges"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "api_symbol",
+        "id": "RecentNodes"
+      },
+      "Relation": "see_also",
+      "To": {
+        "type": "api_symbol",
+        "id": "ListNodes"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "api_symbol",
+        "id": "RecentNodes"
+      },
+      "Relation": "see_also",
+      "To": {
+        "type": "api_symbol",
+        "id": "RecencyFilter"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "api_symbol",
+        "id": "ReconcileOutboundEdges"
+      },
+      "Relation": "see_also",
+      "To": {
+        "type": "api_symbol",
+        "id": "DeleteEdge"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "api_symbol",
+        "id": "ReconcileOutboundEdges"
+      },
+      "Relation": "see_also",
+      "To": {
+        "type": "api_symbol",
+        "id": "PutEdge"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "api_symbol",
+        "id": "Snapshot"
+      },
+      "Relation": "see_also",
+      "To": {
+        "type": "api_symbol",
+        "id": "SnapshotType"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "concept",
+        "id": "compaction"
+      },
+      "Relation": "see_also",
+      "To": {
+        "type": "api_symbol",
+        "id": "Compact"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "concept",
+        "id": "wal"
+      },
+      "Relation": "see_also",
+      "To": {
+        "type": "api_symbol",
+        "id": "Close"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "concept",
+        "id": "wal"
+      },
+      "Relation": "see_also",
+      "To": {
+        "type": "api_symbol",
+        "id": "Commit"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "warning",
+        "id": "delete_edges_before_nodes"
+      },
+      "Relation": "see_also",
+      "To": {
+        "type": "api_symbol",
+        "id": "DeleteEdge"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "warning",
+        "id": "delete_edges_before_nodes"
+      },
+      "Relation": "see_also",
+      "To": {
+        "type": "api_symbol",
+        "id": "DeleteNode"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "warning",
+        "id": "uncommitted_mutations"
+      },
+      "Relation": "see_also",
+      "To": {
+        "type": "api_symbol",
+        "id": "Close"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    },
+    {
+      "From": {
+        "type": "warning",
+        "id": "uncommitted_mutations"
+      },
+      "Relation": "see_also",
+      "To": {
+        "type": "api_symbol",
+        "id": "Commit"
+      },
+      "Strength": 0.5,
+      "Confidence": null,
+      "Meta": {},
+      "CreatedAt": 1779926400000000,
+      "UpdatedAt": 1779926400000000,
+      "Version": 1
+    }
+  ]
+}

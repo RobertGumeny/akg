@@ -15,6 +15,13 @@ jobs:
           go-version: '1.22'
       - name: Test root package
         run: go test -count=1 ./...
+      - name: Build Go SDK
+        run: cd sdk/akg-go && go build ./...
+      - name: Check docs graph freshness
+        working-directory: sdk/akg-go
+        run: |
+          go run ./cmd/akg-go-docs-gen
+          git diff --exit-code sdk/akg-go/docs/
       - name: Test Go SDK
         run: cd sdk/akg-go && go test ./...
       - name: Vet Go SDK
@@ -31,12 +38,17 @@ jobs:
       - name: Install dependencies
         working-directory: sdk/akg-ts
         run: npm ci
-      - name: Test
-        working-directory: sdk/akg-ts
-        run: npm test
       - name: Build
         working-directory: sdk/akg-ts
         run: npm run build
+      - name: Check docs graph freshness
+        working-directory: sdk/akg-ts
+        run: |
+          npm run generate:docs
+          git diff --exit-code sdk/akg-ts/docs/
+      - name: Test
+        working-directory: sdk/akg-ts
+        run: npm test
       - name: Type check
         working-directory: sdk/akg-ts
         run: npx tsc --noEmit

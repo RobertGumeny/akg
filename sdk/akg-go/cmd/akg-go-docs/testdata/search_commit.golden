@@ -1,0 +1,6 @@
+## Search results for "commit"
+
+- **Close** (`api_symbol`) — Commits outstanding mutations and closes the store; safe to call with no pending mutations.
+- **Commit** (`api_symbol`) — Durably writes all pending in-memory mutations to the .akg file; no-op when nothing is pending.
+- **Write-Ahead Log (WAL)** (`concept`) — Mutations are held in memory and appended to a WAL on Commit; not visible to other processes until committed.
+- **Uncommitted mutations are lost** (`warning`) — Mutations held in memory are lost if the process exits without calling Commit or Close.

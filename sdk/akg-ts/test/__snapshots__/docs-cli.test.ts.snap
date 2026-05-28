@@ -1,0 +1,1804 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`docs CLI > docs dump --format json 1`] = `
+"{
+  "nodes": [
+    {
+      "type": "api_symbol",
+      "id": "CascadeDeleteResult",
+      "title": "CascadeDeleteResult",
+      "body": "Result of deleteNodeCascade: counts of deleted inbound edges, outbound edges, and node.",
+      "meta": {
+        "anchor": "cascade-delete",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Cascade delete",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "Edge",
+      "title": "Edge",
+      "body": "An edge record returned by read operations; includes from, relation, to, strength, confidence, meta, and timestamps.",
+      "meta": {
+        "anchor": "reading",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Reading",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "EdgeFields",
+      "title": "EdgeFields",
+      "body": "Input fields for putEdge: strength (default 0.5), confidence (default null), meta (optional).",
+      "meta": {
+        "anchor": "writing-edges",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Writing edges",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "EdgeFilter",
+      "title": "EdgeFilter",
+      "body": "Filter criteria for listEdges: relation and meta.",
+      "meta": {
+        "anchor": "listedges",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "listEdges",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "InvalidInputError",
+      "title": "InvalidInputError",
+      "body": "Thrown when a caller passes an argument that violates a format or semantic constraint.",
+      "meta": {
+        "anchor": "error-handling",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Error handling",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "MissingRequiredFieldError",
+      "title": "MissingRequiredFieldError",
+      "body": "Thrown when a required field is absent, such as omitting title in putNode.",
+      "meta": {
+        "anchor": "error-handling",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Error handling",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "Node",
+      "title": "Node",
+      "body": "A node record returned by read operations; includes id, type, title, body, meta, tags, and SDK-managed timestamps.",
+      "meta": {
+        "anchor": "reading",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Reading",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "NodeFields",
+      "title": "NodeFields",
+      "body": "Input fields for putNode: title (required), body (optional), meta (optional).",
+      "meta": {
+        "anchor": "writing-nodes",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Writing nodes",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "NodeFilter",
+      "title": "NodeFilter",
+      "body": "Filter criteria for listNodesFiltered: type, tag, and meta with AND semantics.",
+      "meta": {
+        "anchor": "listnodesfiltered",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "listNodesFiltered",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "NodeRef",
+      "title": "NodeRef",
+      "body": "Identifies a node by type and id; returned by putNode and accepted by edge and query methods.",
+      "meta": {
+        "anchor": "noderef",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "NodeRef",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "NotFoundError",
+      "title": "NotFoundError",
+      "body": "Thrown when a deleteNode or deleteEdge target does not exist.",
+      "meta": {
+        "anchor": "error-handling",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Error handling",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "ReconcileResult",
+      "title": "ReconcileResult",
+      "body": "Result of reconcileOutboundEdges: counts of added, removed, and unchanged edges.",
+      "meta": {
+        "anchor": "edge-reconciliation",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Edge reconciliation",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "Snapshot",
+      "title": "Snapshot",
+      "body": "JSON-serializable record of all live nodes and edges returned by store.snapshot().",
+      "meta": {
+        "anchor": "snapshot",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "snapshot",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "Store",
+      "title": "Store",
+      "body": "The main class for reading and writing an AKG knowledge graph.",
+      "meta": {
+        "anchor": "api",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "API",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "close",
+      "title": "close",
+      "body": "Commits outstanding mutations and closes the store; safe to call with no pending mutations.",
+      "meta": {
+        "anchor": "committing-and-closing",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Committing and closing",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "api",
+        "typescript",
+        "lifecycle"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "commit",
+      "title": "commit",
+      "body": "Durably writes all pending in-memory mutations to the .akg file.",
+      "meta": {
+        "anchor": "committing-and-closing",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Committing and closing",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "api",
+        "typescript",
+        "lifecycle"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "compact",
+      "title": "compact",
+      "body": "Rewrites the .akg file with only live records, discarding WAL history and tombstones.",
+      "meta": {
+        "anchor": "compaction",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Compaction",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "api",
+        "typescript",
+        "lifecycle"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "deleteEdge",
+      "title": "deleteEdge",
+      "body": "Deletes an edge; throws NotFoundError if the edge does not exist.",
+      "meta": {
+        "anchor": "deleting-nodes-and-edges",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Deleting nodes and edges",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "deleteNode",
+      "title": "deleteNode",
+      "body": "Deletes a node; throws NotFoundError if missing, InvalidInputError if live edges remain.",
+      "meta": {
+        "anchor": "deleting-nodes-and-edges",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Deleting nodes and edges",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "deleteNodeCascade",
+      "title": "deleteNodeCascade",
+      "body": "Deletes all inbound and outbound edges then deletes the node; returns a CascadeDeleteResult.",
+      "meta": {
+        "anchor": "cascade-delete",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Cascade delete",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "getNode",
+      "title": "getNode",
+      "body": "Returns the node at (typeName, id), or null if it does not exist.",
+      "meta": {
+        "anchor": "reading",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Reading",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "getNodes",
+      "title": "getNodes",
+      "body": "Batch-fetches nodes by NodeRef array; returns null at positions where a node does not exist.",
+      "meta": {
+        "anchor": "getnodes",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "getNodes",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "inboundEdges",
+      "title": "inboundEdges",
+      "body": "Returns all inbound edges to a node, optionally filtered by relation.",
+      "meta": {
+        "anchor": "reading",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Reading",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "listEdges",
+      "title": "listEdges",
+      "body": "Returns all edges, optionally filtered by relation or metadata.",
+      "meta": {
+        "anchor": "listedges",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "listEdges",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "listNodes",
+      "title": "listNodes",
+      "body": "Returns all nodes, optionally filtered to a given type name, sorted by key.",
+      "meta": {
+        "anchor": "reading",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Reading",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "listNodesByTag",
+      "title": "listNodesByTag",
+      "body": "Returns all nodes carrying the given tag, sorted by key.",
+      "meta": {
+        "anchor": "reading",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Reading",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "listNodesFiltered",
+      "title": "listNodesFiltered",
+      "body": "Returns nodes matching a NodeFilter combining type, tag, and metadata criteria.",
+      "meta": {
+        "anchor": "listnodesfiltered",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "listNodesFiltered",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "open",
+      "title": "open",
+      "body": "Opens an existing .akg file or creates a new empty one; returns a Store.",
+      "meta": {
+        "anchor": "opening-a-store",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Opening a store",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "api",
+        "typescript",
+        "lifecycle"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "outboundEdges",
+      "title": "outboundEdges",
+      "body": "Returns all outbound edges from a node, optionally filtered by relation.",
+      "meta": {
+        "anchor": "reading",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Reading",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "putEdge",
+      "title": "putEdge",
+      "body": "Writes or replaces an edge between two existing nodes.",
+      "meta": {
+        "anchor": "writing-edges",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Writing edges",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "putNode",
+      "title": "putNode",
+      "body": "Writes or replaces a node at (typeName, id); returns a NodeRef.",
+      "meta": {
+        "anchor": "writing-nodes",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Writing nodes",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "recentEdges",
+      "title": "recentEdges",
+      "body": "Returns edges sorted newest-first by updatedAt, with optional source, relation, and limit filters.",
+      "meta": {
+        "anchor": "recency-helpers",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Recency helpers",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "recentNodes",
+      "title": "recentNodes",
+      "body": "Returns nodes sorted newest-first by updatedAt, with optional type, tag, and limit filters.",
+      "meta": {
+        "anchor": "recency-helpers",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Recency helpers",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "reconcileOutboundEdges",
+      "title": "reconcileOutboundEdges",
+      "body": "Synchronizes the outbound edges for a source node and relation to exactly the desired target set.",
+      "meta": {
+        "anchor": "edge-reconciliation",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Edge reconciliation",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "api_symbol",
+      "id": "snapshot",
+      "title": "snapshot",
+      "body": "Returns a JSON-serializable Snapshot of all live nodes and edges in deterministic order.",
+      "meta": {
+        "anchor": "snapshot",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "snapshot",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "api",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "concept",
+      "id": "compaction",
+      "title": "Compaction",
+      "body": "Rewrites the file to contain only live records, discarding WAL history; caller-triggered, never automatic.",
+      "meta": {
+        "anchor": "compaction",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Compaction",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "concept",
+        "lifecycle",
+        "typescript",
+        "normative"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "concept",
+      "id": "naming_rules",
+      "title": "Naming rules",
+      "body": "Type names, relation names, and tags must be lowercase [a-z0-9_] with no leading, trailing, or consecutive underscores.",
+      "meta": {
+        "anchor": "naming-rules",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Naming rules",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "concept",
+        "normative",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "concept",
+      "id": "single_writer",
+      "title": "Single-writer semantics",
+      "body": "Only one process should have a store open for writing at a time; concurrent access produces undefined behavior.",
+      "meta": {
+        "anchor": "concurrency-and-single-writer-semantics",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Concurrency and single-writer semantics",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "concept",
+        "normative",
+        "typescript"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "concept",
+      "id": "wal",
+      "title": "Write-Ahead Log (WAL)",
+      "body": "Mutations are held in memory and appended to a WAL on commit; not visible to other processes until committed.",
+      "meta": {
+        "anchor": "committing-and-closing",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Committing and closing",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "concept",
+        "lifecycle",
+        "typescript",
+        "normative"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "warning",
+      "id": "delete_edges_before_nodes",
+      "title": "Delete edges before nodes",
+      "body": "You must delete all inbound and outbound edges before deleting a node; the graph does not cascade-delete automatically.",
+      "meta": {
+        "anchor": "deleting-nodes-and-edges",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Deleting nodes and edges",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "warning",
+        "typescript",
+        "normative"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "type": "warning",
+      "id": "uncommitted_mutations",
+      "title": "Uncommitted mutations are lost",
+      "body": "Mutations held in memory are lost if the process exits without calling commit or close.",
+      "meta": {
+        "anchor": "committing-and-closing",
+        "generated_at": "2026-05-28T00:00:00Z",
+        "heading": "Committing and closing",
+        "language": "typescript",
+        "package": "akg-ts",
+        "source_path": "sdk/akg-ts/README.md",
+        "version": "0.1.1"
+      },
+      "tags": [
+        "warning",
+        "typescript",
+        "lifecycle"
+      ],
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    }
+  ],
+  "edges": [
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "close"
+      },
+      "relation": "implements",
+      "to": {
+        "type": "concept",
+        "id": "wal"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "close"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "commit"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "close"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "warning",
+        "id": "uncommitted_mutations"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "commit"
+      },
+      "relation": "implements",
+      "to": {
+        "type": "concept",
+        "id": "wal"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "commit"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "close"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "compact"
+      },
+      "relation": "depends_on",
+      "to": {
+        "type": "api_symbol",
+        "id": "commit"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "compact"
+      },
+      "relation": "implements",
+      "to": {
+        "type": "concept",
+        "id": "compaction"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "deleteEdge"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "deleteNode"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "deleteNode"
+      },
+      "relation": "depends_on",
+      "to": {
+        "type": "api_symbol",
+        "id": "deleteEdge"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "deleteNode"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "warning",
+        "id": "delete_edges_before_nodes"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "deleteNodeCascade"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "deleteNode"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "deleteNodeCascade"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "warning",
+        "id": "delete_edges_before_nodes"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "getNodes"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "getNode"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "listEdges"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "EdgeFilter"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "listNodesFiltered"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "NodeFilter"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "listNodesFiltered"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "listNodes"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "open"
+      },
+      "relation": "implements",
+      "to": {
+        "type": "concept",
+        "id": "wal"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "open"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "Store"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "putEdge"
+      },
+      "relation": "depends_on",
+      "to": {
+        "type": "api_symbol",
+        "id": "putNode"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "putEdge"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "EdgeFields"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "putEdge"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "NodeRef"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "putNode"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "NodeFields"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "putNode"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "NodeRef"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "putNode"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "putEdge"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "recentEdges"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "outboundEdges"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "recentNodes"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "listNodes"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "reconcileOutboundEdges"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "deleteEdge"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "reconcileOutboundEdges"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "putEdge"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "api_symbol",
+        "id": "snapshot"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "Snapshot"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "concept",
+        "id": "compaction"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "compact"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "concept",
+        "id": "wal"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "close"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "concept",
+        "id": "wal"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "commit"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "warning",
+        "id": "delete_edges_before_nodes"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "deleteEdge"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "warning",
+        "id": "delete_edges_before_nodes"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "deleteNode"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "warning",
+        "id": "uncommitted_mutations"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "close"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    },
+    {
+      "from": {
+        "type": "warning",
+        "id": "uncommitted_mutations"
+      },
+      "relation": "see_also",
+      "to": {
+        "type": "api_symbol",
+        "id": "commit"
+      },
+      "strength": 0.5,
+      "confidence": null,
+      "meta": {},
+      "createdAt": 1779926400000000,
+      "updatedAt": 1779926400000000,
+      "version": 1
+    }
+  ]
+}
+"
+`;
+
+exports[`docs CLI > docs dump --format markdown 1`] = `
+"# akg-ts Documentation
+
+
+## api_symbol
+
+**CascadeDeleteResult** (\`api_symbol/CascadeDeleteResult\`)
+> Result of deleteNodeCascade: counts of deleted inbound edges, outbound edges, and node.
+Tags: \`api\`, \`typescript\`
+
+**Edge** (\`api_symbol/Edge\`)
+> An edge record returned by read operations; includes from, relation, to, strength, confidence, meta, and timestamps.
+Tags: \`api\`, \`typescript\`
+
+**EdgeFields** (\`api_symbol/EdgeFields\`)
+> Input fields for putEdge: strength (default 0.5), confidence (default null), meta (optional).
+Tags: \`api\`, \`typescript\`
+
+**EdgeFilter** (\`api_symbol/EdgeFilter\`)
+> Filter criteria for listEdges: relation and meta.
+Tags: \`api\`, \`typescript\`
+
+**InvalidInputError** (\`api_symbol/InvalidInputError\`)
+> Thrown when a caller passes an argument that violates a format or semantic constraint.
+Tags: \`api\`, \`typescript\`
+
+**MissingRequiredFieldError** (\`api_symbol/MissingRequiredFieldError\`)
+> Thrown when a required field is absent, such as omitting title in putNode.
+Tags: \`api\`, \`typescript\`
+
+**Node** (\`api_symbol/Node\`)
+> A node record returned by read operations; includes id, type, title, body, meta, tags, and SDK-managed timestamps.
+Tags: \`api\`, \`typescript\`
+
+**NodeFields** (\`api_symbol/NodeFields\`)
+> Input fields for putNode: title (required), body (optional), meta (optional).
+Tags: \`api\`, \`typescript\`
+
+**NodeFilter** (\`api_symbol/NodeFilter\`)
+> Filter criteria for listNodesFiltered: type, tag, and meta with AND semantics.
+Tags: \`api\`, \`typescript\`
+
+**NodeRef** (\`api_symbol/NodeRef\`)
+> Identifies a node by type and id; returned by putNode and accepted by edge and query methods.
+Tags: \`api\`, \`typescript\`
+
+**NotFoundError** (\`api_symbol/NotFoundError\`)
+> Thrown when a deleteNode or deleteEdge target does not exist.
+Tags: \`api\`, \`typescript\`
+
+**ReconcileResult** (\`api_symbol/ReconcileResult\`)
+> Result of reconcileOutboundEdges: counts of added, removed, and unchanged edges.
+Tags: \`api\`, \`typescript\`
+
+**Snapshot** (\`api_symbol/Snapshot\`)
+> JSON-serializable record of all live nodes and edges returned by store.snapshot().
+Tags: \`api\`, \`typescript\`
+
+**Store** (\`api_symbol/Store\`)
+> The main class for reading and writing an AKG knowledge graph.
+Tags: \`api\`, \`typescript\`
+
+**close** (\`api_symbol/close\`)
+> Commits outstanding mutations and closes the store; safe to call with no pending mutations.
+Tags: \`api\`, \`typescript\`, \`lifecycle\`
+
+**commit** (\`api_symbol/commit\`)
+> Durably writes all pending in-memory mutations to the .akg file.
+Tags: \`api\`, \`typescript\`, \`lifecycle\`
+
+**compact** (\`api_symbol/compact\`)
+> Rewrites the .akg file with only live records, discarding WAL history and tombstones.
+Tags: \`api\`, \`typescript\`, \`lifecycle\`
+
+**deleteEdge** (\`api_symbol/deleteEdge\`)
+> Deletes an edge; throws NotFoundError if the edge does not exist.
+Tags: \`api\`, \`typescript\`
+
+**deleteNode** (\`api_symbol/deleteNode\`)
+> Deletes a node; throws NotFoundError if missing, InvalidInputError if live edges remain.
+Tags: \`api\`, \`typescript\`
+
+**deleteNodeCascade** (\`api_symbol/deleteNodeCascade\`)
+> Deletes all inbound and outbound edges then deletes the node; returns a CascadeDeleteResult.
+Tags: \`api\`, \`typescript\`
+
+**getNode** (\`api_symbol/getNode\`)
+> Returns the node at (typeName, id), or null if it does not exist.
+Tags: \`api\`, \`typescript\`
+
+**getNodes** (\`api_symbol/getNodes\`)
+> Batch-fetches nodes by NodeRef array; returns null at positions where a node does not exist.
+Tags: \`api\`, \`typescript\`
+
+**inboundEdges** (\`api_symbol/inboundEdges\`)
+> Returns all inbound edges to a node, optionally filtered by relation.
+Tags: \`api\`, \`typescript\`
+
+**listEdges** (\`api_symbol/listEdges\`)
+> Returns all edges, optionally filtered by relation or metadata.
+Tags: \`api\`, \`typescript\`
+
+**listNodes** (\`api_symbol/listNodes\`)
+> Returns all nodes, optionally filtered to a given type name, sorted by key.
+Tags: \`api\`, \`typescript\`
+
+**listNodesByTag** (\`api_symbol/listNodesByTag\`)
+> Returns all nodes carrying the given tag, sorted by key.
+Tags: \`api\`, \`typescript\`
+
+**listNodesFiltered** (\`api_symbol/listNodesFiltered\`)
+> Returns nodes matching a NodeFilter combining type, tag, and metadata criteria.
+Tags: \`api\`, \`typescript\`
+
+**open** (\`api_symbol/open\`)
+> Opens an existing .akg file or creates a new empty one; returns a Store.
+Tags: \`api\`, \`typescript\`, \`lifecycle\`
+
+**outboundEdges** (\`api_symbol/outboundEdges\`)
+> Returns all outbound edges from a node, optionally filtered by relation.
+Tags: \`api\`, \`typescript\`
+
+**putEdge** (\`api_symbol/putEdge\`)
+> Writes or replaces an edge between two existing nodes.
+Tags: \`api\`, \`typescript\`
+
+**putNode** (\`api_symbol/putNode\`)
+> Writes or replaces a node at (typeName, id); returns a NodeRef.
+Tags: \`api\`, \`typescript\`
+
+**recentEdges** (\`api_symbol/recentEdges\`)
+> Returns edges sorted newest-first by updatedAt, with optional source, relation, and limit filters.
+Tags: \`api\`, \`typescript\`
+
+**recentNodes** (\`api_symbol/recentNodes\`)
+> Returns nodes sorted newest-first by updatedAt, with optional type, tag, and limit filters.
+Tags: \`api\`, \`typescript\`
+
+**reconcileOutboundEdges** (\`api_symbol/reconcileOutboundEdges\`)
+> Synchronizes the outbound edges for a source node and relation to exactly the desired target set.
+Tags: \`api\`, \`typescript\`
+
+**snapshot** (\`api_symbol/snapshot\`)
+> Returns a JSON-serializable Snapshot of all live nodes and edges in deterministic order.
+Tags: \`api\`, \`typescript\`
+
+
+## concept
+
+**Compaction** (\`concept/compaction\`)
+> Rewrites the file to contain only live records, discarding WAL history; caller-triggered, never automatic.
+Tags: \`concept\`, \`lifecycle\`, \`typescript\`, \`normative\`
+
+**Naming rules** (\`concept/naming_rules\`)
+> Type names, relation names, and tags must be lowercase [a-z0-9_] with no leading, trailing, or consecutive underscores.
+Tags: \`concept\`, \`normative\`, \`typescript\`
+
+**Single-writer semantics** (\`concept/single_writer\`)
+> Only one process should have a store open for writing at a time; concurrent access produces undefined behavior.
+Tags: \`concept\`, \`normative\`, \`typescript\`
+
+**Write-Ahead Log (WAL)** (\`concept/wal\`)
+> Mutations are held in memory and appended to a WAL on commit; not visible to other processes until committed.
+Tags: \`concept\`, \`lifecycle\`, \`typescript\`, \`normative\`
+
+
+## warning
+
+**Delete edges before nodes** (\`warning/delete_edges_before_nodes\`)
+> You must delete all inbound and outbound edges before deleting a node; the graph does not cascade-delete automatically.
+Tags: \`warning\`, \`typescript\`, \`normative\`
+
+**Uncommitted mutations are lost** (\`warning/uncommitted_mutations\`)
+> Mutations held in memory are lost if the process exits without calling commit or close.
+Tags: \`warning\`, \`typescript\`, \`lifecycle\`
+
+"
+`;
+
+exports[`docs CLI > docs explain putNode 1`] = `
+"# putNode
+
+**Type:** \`api_symbol\`
+
+Writes or replaces a node at (typeName, id); returns a NodeRef.
+
+**Tags:** \`api\`, \`typescript\`
+
+## Relations
+
+### depends_on
+
+- ← **api_symbol/putEdge**
+### see_also
+
+- → **api_symbol/NodeFields**
+- → **api_symbol/NodeRef**
+- → **api_symbol/putEdge**
+
+**Source:** \`sdk/akg-ts/README.md#writing-nodes\`
+"
+`;
+
+exports[`docs CLI > docs overview 1`] = `
+"
+## api_symbol
+
+- **CascadeDeleteResult** — Result of deleteNodeCascade: counts of deleted inbound edges, outbound edges, and node.
+- **Edge** — An edge record returned by read operations; includes from, relation, to, strength, confidence, meta, and timestamps.
+- **EdgeFields** — Input fields for putEdge: strength (default 0.5), confidence (default null), meta (optional).
+- **EdgeFilter** — Filter criteria for listEdges: relation and meta.
+- **InvalidInputError** — Thrown when a caller passes an argument that violates a format or semantic constraint.
+- **MissingRequiredFieldError** — Thrown when a required field is absent, such as omitting title in putNode.
+- **Node** — A node record returned by read operations; includes id, type, title, body, meta, tags, and SDK-managed timestamps.
+- **NodeFields** — Input fields for putNode: title (required), body (optional), meta (optional).
+- **NodeFilter** — Filter criteria for listNodesFiltered: type, tag, and meta with AND semantics.
+- **NodeRef** — Identifies a node by type and id; returned by putNode and accepted by edge and query methods.
+- **NotFoundError** — Thrown when a deleteNode or deleteEdge target does not exist.
+- **ReconcileResult** — Result of reconcileOutboundEdges: counts of added, removed, and unchanged edges.
+- **Snapshot** — JSON-serializable record of all live nodes and edges returned by store.snapshot().
+- **Store** — The main class for reading and writing an AKG knowledge graph.
+- **close** — Commits outstanding mutations and closes the store; safe to call with no pending mutations.
+- **commit** — Durably writes all pending in-memory mutations to the .akg file.
+- **compact** — Rewrites the .akg file with only live records, discarding WAL history and tombstones.
+- **deleteEdge** — Deletes an edge; throws NotFoundError if the edge does not exist.
+- **deleteNode** — Deletes a node; throws NotFoundError if missing, InvalidInputError if live edges remain.
+- **deleteNodeCascade** — Deletes all inbound and outbound edges then deletes the node; returns a CascadeDeleteResult.
+- **getNode** — Returns the node at (typeName, id), or null if it does not exist.
+- **getNodes** — Batch-fetches nodes by NodeRef array; returns null at positions where a node does not exist.
+- **inboundEdges** — Returns all inbound edges to a node, optionally filtered by relation.
+- **listEdges** — Returns all edges, optionally filtered by relation or metadata.
+- **listNodes** — Returns all nodes, optionally filtered to a given type name, sorted by key.
+- **listNodesByTag** — Returns all nodes carrying the given tag, sorted by key.
+- **listNodesFiltered** — Returns nodes matching a NodeFilter combining type, tag, and metadata criteria.
+- **open** — Opens an existing .akg file or creates a new empty one; returns a Store.
+- **outboundEdges** — Returns all outbound edges from a node, optionally filtered by relation.
+- **putEdge** — Writes or replaces an edge between two existing nodes.
+- **putNode** — Writes or replaces a node at (typeName, id); returns a NodeRef.
+- **recentEdges** — Returns edges sorted newest-first by updatedAt, with optional source, relation, and limit filters.
+- **recentNodes** — Returns nodes sorted newest-first by updatedAt, with optional type, tag, and limit filters.
+- **reconcileOutboundEdges** — Synchronizes the outbound edges for a source node and relation to exactly the desired target set.
+- **snapshot** — Returns a JSON-serializable Snapshot of all live nodes and edges in deterministic order.
+
+## concept
+
+- **Compaction** — Rewrites the file to contain only live records, discarding WAL history; caller-triggered, never automatic.
+- **Naming rules** — Type names, relation names, and tags must be lowercase [a-z0-9_] with no leading, trailing, or consecutive underscores.
+- **Single-writer semantics** — Only one process should have a store open for writing at a time; concurrent access produces undefined behavior.
+- **Write-Ahead Log (WAL)** — Mutations are held in memory and appended to a WAL on commit; not visible to other processes until committed.
+
+## warning
+
+- **Delete edges before nodes** — You must delete all inbound and outbound edges before deleting a node; the graph does not cascade-delete automatically.
+- **Uncommitted mutations are lost** — Mutations held in memory are lost if the process exits without calling commit or close.
+"
+`;
+
+exports[`docs CLI > docs search "commit" 1`] = `
+"## Search results for "commit"
+
+- **close** (\`api_symbol\`) — Commits outstanding mutations and closes the store; safe to call with no pending mutations.
+- **commit** (\`api_symbol\`) — Durably writes all pending in-memory mutations to the .akg file.
+- **Write-Ahead Log (WAL)** (\`concept\`) — Mutations are held in memory and appended to a WAL on commit; not visible to other processes until committed.
+- **Uncommitted mutations are lost** (\`warning\`) — Mutations held in memory are lost if the process exits without calling commit or close.
+"
+`;

@@ -100,6 +100,22 @@ var (
 	errTooManyTags    = fmt.Errorf("too many tags: %w", ErrInvalidInput)
 )
 
+// testNow, when non-nil, overrides the clock for all Store writes.
+// Used only by deterministic generator tooling.
+var testNow *timestampMicros
+
+// SetTestNow pins the clock used by all Store writes to a fixed Unix-microsecond
+// timestamp. Call SetTestNow(0) to restore wall-clock behavior.
+// Intended only for deterministic artifact generation.
+func SetTestNow(micros uint64) {
+	if micros == 0 {
+		testNow = nil
+	} else {
+		v := timestampMicros(micros)
+		testNow = &v
+	}
+}
+
 func (n *coreNode) applyReadDefaults() {
 	if n.Meta == nil {
 		n.Meta = map[string]any{}
@@ -146,6 +162,9 @@ func newStoreState() *storeState {
 		nodes: make(map[nodeIdentity]nodeRecord),
 		edges: make(map[edgeIdentity]coreEdge),
 		now: func() timestampMicros {
+			if testNow != nil {
+				return *testNow
+			}
 			return timestampMicros(time.Now().UnixMicro())
 		},
 	}

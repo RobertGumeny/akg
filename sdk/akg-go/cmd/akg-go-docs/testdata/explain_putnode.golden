@@ -1,0 +1,21 @@
+# PutNode
+
+**Type:** `api_symbol`
+
+Writes or replaces the node at (typeName, id); returns a NodeRef.
+
+**Tags:** `api`, `go`
+
+## Relations
+
+### depends_on
+
+- ← **api_symbol/PutEdge**
+
+### see_also
+
+- → **api_symbol/NodeFields**
+- → **api_symbol/NodeRef**
+- → **api_symbol/PutEdge**
+
+**Source:** `sdk/akg-go/README.md#writing-nodes`

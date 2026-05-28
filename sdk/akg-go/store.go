@@ -89,6 +89,14 @@ func openBytes(file []byte) (*Store, error) {
 	return &Store{state: state, committedWAL: committedWAL, nextWALSeq: nextSeq}, nil
 }
 
+// OpenBytes opens an AKG store from in-memory bytes. The store is fully
+// readable but has no backing file — calling Commit or Close with pending
+// mutations will fail. Use it for read-only access to embedded or in-memory
+// .akg data. Close is safe to call when no mutations are pending.
+func OpenBytes(data []byte) (*Store, error) {
+	return openBytes(data)
+}
+
 // PutNode writes or replaces the current live node for (typeName, id).
 // Title is required. Tags are validated against the AKG tag rules and become
 // the node's current tag set. If id is empty, a new node ID is generated.

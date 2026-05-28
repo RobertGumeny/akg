@@ -6,7 +6,15 @@
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist", "README.md", "CHANGELOG.md"],
+  "bin": {
+    "akg-ts": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "docs/akg-ts-docs.akg",
+    "README.md",
+    "CHANGELOG.md"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -16,12 +24,14 @@
   },
   "scripts": {
     "build": "tsup",
+    "generate:docs": "tsx scripts/generate-docs.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
     "tsup": "^8.0.0",
+    "tsx": "^4.22.3",
     "typescript": "^5.4.0",
     "vitest": "^1.6.0"
   }
