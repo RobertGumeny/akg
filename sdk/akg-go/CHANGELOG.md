@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.3
+
+### Fixed
+
+- **Edge payload decoding** — `strength` and `confidence` fields encoded as integers (e.g. `1` or `0`) are now correctly decoded. MessagePack encodes whole-number floats as integers, so a value like `1.0` round-trips as `uint64(1)`. The decoder now accepts both `float64` and `uint64` for these fields.
+
 ## v0.1.2
 
 ### Added
