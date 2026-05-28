@@ -1525,6 +1525,67 @@ func TestDeleteNodeCascadeNotFound(t *testing.T) {
 	}
 }
 
+// TestDecodeEdgePayloadIntegerEncodedFloats verifies that decodeEdgePayload
+// accepts uint64-encoded values for strength and confidence — the encoding
+// a JS runtime emits for whole-number floats (e.g. confidence: 1).
+func TestDecodeEdgePayloadIntegerEncodedFloats(t *testing.T) {
+	conf := float64(1)
+	cases := []struct {
+		name       string
+		strength   any
+		confidence any
+		wantStr    float64
+		wantConf   *float64
+	}{
+		{"float64 encoding", float64(0.8), float64(1), 0.8, &conf},
+		{"uint64 encoding", uint64(1), uint64(1), 1.0, &conf},
+		{"mixed encoding", float64(0.5), uint64(1), 0.5, &conf},
+		{"nil confidence", float64(0.5), nil, 0.5, nil},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			m := map[string]any{
+				"from_node_type": "note",
+				"from_node":      "n1",
+				"to_node_type":   "note",
+				"to_node":        "n2",
+				"relation":       "links_to",
+				"strength":       tc.strength,
+				"created_at":     uint64(1000),
+				"updated_at":     uint64(2000),
+			}
+			if tc.confidence != nil {
+				m["confidence"] = tc.confidence
+			} else {
+				m["confidence"] = nil
+			}
+			b, err := encodeMsgpack(m)
+			if err != nil {
+				t.Fatalf("encodeMsgpack: %v", err)
+			}
+			edge, err := decodeEdgePayload(b)
+			if err != nil {
+				t.Fatalf("decodeEdgePayload: %v", err)
+			}
+			if edge.Strength != tc.wantStr {
+				t.Errorf("strength: got %v, want %v", edge.Strength, tc.wantStr)
+			}
+			if tc.wantConf == nil {
+				if edge.Confidence != nil {
+					t.Errorf("confidence: got %v, want nil", *edge.Confidence)
+				}
+			} else {
+				if edge.Confidence == nil {
+					t.Errorf("confidence: got nil, want %v", *tc.wantConf)
+				} else if *edge.Confidence != *tc.wantConf {
+					t.Errorf("confidence: got %v, want %v", *edge.Confidence, *tc.wantConf)
+				}
+			}
+		})
+	}
+}
+
 // --- helpers ---
 
 func nodeIDs(nodes []Node) []string {

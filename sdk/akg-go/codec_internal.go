@@ -217,14 +217,14 @@ func decodeEdgePayload(b []byte) (coreEdge, error) {
 		return coreEdge{}, ErrMissingRequiredField
 	}
 	edge := coreEdge{FromType: fromTypeValue, FromNode: nodeID(fromValue), ToType: toTypeValue, ToNode: nodeID(toValue), Relation: relation(relationValue), Strength: 0.5}
-	if f, ok := m["strength"].(float64); ok {
+	if f, ok := asFloat64(m["strength"]); ok {
 		edge.Strength = f
 	}
 	if _, ok := m["confidence"]; ok {
 		if m["confidence"] == nil {
 			edge.Confidence = nil
 		} else {
-			f, ok := m["confidence"].(float64)
+			f, ok := asFloat64(m["confidence"])
 			if !ok {
 				return coreEdge{}, errInvalidPayload
 			}
@@ -517,3 +517,13 @@ func decodeMap(b []byte, off, l int) (any, int, error) {
 }
 
 func asUint(v any) (uint64, bool) { u, ok := v.(uint64); return u, ok }
+
+func asFloat64(v any) (float64, bool) {
+	switch x := v.(type) {
+	case float64:
+		return x, true
+	case uint64:
+		return float64(x), true
+	}
+	return 0, false
+}
