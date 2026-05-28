@@ -39,3 +39,14 @@ internal structure, and do not import it.
 
 If you are building in Go specifically, use [akg-go](../sdk/akg-go/README.md)
 instead. It is the production Go SDK with the full public API.
+
+## Behavioral parity and release readiness
+
+The `testdata/behavior/` directory contains two language-agnostic files:
+
+- `parity-graph.akg` — a pre-built graph fixture
+- `parity-spec.json` — expected query results for that graph
+
+To verify behavioral parity, write a test in your SDK that loads both files and asserts your query results match the spec. The existing Go and TypeScript `behavior_parity` tests are reference implementations of this pattern.
+
+**A new SDK must pass ≥80% of the behavior parity test cases before it can be officially released (v1.0.0).** Count the total number of distinct assertions in your parity test and ensure at least 80% pass. Remaining gaps should be documented and closed before any subsequent release.

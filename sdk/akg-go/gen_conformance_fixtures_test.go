@@ -143,7 +143,7 @@ func genFixtureCommittedWALReplay(path string) error {
 	if _, err := st.PutNode("note", "a2", NodeFields{Title: "Node B v2"}, nil); err != nil {
 		return err
 	}
-	if err := st.PutEdge(NodeRef{Type: "note", ID: "a1"}, "links_to", NodeRef{Type: "note", ID: "a2"}, EdgeFields{Strength: 0.8}); err != nil {
+	if err := st.PutEdge(NodeRef{Type: "note", ID: "a1"}, "links_to", NodeRef{Type: "note", ID: "a2"}, EdgeFields{Strength: StrengthOf(0.8)}); err != nil {
 		return err
 	}
 	return st.Close() // seqs 7,8,9 — nextWALSeq=10

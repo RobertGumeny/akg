@@ -25,9 +25,27 @@ akg/
 - **`sdk/akg-go/`** and **`sdk/akg-ts/`** are the application SDKs. Their READMEs document the public API.
 - **The root package** (`akg.go`, `internal/`) is the Go Reference SDK. It proves the spec is implementable and is the behavior target for other implementations. It is not a blueprint for internal architecture — application SDKs implement the format independently.
 
-## What is not authoritative
+## Error model
 
-- `docs/PRD.md` and `docs/backlog.md` are process artifacts for the current work cycle. They describe ongoing implementation goals, not permanent project truth.
+Both application SDKs use the same three-tier error model. Know which tier to use before writing or reviewing SDK code.
+
+| Tier | Go | TypeScript | When |
+|---|---|---|---|
+| Not found | `ErrNotFound` | `NotFoundError` | A `Delete*` target or a required node ref does not exist. |
+| Invalid input | `ErrInvalidInput` | `InvalidInputError` | Bad argument: invalid type/tag/relation name, violated constraint (node has edges), closed store, negative limit, etc. |
+| Missing required field | `ErrMissingRequiredField` | `MissingRequiredFieldError` | A required field is structurally absent — either a `PutNode` without `Title`, or a decoded file record missing a required field. |
+
+**`GetNode` is a special case:** a missing node returns `(nil, nil)` / `null` (not an error). Check the pointer/value, not the error.
+
+**Filter helpers** return empty results (not errors) for unknown-but-valid types, tags, relations, or metadata keys.
+
+**Negative `Limit`** on `RecentNodes` / `RecentEdges` is `ErrInvalidInput` / `InvalidInputError`.
+
+## SDK parity
+
+The behavioral contract is defined by the shared fixtures in `testdata/behavior/` (`parity-graph.akg` and `parity-spec.json`). Each SDK has a `behavior_parity` test that loads those fixtures and asserts against the spec. If both SDKs pass, they agree on behavior.
+
+A new SDK must pass ≥80% of the behavior parity test cases before it can be officially released (v1.0.0). See [`docs/sdk-author-guide.md`](docs/sdk-author-guide.md) for details.
 
 ## Testing
 
@@ -37,14 +55,11 @@ Run all Go tests (reference SDK + conformance fixtures):
 go test -count=1 ./...
 ```
 
-Run the Go application SDK tests:
+Run an individual SDK's tests:
 
 ```sh
-cd sdk/akg-go && go test ./...
+cd sdk/akg-go && go test ./...   # Go SDK
+cd sdk/akg-ts && npm test         # TypeScript SDK
 ```
 
-Run the TypeScript application SDK tests:
-
-```sh
-cd sdk/akg-ts && npm test
-```
+Each SDK directory contains its own README with full test and build instructions.

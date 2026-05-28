@@ -40,10 +40,10 @@ func main() {
 	must(err, "put paper")
 
 	// Write edges connecting the nodes.
-	err = store.PutEdge(alice, "authored", paper, akg.EdgeFields{Strength: 1.0})
+	err = store.PutEdge(alice, "authored", paper, akg.EdgeFields{Strength: akg.StrengthOf(1.0)})
 	must(err, "put authored edge")
 
-	err = store.PutEdge(bob, "reviewed", paper, akg.EdgeFields{Strength: 0.8})
+	err = store.PutEdge(bob, "reviewed", paper, akg.EdgeFields{Strength: akg.StrengthOf(0.8)})
 	must(err, "put reviewed edge")
 
 	err = store.PutEdge(alice, "collaborates_with", bob, akg.EdgeFields{})

@@ -2,7 +2,12 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync, openSync, writeSync
 import { dirname } from 'node:path';
 import { randomBytes } from 'node:crypto';
 import { NotFoundError, InvalidInputError, MissingRequiredFieldError } from './errors.js';
-import type { NodeRef, NodeFields, Node, EdgeFields, Edge } from './types.js';
+import type {
+  NodeRef, NodeFields, Node, EdgeFields, Edge,
+  EdgeFilter, NodeFilter, Snapshot,
+  RecencyFilter, EdgeRecencyFilter,
+  ReconcileResult, CascadeDeleteResult,
+} from './types.js';
 import {
   decodeContainer, encodeContainer, decodeDataEntries, encodeDataEntries,
   decodeBloom, encodeBloom, DataEntry, equalBytes, compareBytes,
@@ -58,6 +63,17 @@ function edgeKey(ident: EdgeIdentity): string {
 
 function nowMicros(): bigint {
   return BigInt(Date.now()) * 1000n;
+}
+
+// Overridable in tests. Set to a function returning a fixed bigint to pin time.
+// Usage in tests: import { _setTestNow } from '../src/store.js'; _setTestNow(100n);
+export let _testNow: (() => bigint) | null = null;
+export function _setTestNow(ts: bigint | null): void {
+  _testNow = ts === null ? null : () => ts;
+}
+
+function clock(): bigint {
+  return _testNow ? _testNow() : nowMicros();
 }
 
 function newStoreState(): StoreState {
@@ -195,7 +211,7 @@ export class Store {
       version: 1,
     };
 
-    const rec = putNodeInState(this.state, actualID, n, nowMicros());
+    const rec = putNodeInState(this.state, actualID, n, clock());
     const payload = encodeNodePutPayload({ id: rec.id, node: rec.node });
     this.pending.push({ op: WAL_OP_PUT_NODE, payload });
     return { type: typeName, id: rec.id };
@@ -247,7 +263,7 @@ export class Store {
       toType: toRef.type,
       toNode: toRef.id,
       relation,
-      strength: fields.strength ?? 0,
+      strength: fields.strength ?? 0.5,
       confidence: fields.confidence !== undefined ? fields.confidence : null,
       meta: fields.meta ? { ...fields.meta } : {},
       createdAt: 0n,
@@ -255,7 +271,7 @@ export class Store {
       version: 1,
     };
 
-    const rec = putEdgeInState(this.state, e, nowMicros());
+    const rec = putEdgeInState(this.state, e, clock());
     const payload = encodeEdgePutPayload(rec);
     this.pending.push({ op: WAL_OP_PUT_EDGE, payload });
   }
@@ -313,6 +329,215 @@ export class Store {
     this.pending.push({ op: WAL_OP_DELETE_EDGE, payload });
   }
 
+  // ---- global edge listing and snapshots ---------------------------------
+
+  listEdges(filter?: EdgeFilter): Edge[] {
+    if (this.closed) throw new InvalidInputError('store is closed');
+    if (filter?.relation) validateComponent(filter.relation);
+    const matches: CoreEdge[] = [];
+    for (const e of this.state.edges.values()) {
+      if (filter?.relation && e.relation !== filter.relation) continue;
+      if (filter?.meta && !metaMatches(e.meta, filter.meta)) continue;
+      matches.push(e);
+    }
+    return sortAndMapEdgesByKey(matches);
+  }
+
+  snapshot(): Snapshot {
+    if (this.closed) throw new InvalidInputError('store is closed');
+    return {
+      nodes: this.listNodes(),
+      edges: this.listEdges(),
+    };
+  }
+
+  // ---- node filtering and batch inspection --------------------------------
+
+  listNodesFiltered(filter: NodeFilter): Node[] {
+    if (this.closed) throw new InvalidInputError('store is closed');
+    if (filter.type) validateComponent(filter.type);
+    if (filter.tag) validateTag(filter.tag);
+    const matches: NodeRecord[] = [];
+    for (const rec of this.state.nodes.values()) {
+      if (filter.type && rec.node.type !== filter.type) continue;
+      if (filter.tag && !rec.node.tags.includes(filter.tag)) continue;
+      if (filter.meta && !metaMatches(rec.node.meta, filter.meta)) continue;
+      matches.push(rec);
+    }
+    return sortAndMapNodes(matches);
+  }
+
+  getNodes(refs: NodeRef[]): Array<Node | null> {
+    if (this.closed) throw new InvalidInputError('store is closed');
+    return refs.map(ref => {
+      buildNodeKey(ref.type, ref.id);
+      const k = nodeKey({ type: ref.type, id: ref.id });
+      const rec = this.state.nodes.get(k);
+      return rec ? nodeFromRecord(rec) : null;
+    });
+  }
+
+  // ---- recency helpers ----------------------------------------------------
+
+  recentNodes(filter?: RecencyFilter): Node[] {
+    if (this.closed) throw new InvalidInputError('store is closed');
+    const limit = filter?.limit ?? 0;
+    if (limit < 0) throw new InvalidInputError('limit must be non-negative');
+    if (filter?.type) validateComponent(filter.type);
+    if (filter?.tag) validateTag(filter.tag);
+
+    const matches: NodeRecord[] = [];
+    for (const rec of this.state.nodes.values()) {
+      if (filter?.type && rec.node.type !== filter.type) continue;
+      if (filter?.tag && !rec.node.tags.includes(filter.tag)) continue;
+      const ua = Number(rec.node.updatedAt);
+      if (filter?.sinceUpdatedAt && ua < filter.sinceUpdatedAt) continue;
+      if (filter?.untilUpdatedAt && ua > filter.untilUpdatedAt) continue;
+      matches.push(rec);
+    }
+
+    const enc = new TextEncoder();
+    matches.sort((a, b) => {
+      const ua = Number(a.node.updatedAt), ub = Number(b.node.updatedAt);
+      if (ua !== ub) return ub - ua;
+      const ca = Number(a.node.createdAt), cb = Number(b.node.createdAt);
+      if (ca !== cb) return cb - ca;
+      if (a.node.type !== b.node.type) return a.node.type < b.node.type ? -1 : 1;
+      const ak = enc.encode(buildNodeKey(a.node.type, a.id));
+      const bk = enc.encode(buildNodeKey(b.node.type, b.id));
+      return compareBytes(ak, bk);
+    });
+
+    const result = limit > 0 ? matches.slice(0, limit) : matches;
+    return result.map(nodeFromRecord);
+  }
+
+  recentEdges(filter?: EdgeRecencyFilter): Edge[] {
+    if (this.closed) throw new InvalidInputError('store is closed');
+    const limit = filter?.limit ?? 0;
+    if (limit < 0) throw new InvalidInputError('limit must be non-negative');
+    if (filter?.relation) validateComponent(filter.relation);
+    if (filter?.from) buildNodeKey(filter.from.type, filter.from.id);
+    if (filter?.to) buildNodeKey(filter.to.type, filter.to.id);
+
+    const matches: CoreEdge[] = [];
+    for (const e of this.state.edges.values()) {
+      if (filter?.relation && e.relation !== filter.relation) continue;
+      if (filter?.from && (e.fromType !== filter.from.type || e.fromNode !== filter.from.id)) continue;
+      if (filter?.to && (e.toType !== filter.to.type || e.toNode !== filter.to.id)) continue;
+      const ua = Number(e.updatedAt);
+      if (filter?.sinceUpdatedAt && ua < filter.sinceUpdatedAt) continue;
+      if (filter?.untilUpdatedAt && ua > filter.untilUpdatedAt) continue;
+      matches.push(e);
+    }
+
+    const enc = new TextEncoder();
+    matches.sort((a, b) => {
+      const ua = Number(a.updatedAt), ub = Number(b.updatedAt);
+      if (ua !== ub) return ub - ua;
+      const ca = Number(a.createdAt), cb = Number(b.createdAt);
+      if (ca !== cb) return cb - ca;
+      if (a.fromType !== b.fromType) return a.fromType < b.fromType ? -1 : 1;
+      if (a.fromNode !== b.fromNode) return a.fromNode < b.fromNode ? -1 : 1;
+      if (a.relation !== b.relation) return a.relation < b.relation ? -1 : 1;
+      if (a.toType !== b.toType) return a.toType < b.toType ? -1 : 1;
+      return a.toNode < b.toNode ? -1 : 1;
+    });
+
+    const result = limit > 0 ? matches.slice(0, limit) : matches;
+    return result.map(edgeFromCoreEdge);
+  }
+
+  // ---- edge reconciliation ------------------------------------------------
+
+  reconcileOutboundEdges(source: NodeRef, relation: string, desired: NodeRef[], fields: EdgeFields): ReconcileResult {
+    if (this.closed) throw new InvalidInputError('store is closed');
+    buildNodeKey(source.type, source.id);
+    if (!this.state.nodes.has(nodeKey({ type: source.type, id: source.id }))) {
+      throw new NotFoundError(`node ${source.type}/${source.id} not found`);
+    }
+    validateComponent(relation);
+    for (const d of desired) buildNodeKey(d.type, d.id);
+
+    const desiredSet = new Set(desired.map(d => nodeKey({ type: d.type, id: d.id })));
+
+    const existing = new Map<string, NodeRef>();
+    for (const [ek, e] of this.state.edges) {
+      if (e.fromType === source.type && e.fromNode === source.id && e.relation === relation) {
+        existing.set(nodeKey({ type: e.toType, id: e.toNode }), { type: e.toType, id: e.toNode });
+      }
+    }
+
+    let added = 0, removed = 0, unchanged = 0;
+
+    for (const [nk, ref] of existing) {
+      if (!desiredSet.has(nk)) {
+        const ek = edgeKey({ fromType: source.type, from: source.id, relation, toType: ref.type, to: ref.id });
+        this.state.edges.delete(ek);
+        const payload = encodeEdgeDeletePayload({ fromType: source.type, fromNode: source.id, relation, toType: ref.type, toNode: ref.id });
+        this.pending.push({ op: WAL_OP_DELETE_EDGE, payload });
+        removed++;
+      }
+    }
+
+    for (const d of desired) {
+      const nk = nodeKey({ type: d.type, id: d.id });
+      if (existing.has(nk)) {
+        unchanged++;
+      } else {
+        if (!this.state.nodes.has(nk)) throw new NotFoundError(`node ${d.type}/${d.id} not found`);
+        const e: CoreEdge = {
+          fromType: source.type, fromNode: source.id,
+          toType: d.type, toNode: d.id,
+          relation,
+          strength: fields.strength ?? 0.5,
+          confidence: fields.confidence !== undefined ? fields.confidence : null,
+          meta: fields.meta ? { ...fields.meta } : {},
+          createdAt: 0n, updatedAt: 0n, version: 1,
+        };
+        const rec = putEdgeInState(this.state, e, clock());
+        const payload = encodeEdgePutPayload(rec);
+        this.pending.push({ op: WAL_OP_PUT_EDGE, payload });
+        added++;
+      }
+    }
+
+    return { added, removed, unchanged };
+  }
+
+  // ---- cascade delete -----------------------------------------------------
+
+  deleteNodeCascade(typeName: string, id: string): CascadeDeleteResult {
+    if (this.closed) throw new InvalidInputError('store is closed');
+    buildNodeKey(typeName, id);
+    const nk = nodeKey({ type: typeName, id });
+    if (!this.state.nodes.has(nk)) throw new NotFoundError(`node ${typeName}/${id} not found`);
+
+    let deletedInboundEdges = 0, deletedOutboundEdges = 0;
+
+    const toDelete: Array<{ ek: string; fromType: string; fromNode: string; relation: string; toType: string; toNode: string; isOutbound: boolean }> = [];
+    for (const [ek, e] of this.state.edges) {
+      if (e.fromType === typeName && e.fromNode === id) {
+        toDelete.push({ ek, fromType: e.fromType, fromNode: e.fromNode, relation: e.relation, toType: e.toType, toNode: e.toNode, isOutbound: true });
+      } else if (e.toType === typeName && e.toNode === id) {
+        toDelete.push({ ek, fromType: e.fromType, fromNode: e.fromNode, relation: e.relation, toType: e.toType, toNode: e.toNode, isOutbound: false });
+      }
+    }
+
+    for (const d of toDelete) {
+      this.state.edges.delete(d.ek);
+      const payload = encodeEdgeDeletePayload({ fromType: d.fromType, fromNode: d.fromNode, relation: d.relation, toType: d.toType, toNode: d.toNode });
+      this.pending.push({ op: WAL_OP_DELETE_EDGE, payload });
+      if (d.isOutbound) deletedOutboundEdges++; else deletedInboundEdges++;
+    }
+
+    this.state.nodes.delete(nk);
+    const payload = encodeNodeDeletePayload({ type: typeName, id });
+    this.pending.push({ op: WAL_OP_DELETE_NODE, payload });
+
+    return { deletedInboundEdges, deletedOutboundEdges, deletedNode: true };
+  }
+
   // ---- internal inspection (for testing/conformance) ---------------------
 
   get hasUncompactedWAL(): boolean {
@@ -324,6 +549,23 @@ export class Store {
   }
 
   // ---- lifecycle (async, I/O) ---------------------------------------------
+
+  // Compact commits any pending mutations and rewrites the file to contain only
+  // live records, discarding all tombstones and prior WAL history. If the
+  // auto-commit fails, compaction does not run. After compaction the store
+  // remains fully usable. Compaction is never triggered automatically.
+  async compact(): Promise<void> {
+    if (this.closed) throw new InvalidInputError('store is closed');
+    await this.commit();
+    const entries = materializeDataEntries(this.state);
+    const data = encodeDataEntries(entries);
+    const keys = entries.map(e => e.key);
+    const bloom = encodeBloom(keys);
+    const file = encodeContainer({ data, bloom, wal: null });
+    writeFileAtomic(this.path, file);
+    this.committedWAL = [];
+    this.nextWALSeq = 1n;
+  }
 
   async commit(): Promise<void> {
     if (this.closed) throw new InvalidInputError('store is closed');
@@ -592,6 +834,45 @@ function sortAndMapEdgesByIndexKey(edges: CoreEdge[]): Edge[] {
     return compareBytes(ak, bk);
   });
   return edges.map(edgeFromCoreEdge);
+}
+
+// ---- Metadata deep equality ------------------------------------------------
+
+function metaMatches(meta: Record<string, unknown>, filter: Record<string, unknown>): boolean {
+  for (const [k, fv] of Object.entries(filter)) {
+    if (!(k in meta)) return false;
+    if (!deepEqual(meta[k], fv)) return false;
+  }
+  return true;
+}
+
+function deepEqual(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (a === null || b === null) return false;
+  if (typeof a !== typeof b) {
+    // numeric cross-type: compare via JSON
+    return JSON.stringify(a) === JSON.stringify(b);
+  }
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+      if (!deepEqual(a[i], b[i])) return false;
+    }
+    return true;
+  }
+  if (typeof a === 'object' && typeof b === 'object' && !Array.isArray(a) && !Array.isArray(b)) {
+    const ao = a as Record<string, unknown>;
+    const bo = b as Record<string, unknown>;
+    const ak = Object.keys(ao);
+    const bk = Object.keys(bo);
+    if (ak.length !== bk.length) return false;
+    for (const k of ak) {
+      if (!(k in bo)) return false;
+      if (!deepEqual(ao[k], bo[k])) return false;
+    }
+    return true;
+  }
+  return JSON.stringify(a) === JSON.stringify(b);
 }
 
 // ---- File I/O --------------------------------------------------------------

@@ -216,7 +216,7 @@ func decodeEdgePayload(b []byte) (coreEdge, error) {
 	if !ok || relationValue == "" {
 		return coreEdge{}, ErrMissingRequiredField
 	}
-	edge := coreEdge{FromType: fromTypeValue, FromNode: nodeID(fromValue), ToType: toTypeValue, ToNode: nodeID(toValue), Relation: relation(relationValue)}
+	edge := coreEdge{FromType: fromTypeValue, FromNode: nodeID(fromValue), ToType: toTypeValue, ToNode: nodeID(toValue), Relation: relation(relationValue), Strength: 0.5}
 	if f, ok := m["strength"].(float64); ok {
 		edge.Strength = f
 	}

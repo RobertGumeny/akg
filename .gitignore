@@ -59,3 +59,10 @@ Thumbs.db
 # Agent/tooling scratch space
 .pi/
 .agents/
+
+# Local research reports
+/docs/reports/
+
+# Local planning docs
+/docs/prd.md
+/docs/tasks.md

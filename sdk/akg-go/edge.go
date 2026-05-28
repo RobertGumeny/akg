@@ -1,8 +1,12 @@
 package akg
 
 // EdgeFields contains the content fields for an edge write.
+//
+// Strength is a pointer so that nil ("omitted") is distinguishable from an
+// explicit 0.0. When nil, the AKG v1 spec default of 0.5 is applied.
+// Confidence uses the same convention: nil means "no confidence recorded".
 type EdgeFields struct {
-	Strength   float64
+	Strength   *float64
 	Confidence *float64
 	Meta       map[string]any
 }
@@ -34,6 +38,12 @@ func edgeFromRecord(rec coreEdge) *Edge {
 	}
 }
 
+// StrengthOf returns a pointer to v, for use in EdgeFields.Strength.
+// It is the idiomatic way to supply an explicit strength value:
+//
+//	store.PutEdge(a, "knows", b, akg.EdgeFields{Strength: akg.StrengthOf(0.75)})
+func StrengthOf(v float64) *float64 { return &v }
+
 func cloneConfidence(in *float64) *float64 {
 	if in == nil {
 		return nil
@@ -43,13 +53,17 @@ func cloneConfidence(in *float64) *float64 {
 }
 
 func coreEdgeFromFields(fromRef NodeRef, relationValue string, toRef NodeRef, fields EdgeFields) (coreEdge, error) {
+	strength := 0.5
+	if fields.Strength != nil {
+		strength = *fields.Strength
+	}
 	e := coreEdge{
 		FromType:   fromRef.Type,
 		FromNode:   nodeID(fromRef.ID),
 		ToType:     toRef.Type,
 		ToNode:     nodeID(toRef.ID),
 		Relation:   relation(relationValue),
-		Strength:   fields.Strength,
+		Strength:   strength,
 		Confidence: cloneConfidence(fields.Confidence),
 		Meta:       cloneMap(fields.Meta),
 	}

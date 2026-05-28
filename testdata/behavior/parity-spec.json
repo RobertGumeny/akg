@@ -1,0 +1,144 @@
+{
+  "assertions": {
+    "alice_assigned_t1_strength": 0.5,
+    "alice_knows_bob_strength": 0.7,
+    "bob_knows_alice_strength": 0,
+    "get_nodes_input": [
+      {
+        "id": "bob",
+        "type": "person"
+      },
+      {
+        "id": "MISSING",
+        "type": "person"
+      },
+      {
+        "id": "alice",
+        "type": "person"
+      }
+    ],
+    "get_nodes_titles": [
+      "Bob",
+      null,
+      "Alice"
+    ],
+    "list_edges_all_count": 4,
+    "list_edges_assigned_count": 1,
+    "list_edges_knows_count": 2,
+    "list_edges_manages_count": 1,
+    "list_edges_meta_source_inferred_count": 1,
+    "list_edges_meta_source_manual_count": 1,
+    "list_nodes_meta_role_engineer_ids": [
+      "bob",
+      "carol"
+    ],
+    "list_nodes_meta_tags_array_ids": [
+      "t1"
+    ],
+    "list_nodes_type_person_tag_active_ids": [
+      "alice",
+      "bob"
+    ],
+    "list_nodes_type_person_tag_researcher_ids": [
+      "alice"
+    ],
+    "snapshot_edge_count": 4,
+    "snapshot_node_count": 4
+  },
+  "description": "Cross-SDK behavioral parity fixture. Both SDKs must produce these results when opening parity-graph.akg.",
+  "edge_count": 4,
+  "edges": [
+    {
+      "from_id": "alice",
+      "from_type": "person",
+      "meta": {
+        "source": "manual"
+      },
+      "relation": "assigned",
+      "strength": 0.5,
+      "to_id": "t1",
+      "to_type": "task"
+    },
+    {
+      "from_id": "alice",
+      "from_type": "person",
+      "meta": {
+        "source": "inferred"
+      },
+      "relation": "knows",
+      "strength": 0.7,
+      "to_id": "bob",
+      "to_type": "person"
+    },
+    {
+      "from_id": "alice",
+      "from_type": "person",
+      "meta": {},
+      "relation": "manages",
+      "strength": 0.9,
+      "to_id": "bob",
+      "to_type": "person"
+    },
+    {
+      "from_id": "bob",
+      "from_type": "person",
+      "meta": {},
+      "relation": "knows",
+      "strength": 0,
+      "to_id": "alice",
+      "to_type": "person"
+    }
+  ],
+  "node_count": 4,
+  "nodes": [
+    {
+      "id": "alice",
+      "meta": {
+        "role": "lead"
+      },
+      "tags": [
+        "active",
+        "researcher"
+      ],
+      "title": "Alice",
+      "type": "person"
+    },
+    {
+      "id": "bob",
+      "meta": {
+        "role": "engineer"
+      },
+      "tags": [
+        "active"
+      ],
+      "title": "Bob",
+      "type": "person"
+    },
+    {
+      "id": "carol",
+      "meta": {
+        "role": "engineer"
+      },
+      "tags": [
+        "inactive"
+      ],
+      "title": "Carol",
+      "type": "person"
+    },
+    {
+      "id": "t1",
+      "meta": {
+        "priority": "high",
+        "tags": [
+          "urgent",
+          "p1"
+        ]
+      },
+      "tags": [
+        "open"
+      ],
+      "title": "First Task",
+      "type": "task"
+    }
+  ]
+}

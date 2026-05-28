@@ -159,13 +159,24 @@ on `relation`.
 
 | Field        | Required | Type            | Default |
 |--------------|----------|-----------------|---------|
-| `Strength`   | no       | `float64`       | `0.0`   |
+| `Strength`   | no       | `*float64`      | `0.5`   |
 | `Confidence` | no       | `*float64`      | nil     |
 | `Meta`       | no       | `map[string]any`| nil     |
 
-**`Strength`** is a caller-defined weight for the edge — how strongly the relationship holds. The SDK stores and returns it as-is; no semantic is imposed. Use it for ranking, sorting, or filtering (e.g. `0.0`–`1.0` for weak-to-strong, or an integer priority). Default `0.0`.
+**`Strength`** is a caller-defined weight for the edge — how strongly the relationship holds. Use it for ranking, sorting, or filtering (e.g. `0.0`–`1.0` for weak-to-strong). Both fields use `*float64` so that `nil` ("omitted") is distinguishable from an explicit value including `0.0`. Use `akg.StrengthOf(v)` to supply a value without a temp variable:
 
-**`Confidence`** represents how certain you are that the edge is correct — for example when it was inferred rather than asserted. `nil` means no confidence value was recorded (i.e. the edge was asserted directly). When set, the convention is `0.0`–`1.0`. The SDK does not enforce a range. Default `nil`.
+```go
+// omitted → spec default 0.5
+store.PutEdge(alice, "knows", bob, akg.EdgeFields{})
+
+// explicit value
+store.PutEdge(alice, "knows", bob, akg.EdgeFields{Strength: akg.StrengthOf(0.75)})
+
+// explicitly zero
+store.PutEdge(alice, "knows", bob, akg.EdgeFields{Strength: akg.StrengthOf(0.0)})
+```
+
+**`Confidence`** represents how certain you are that the edge is correct — for example when it was inferred rather than asserted. `nil` means no confidence judgment was recorded. When set, the convention is `0.0`–`1.0`. The SDK does not enforce a range.
 
 ### Reading
 
@@ -185,21 +196,7 @@ edges, err := store.OutboundEdges(nodeRef NodeRef, relation string) ([]Edge, err
 edges, err := store.InboundEdges(nodeRef NodeRef, relation string) ([]Edge, error)
 ```
 
-To filter by both type and tag, call `ListNodes` and filter the result:
-
-```go
-nodes, err := store.ListNodes("person")
-// filter by tag in the caller
-var researchers []akg.Node
-for _, n := range nodes {
-    for _, t := range n.Tags {
-        if t == "researcher" {
-            researchers = append(researchers, n)
-            break
-        }
-    }
-}
-```
+To filter by both type and tag, call `ListNodes` and filter the result, or use `ListNodesFiltered` (see [Filtering and inspection helpers](#filtering-and-inspection-helpers)).
 
 ### Metadata fields
 
@@ -308,9 +305,158 @@ ref, err := store.PutNode("person", "", akg.NodeFields{Title: "New person"}, nil
 fmt.Println(ref.ID) // e.g. "01J2K3..."
 ```
 
-## Concurrency
+## Compaction
 
-A store is not safe for concurrent access. Only one process should open a given `.akg` file at a time. Opening the same file from two processes simultaneously produces undefined behavior — there is no lock file or advisory lock. If you need concurrent access, serialize it at the application layer.
+```go
+err := store.Compact() error
+```
+
+`Compact` rewrites the `.akg` file to contain only live records, discarding all tombstones and prior WAL history. Before compacting, it automatically commits any pending in-memory mutations. If the auto-commit fails, compaction does not run.
+
+After a successful compaction:
+- The logical graph content (nodes and edges) is unchanged.
+- The file contains no WAL section.
+- The open store remains fully usable.
+
+**Compaction is always caller-triggered — it is never automatic.** Callers that do not call `Compact` will accumulate WAL entries over time; this is safe but eventually increases file size.
+
+```go
+store.DeleteEdge(alice, "knows", bob)
+if err := store.Compact(); err != nil { ... }
+// file now contains only live records; no WAL, no tombstones
+nodes, _ := store.ListNodes("")
+```
+
+## Filtering and inspection helpers
+
+### ListNodesFiltered
+
+```go
+nodes, err := store.ListNodesFiltered(filter akg.NodeFilter) ([]Node, error)
+```
+
+`NodeFilter` fields:
+
+| Field  | Type            | Matches |
+|--------|-----------------|---------|
+| `Type` | `string`        | Nodes of this type (empty = all types) |
+| `Tag`  | `string`        | Nodes carrying this tag (empty = all tags) |
+| `Meta` | `map[string]any`| Nodes whose metadata contains all key/value pairs |
+
+Non-empty fields combine with AND semantics. Unknown types or tags return empty results rather than errors. Metadata filtering uses JSON-like deep equality: scalars by value, arrays by ordered equality, objects by recursive equality ignoring key order.
+
+```go
+nodes, _ := store.ListNodesFiltered(akg.NodeFilter{
+    Type: "decision",
+    Tag:  "active",
+    Meta: map[string]any{"status": "accepted"},
+})
+```
+
+### GetNodes
+
+```go
+selected, err := store.GetNodes(refs []NodeRef) ([]*Node, error)
+```
+
+Returns one output position per input ref. Preserves input order. Preserves duplicate refs as duplicate output positions. Returns `nil` at positions where the referenced node does not exist.
+
+```go
+selected, _ := store.GetNodes([]akg.NodeRef{
+    {Type: "decision", ID: "d1"},
+    {Type: "task", ID: "t1"},
+})
+// selected[0] is *Node for d1, or nil if missing
+// selected[1] is *Node for t1, or nil if missing
+```
+
+### ListEdges
+
+```go
+edges, err := store.ListEdges(filter akg.EdgeFilter) ([]Edge, error)
+```
+
+`EdgeFilter` fields:
+
+| Field      | Type            | Matches |
+|------------|-----------------|---------|
+| `Relation` | `string`        | Edges with this relation (empty = all relations) |
+| `Meta`     | `map[string]any`| Edges whose metadata contains all key/value pairs |
+
+```go
+allEdges, _ := store.ListEdges(akg.EdgeFilter{})
+knowsEdges, _ := store.ListEdges(akg.EdgeFilter{Relation: "knows"})
+inferred, _ := store.ListEdges(akg.EdgeFilter{Meta: map[string]any{"source": "inferred"}})
+```
+
+### Snapshot
+
+```go
+snap, err := store.Snapshot() (Snapshot, error)
+```
+
+Returns all live nodes and all live edges in deterministic order. The `Snapshot` struct is JSON-serializable using standard library tooling.
+
+```go
+snap, _ := store.Snapshot()
+encoded, _ := json.Marshal(snap)
+fmt.Printf("%d nodes, %d edges\n", len(snap.Nodes), len(snap.Edges))
+```
+
+## Recency helpers
+
+Recency helpers return records sorted newest-first by `updatedAt` (Unix microseconds). Tie-breaker for nodes: `createdAt` desc, `type` asc, `id` asc. Tie-breaker for edges: `createdAt` desc, `from.type` asc, `from.id` asc, `relation` asc, `to.type` asc, `to.id` asc.
+
+Time-window bounds are inclusive: `sinceUpdatedAt <= updatedAt <= untilUpdatedAt`. Timestamps are Unix microseconds, matching `Node.UpdatedAt` and `Edge.UpdatedAt`.
+
+```go
+recentNodes, _ := store.RecentNodes(akg.RecencyFilter{
+    Type:  "task",
+    Tag:   "active",
+    Limit: 20,
+})
+
+taskRef := akg.NodeRef{Type: "task", ID: "t1"}
+recentEdges, _ := store.RecentEdges(akg.EdgeRecencyFilter{
+    From:     &taskRef,
+    Relation: "depends_on",
+    Limit:    20,
+})
+```
+
+`Limit 0` means unlimited. Positive `Limit` caps results after filtering and sorting. Negative `Limit` returns `ErrInvalidInput`.
+
+These helpers are not cursor-pagination APIs; callers that need duplicate-free checkpoint pagination should track a full cursor separately.
+
+## Edge reconciliation
+
+`ReconcileOutboundEdges` synchronizes the outbound edges for a source node and relation to exactly the desired target set. Missing desired edges are added; stale edges (same source+relation, not in desired) are removed; edges for other relations or other source nodes are unchanged.
+
+```go
+result, _ := store.ReconcileOutboundEdges(alice, "knows", []akg.NodeRef{bob}, akg.EdgeFields{Strength: 0.8})
+fmt.Println(result.Added, result.Removed, result.Unchanged)
+```
+
+## Cascade delete
+
+Normal `DeleteNode` rejects nodes with live edges. `DeleteNodeCascade` is an explicit opt-in helper that deletes all inbound and outbound edges first, then deletes the node. It is auditable: the returned `CascadeDeleteResult` reports how many edges and nodes were deleted.
+
+```go
+result, _ := store.DeleteNodeCascade("person", "alice")
+fmt.Println(result.DeletedInboundEdges, result.DeletedOutboundEdges, result.DeletedNode)
+```
+
+`deleteNode` behavior is unchanged — it still rejects nodes with live edges. Only callers that explicitly call `DeleteNodeCascade` get cascade behavior.
+
+## Concurrency and single-writer semantics
+
+**One active writer per `.akg` file.** Only one process should have a store open for writing at a time.
+
+Mutations (`PutNode`, `PutEdge`, `DeleteNode`, `DeleteEdge`) are held in memory until `Commit` or `Close` is called. They are not visible to other processes until after a successful commit or close.
+
+Opening the same file from two processes simultaneously, or from two goroutines without external serialization, produces undefined behavior — there is no lock file or advisory lock. If you need concurrent access, serialize writes at the application layer.
+
+Cross-platform lock-file or advisory locking is an explicit future enhancement.
 
 ## Run the example
 

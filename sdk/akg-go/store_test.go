@@ -182,7 +182,7 @@ func TestPutEdgeOutboundInboundAndRelationFilter(t *testing.T) {
 	st.state.now = func() timestampMicros { return 100 }
 	confidence := 0.9
 	if err := st.PutEdge(NodeRef{Type: "note", ID: "n1"}, "links_to", NodeRef{Type: "note", ID: "n2"}, EdgeFields{
-		Strength:   0.75,
+		Strength:   StrengthOf(0.75),
 		Confidence: &confidence,
 		Meta:       map[string]any{"source": "test"},
 	}); err != nil {
@@ -490,11 +490,11 @@ func TestEdgeRoundTripAcrossCloseReopenAndUpdate(t *testing.T) {
 	}
 
 	st.state.now = func() timestampMicros { return 10 }
-	if err := st.PutEdge(NodeRef{Type: "note", ID: "n1"}, "links_to", NodeRef{Type: "note", ID: "n2"}, EdgeFields{Strength: 0.4}); err != nil {
+	if err := st.PutEdge(NodeRef{Type: "note", ID: "n1"}, "links_to", NodeRef{Type: "note", ID: "n2"}, EdgeFields{Strength: StrengthOf(0.4)}); err != nil {
 		t.Fatalf("PutEdge initial: %v", err)
 	}
 	st.state.now = func() timestampMicros { return 25 }
-	if err := st.PutEdge(NodeRef{Type: "note", ID: "n1"}, "links_to", NodeRef{Type: "note", ID: "n2"}, EdgeFields{Strength: 0.8}); err != nil {
+	if err := st.PutEdge(NodeRef{Type: "note", ID: "n1"}, "links_to", NodeRef{Type: "note", ID: "n2"}, EdgeFields{Strength: StrengthOf(0.8)}); err != nil {
 		t.Fatalf("PutEdge update: %v", err)
 	}
 	if err := st.Close(); err != nil {
@@ -865,4 +865,672 @@ func TestTagArrayConstraints(t *testing.T) {
 	if _, err := st.PutNode("note", "n2", NodeFields{Title: "t"}, dups); !errors.Is(err, ErrInvalidInput) {
 		t.Fatalf("duplicate tags: expected ErrInvalidInput, got %v", err)
 	}
+}
+
+// --- SDK-PARITY-001: edge strength default ---
+
+func TestEdgeStrengthDefaultIs05(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "strength-default.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	alice, _ := st.PutNode("person", "alice", NodeFields{Title: "Alice"}, nil)
+	bob, _ := st.PutNode("person", "bob", NodeFields{Title: "Bob"}, nil)
+	if err := st.PutEdge(alice, "knows", bob, EdgeFields{}); err != nil {
+		t.Fatalf("PutEdge: %v", err)
+	}
+	edges, err := st.OutboundEdges(alice, "knows")
+	if err != nil {
+		t.Fatalf("OutboundEdges: %v", err)
+	}
+	if len(edges) != 1 || edges[0].Strength != 0.5 {
+		t.Fatalf("expected strength 0.5, got %v", edges[0].Strength)
+	}
+}
+
+func TestEdgeStrengthExplicitZeroRoundTrips(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "strength-zero.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	alice, _ := st.PutNode("person", "alice", NodeFields{Title: "Alice"}, nil)
+	bob, _ := st.PutNode("person", "bob", NodeFields{Title: "Bob"}, nil)
+	if err := st.PutEdge(alice, "knows", bob, EdgeFields{Strength: StrengthOf(0.0)}); err != nil {
+		t.Fatalf("PutEdge: %v", err)
+	}
+	edges, err := st.OutboundEdges(alice, "knows")
+	if err != nil {
+		t.Fatalf("OutboundEdges: %v", err)
+	}
+	if len(edges) != 1 || edges[0].Strength != 0.0 {
+		t.Fatalf("expected strength 0.0, got %v", edges[0].Strength)
+	}
+}
+
+func TestEdgeStrengthExplicitRoundTrips(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "strength-explicit.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	alice, _ := st.PutNode("person", "alice", NodeFields{Title: "Alice"}, nil)
+	bob, _ := st.PutNode("person", "bob", NodeFields{Title: "Bob"}, nil)
+	if err := st.PutEdge(alice, "knows", bob, EdgeFields{Strength: StrengthOf(0.75)}); err != nil {
+		t.Fatalf("PutEdge: %v", err)
+	}
+	edges, err := st.OutboundEdges(alice, "knows")
+	if err != nil {
+		t.Fatalf("OutboundEdges: %v", err)
+	}
+	if len(edges) != 1 || edges[0].Strength != 0.75 {
+		t.Fatalf("expected strength 0.75, got %v", edges[0].Strength)
+	}
+	// round-trip through commit and reopen
+	if err := st.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+	st2, err := Open(path)
+	if err != nil {
+		t.Fatalf("reopen: %v", err)
+	}
+	edges2, err := st2.OutboundEdges(alice, "knows")
+	if err != nil {
+		t.Fatalf("OutboundEdges after reopen: %v", err)
+	}
+	if len(edges2) != 1 || edges2[0].Strength != 0.75 {
+		t.Fatalf("expected strength 0.75 after reopen, got %v", edges2[0].Strength)
+	}
+}
+
+// --- SDK-PARITY-002: compaction ---
+
+func TestCompactPendingMutationsCommittedBeforeCompaction(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "compact-pending.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	if _, err := st.PutNode("note", "n1", NodeFields{Title: "hello"}, nil); err != nil {
+		t.Fatalf("PutNode: %v", err)
+	}
+	// Do not commit — pending mutation should be committed by Compact.
+	if err := st.Compact(); err != nil {
+		t.Fatalf("Compact: %v", err)
+	}
+	node, err := st.GetNode("note", "n1")
+	if err != nil || node == nil {
+		t.Fatalf("node should be present after Compact: err=%v node=%v", err, node)
+	}
+}
+
+func TestCompactNoWALAfterCompaction(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "compact-wal.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	alice, _ := st.PutNode("person", "alice", NodeFields{Title: "Alice"}, nil)
+	bob, _ := st.PutNode("person", "bob", NodeFields{Title: "Bob"}, nil)
+	if err := st.PutEdge(alice, "knows", bob, EdgeFields{}); err != nil {
+		t.Fatalf("PutEdge: %v", err)
+	}
+	if err := st.DeleteEdge(alice, "knows", bob); err != nil {
+		t.Fatalf("DeleteEdge: %v", err)
+	}
+	if err := st.Compact(); err != nil {
+		t.Fatalf("Compact: %v", err)
+	}
+	// The file should have no WAL section.
+	fileBytes, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("ReadFile: %v", err)
+	}
+	c, err := decodeContainer(fileBytes)
+	if err != nil {
+		t.Fatalf("decodeContainer: %v", err)
+	}
+	if c.WAL != nil {
+		t.Fatalf("expected no WAL after compaction, got WAL len=%d", len(c.WAL))
+	}
+}
+
+func TestCompactReopenPreservesGraph(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "compact-reopen.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	alice, _ := st.PutNode("person", "alice", NodeFields{Title: "Alice"}, nil)
+	bob, _ := st.PutNode("person", "bob", NodeFields{Title: "Bob"}, nil)
+	if err := st.PutEdge(alice, "knows", bob, EdgeFields{Strength: StrengthOf(0.7)}); err != nil {
+		t.Fatalf("PutEdge: %v", err)
+	}
+	if err := st.Compact(); err != nil {
+		t.Fatalf("Compact: %v", err)
+	}
+	// Store still usable after compaction.
+	nodes, err := st.ListNodes("")
+	if err != nil || len(nodes) != 2 {
+		t.Fatalf("expected 2 nodes after Compact, got %v err=%v", len(nodes), err)
+	}
+	if err := st.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+	// Reopen should have the same logical content.
+	st2, err := Open(path)
+	if err != nil {
+		t.Fatalf("reopen: %v", err)
+	}
+	nodes2, err := st2.ListNodes("")
+	if err != nil || len(nodes2) != 2 {
+		t.Fatalf("expected 2 nodes after reopen, got %v err=%v", len(nodes2), err)
+	}
+	edges2, err := st2.ListEdges(EdgeFilter{})
+	if err != nil || len(edges2) != 1 || edges2[0].Strength != 0.7 {
+		t.Fatalf("expected 1 edge with strength 0.7 after reopen, got %v err=%v", edges2, err)
+	}
+}
+
+// --- SDK-PARITY-003: global edge listing and snapshots ---
+
+func TestListEdgesEmptyFilterReturnsAll(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "list-edges.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	n1, _ := st.PutNode("note", "n1", NodeFields{Title: "one"}, nil)
+	n2, _ := st.PutNode("note", "n2", NodeFields{Title: "two"}, nil)
+	n3, _ := st.PutNode("note", "n3", NodeFields{Title: "three"}, nil)
+	if err := st.PutEdge(n1, "links_to", n2, EdgeFields{}); err != nil {
+		t.Fatalf("PutEdge: %v", err)
+	}
+	if err := st.PutEdge(n2, "mentions", n3, EdgeFields{}); err != nil {
+		t.Fatalf("PutEdge: %v", err)
+	}
+	if err := st.PutEdge(n1, "mentions", n3, EdgeFields{}); err != nil {
+		t.Fatalf("PutEdge: %v", err)
+	}
+	edges, err := st.ListEdges(EdgeFilter{})
+	if err != nil {
+		t.Fatalf("ListEdges: %v", err)
+	}
+	if len(edges) != 3 {
+		t.Fatalf("expected 3 edges, got %d", len(edges))
+	}
+}
+
+func TestListEdgesRelationFilter(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "list-edges-rel.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	n1, _ := st.PutNode("note", "n1", NodeFields{Title: "one"}, nil)
+	n2, _ := st.PutNode("note", "n2", NodeFields{Title: "two"}, nil)
+	n3, _ := st.PutNode("note", "n3", NodeFields{Title: "three"}, nil)
+	if err := st.PutEdge(n1, "links_to", n2, EdgeFields{}); err != nil {
+		t.Fatalf("PutEdge: %v", err)
+	}
+	if err := st.PutEdge(n1, "mentions", n3, EdgeFields{}); err != nil {
+		t.Fatalf("PutEdge: %v", err)
+	}
+	edges, err := st.ListEdges(EdgeFilter{Relation: "links_to"})
+	if err != nil {
+		t.Fatalf("ListEdges: %v", err)
+	}
+	if len(edges) != 1 || edges[0].Relation != "links_to" {
+		t.Fatalf("expected 1 links_to edge, got %v", edges)
+	}
+}
+
+func TestListEdgesMetaFilter(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "list-edges-meta.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	n1, _ := st.PutNode("note", "n1", NodeFields{Title: "one"}, nil)
+	n2, _ := st.PutNode("note", "n2", NodeFields{Title: "two"}, nil)
+	n3, _ := st.PutNode("note", "n3", NodeFields{Title: "three"}, nil)
+	if err := st.PutEdge(n1, "links_to", n2, EdgeFields{Meta: map[string]any{"source": "inferred"}}); err != nil {
+		t.Fatalf("PutEdge: %v", err)
+	}
+	if err := st.PutEdge(n1, "links_to", n3, EdgeFields{Meta: map[string]any{"source": "manual"}}); err != nil {
+		t.Fatalf("PutEdge: %v", err)
+	}
+	edges, err := st.ListEdges(EdgeFilter{Meta: map[string]any{"source": "inferred"}})
+	if err != nil {
+		t.Fatalf("ListEdges: %v", err)
+	}
+	if len(edges) != 1 || edges[0].To.ID != "n2" {
+		t.Fatalf("expected 1 inferred edge to n2, got %v", edges)
+	}
+}
+
+func TestListEdgesRelationAndMetaAND(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "list-edges-and.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	n1, _ := st.PutNode("note", "n1", NodeFields{Title: "one"}, nil)
+	n2, _ := st.PutNode("note", "n2", NodeFields{Title: "two"}, nil)
+	n3, _ := st.PutNode("note", "n3", NodeFields{Title: "three"}, nil)
+	if err := st.PutEdge(n1, "links_to", n2, EdgeFields{Meta: map[string]any{"source": "inferred"}}); err != nil {
+		t.Fatalf("PutEdge: %v", err)
+	}
+	if err := st.PutEdge(n1, "mentions", n3, EdgeFields{Meta: map[string]any{"source": "inferred"}}); err != nil {
+		t.Fatalf("PutEdge: %v", err)
+	}
+	edges, err := st.ListEdges(EdgeFilter{Relation: "links_to", Meta: map[string]any{"source": "inferred"}})
+	if err != nil {
+		t.Fatalf("ListEdges: %v", err)
+	}
+	if len(edges) != 1 || edges[0].Relation != "links_to" {
+		t.Fatalf("expected 1 edge, got %v", edges)
+	}
+}
+
+func TestSnapshotAllLiveNodesAndEdges(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "snapshot.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	n1, _ := st.PutNode("note", "n1", NodeFields{Title: "one"}, nil)
+	n2, _ := st.PutNode("note", "n2", NodeFields{Title: "two"}, nil)
+	if err := st.PutEdge(n1, "links_to", n2, EdgeFields{}); err != nil {
+		t.Fatalf("PutEdge: %v", err)
+	}
+	snap, err := st.Snapshot()
+	if err != nil {
+		t.Fatalf("Snapshot: %v", err)
+	}
+	if len(snap.Nodes) != 2 || len(snap.Edges) != 1 {
+		t.Fatalf("expected 2 nodes and 1 edge, got %d/%d", len(snap.Nodes), len(snap.Edges))
+	}
+}
+
+// --- SDK-PARITY-004: node filtering and batch inspection ---
+
+func TestListNodesFilteredTypeAndTag(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "filter-nodes.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	st.PutNode("person", "alice", NodeFields{Title: "Alice"}, []string{"active"})
+	st.PutNode("person", "bob", NodeFields{Title: "Bob"}, []string{"inactive"})
+	st.PutNode("task", "t1", NodeFields{Title: "Task"}, []string{"active"})
+
+	nodes, err := st.ListNodesFiltered(NodeFilter{Type: "person", Tag: "active"})
+	if err != nil {
+		t.Fatalf("ListNodesFiltered: %v", err)
+	}
+	if len(nodes) != 1 || nodes[0].ID != "alice" {
+		t.Fatalf("expected [alice], got %v", nodes)
+	}
+}
+
+func TestListNodesFilteredMetaDeepEquality(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "filter-meta.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	st.PutNode("note", "n1", NodeFields{Title: "one", Meta: map[string]any{"status": "accepted"}}, nil)
+	st.PutNode("note", "n2", NodeFields{Title: "two", Meta: map[string]any{"status": "rejected"}}, nil)
+	st.PutNode("note", "n3", NodeFields{Title: "three", Meta: map[string]any{"tags": []any{"a", "b"}}}, nil)
+	st.PutNode("note", "n4", NodeFields{Title: "four", Meta: map[string]any{"obj": map[string]any{"x": 1.0, "y": 2.0}}}, nil)
+
+	// scalar equality
+	nodes, err := st.ListNodesFiltered(NodeFilter{Meta: map[string]any{"status": "accepted"}})
+	if err != nil || len(nodes) != 1 || nodes[0].ID != "n1" {
+		t.Fatalf("scalar filter: expected [n1], got %v (err=%v)", nodes, err)
+	}
+
+	// array equality
+	nodes, err = st.ListNodesFiltered(NodeFilter{Meta: map[string]any{"tags": []any{"a", "b"}}})
+	if err != nil || len(nodes) != 1 || nodes[0].ID != "n3" {
+		t.Fatalf("array filter: expected [n3], got %v (err=%v)", nodes, err)
+	}
+
+	// object equality (key order ignored)
+	nodes, err = st.ListNodesFiltered(NodeFilter{Meta: map[string]any{"obj": map[string]any{"y": 2.0, "x": 1.0}}})
+	if err != nil || len(nodes) != 1 || nodes[0].ID != "n4" {
+		t.Fatalf("object filter: expected [n4], got %v (err=%v)", nodes, err)
+	}
+
+	// missing key excludes node
+	nodes, err = st.ListNodesFiltered(NodeFilter{Meta: map[string]any{"nonexistent": "x"}})
+	if err != nil || len(nodes) != 0 {
+		t.Fatalf("missing key: expected empty, got %v (err=%v)", nodes, err)
+	}
+}
+
+func TestGetNodesPreservesOrderAndDuplicates(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "get-nodes.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	st.PutNode("note", "n1", NodeFields{Title: "one"}, nil)
+	st.PutNode("note", "n2", NodeFields{Title: "two"}, nil)
+
+	refs := []NodeRef{
+		{Type: "note", ID: "n2"},
+		{Type: "note", ID: "n1"},
+		{Type: "note", ID: "missing"},
+		{Type: "note", ID: "n2"},
+	}
+	nodes, err := st.GetNodes(refs)
+	if err != nil {
+		t.Fatalf("GetNodes: %v", err)
+	}
+	if len(nodes) != 4 {
+		t.Fatalf("expected 4 positions, got %d", len(nodes))
+	}
+	if nodes[0] == nil || nodes[0].ID != "n2" {
+		t.Fatalf("position 0: expected n2, got %v", nodes[0])
+	}
+	if nodes[1] == nil || nodes[1].ID != "n1" {
+		t.Fatalf("position 1: expected n1, got %v", nodes[1])
+	}
+	if nodes[2] != nil {
+		t.Fatalf("position 2: expected nil for missing, got %v", nodes[2])
+	}
+	if nodes[3] == nil || nodes[3].ID != "n2" {
+		t.Fatalf("position 3: expected n2 duplicate, got %v", nodes[3])
+	}
+}
+
+func TestListNodesFilteredUnknownTypeReturnsEmpty(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "filter-unknown.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	st.PutNode("note", "n1", NodeFields{Title: "one"}, nil)
+	nodes, err := st.ListNodesFiltered(NodeFilter{Type: "nonexistent"})
+	if err != nil || len(nodes) != 0 {
+		t.Fatalf("unknown type: expected empty, got %v (err=%v)", nodes, err)
+	}
+}
+
+// --- SDK-PARITY-005: recency helpers ---
+
+func TestRecentNodesNewestFirst(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "recency-nodes.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	st.state.now = func() timestampMicros { return 100 }
+	st.PutNode("task", "t1", NodeFields{Title: "Task1"}, nil)
+	st.state.now = func() timestampMicros { return 200 }
+	st.PutNode("task", "t2", NodeFields{Title: "Task2"}, nil)
+	st.state.now = func() timestampMicros { return 300 }
+	st.PutNode("task", "t3", NodeFields{Title: "Task3"}, nil)
+
+	nodes, err := st.RecentNodes(RecencyFilter{})
+	if err != nil {
+		t.Fatalf("RecentNodes: %v", err)
+	}
+	if len(nodes) != 3 || nodes[0].ID != "t3" || nodes[1].ID != "t2" || nodes[2].ID != "t1" {
+		t.Fatalf("expected [t3,t2,t1], got %v", nodeIDs(nodes))
+	}
+}
+
+func TestRecentNodesSinceUntilBounds(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "recency-bounds.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	st.state.now = func() timestampMicros { return 100 }
+	st.PutNode("task", "t1", NodeFields{Title: "Task1"}, nil)
+	st.state.now = func() timestampMicros { return 200 }
+	st.PutNode("task", "t2", NodeFields{Title: "Task2"}, nil)
+	st.state.now = func() timestampMicros { return 300 }
+	st.PutNode("task", "t3", NodeFields{Title: "Task3"}, nil)
+
+	// inclusive since
+	nodes, err := st.RecentNodes(RecencyFilter{SinceUpdatedAt: 200})
+	if err != nil || len(nodes) != 2 {
+		t.Fatalf("since 200: expected 2, got %v (err=%v)", nodeIDs(nodes), err)
+	}
+	if nodes[0].ID != "t3" || nodes[1].ID != "t2" {
+		t.Fatalf("since 200: expected [t3,t2], got %v", nodeIDs(nodes))
+	}
+
+	// inclusive until
+	nodes, err = st.RecentNodes(RecencyFilter{UntilUpdatedAt: 200})
+	if err != nil || len(nodes) != 2 {
+		t.Fatalf("until 200: expected 2, got %v (err=%v)", nodeIDs(nodes), err)
+	}
+
+	// both bounds
+	nodes, err = st.RecentNodes(RecencyFilter{SinceUpdatedAt: 150, UntilUpdatedAt: 250})
+	if err != nil || len(nodes) != 1 || nodes[0].ID != "t2" {
+		t.Fatalf("range 150-250: expected [t2], got %v (err=%v)", nodeIDs(nodes), err)
+	}
+}
+
+func TestRecentNodesLimit(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "recency-limit.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	for i := 0; i < 5; i++ {
+		st.state.now = func() timestampMicros { return timestampMicros(i * 100) }
+		st.PutNode("task", "t"+string(rune('a'+i)), NodeFields{Title: "Task"}, nil)
+	}
+
+	// limit 0 = unlimited
+	nodes, err := st.RecentNodes(RecencyFilter{Limit: 0})
+	if err != nil || len(nodes) != 5 {
+		t.Fatalf("limit 0: expected 5, got %v (err=%v)", len(nodes), err)
+	}
+
+	// positive limit
+	nodes, err = st.RecentNodes(RecencyFilter{Limit: 2})
+	if err != nil || len(nodes) != 2 {
+		t.Fatalf("limit 2: expected 2, got %v (err=%v)", len(nodes), err)
+	}
+
+	// negative limit is invalid
+	if _, err := st.RecentNodes(RecencyFilter{Limit: -1}); !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("negative limit: expected ErrInvalidInput, got %v", err)
+	}
+}
+
+func TestRecentEdgesEndpointAndRelationFilter(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "recency-edges.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	alice, _ := st.PutNode("person", "alice", NodeFields{Title: "Alice"}, nil)
+	bob, _ := st.PutNode("person", "bob", NodeFields{Title: "Bob"}, nil)
+	carol, _ := st.PutNode("person", "carol", NodeFields{Title: "Carol"}, nil)
+	st.state.now = func() timestampMicros { return 100 }
+	st.PutEdge(alice, "knows", bob, EdgeFields{})
+	st.state.now = func() timestampMicros { return 200 }
+	st.PutEdge(alice, "knows", carol, EdgeFields{})
+	st.state.now = func() timestampMicros { return 300 }
+	st.PutEdge(bob, "knows", carol, EdgeFields{})
+
+	// from filter
+	edges, err := st.RecentEdges(EdgeRecencyFilter{From: &alice})
+	if err != nil || len(edges) != 2 {
+		t.Fatalf("from alice: expected 2, got %v (err=%v)", len(edges), err)
+	}
+	// newest first
+	if edges[0].To.ID != "carol" || edges[1].To.ID != "bob" {
+		t.Fatalf("from alice order: expected [carol,bob], got [%v,%v]", edges[0].To.ID, edges[1].To.ID)
+	}
+
+	// to filter
+	edges, err = st.RecentEdges(EdgeRecencyFilter{To: &carol})
+	if err != nil || len(edges) != 2 {
+		t.Fatalf("to carol: expected 2, got %v (err=%v)", len(edges), err)
+	}
+
+	// relation filter
+	edges, err = st.RecentEdges(EdgeRecencyFilter{Relation: "knows", From: &alice})
+	if err != nil || len(edges) != 2 {
+		t.Fatalf("relation+from: expected 2, got %v (err=%v)", len(edges), err)
+	}
+
+	// negative limit is invalid
+	if _, err := st.RecentEdges(EdgeRecencyFilter{Limit: -1}); !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("negative limit: expected ErrInvalidInput, got %v", err)
+	}
+}
+
+// --- SDK-PARITY-006: edge reconciliation ---
+
+func TestReconcileOutboundEdgesAddMissing(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "reconcile-add.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	alice, _ := st.PutNode("person", "alice", NodeFields{Title: "Alice"}, nil)
+	bob, _ := st.PutNode("person", "bob", NodeFields{Title: "Bob"}, nil)
+	carol, _ := st.PutNode("person", "carol", NodeFields{Title: "Carol"}, nil)
+
+	result, err := st.ReconcileOutboundEdges(alice, "knows", []NodeRef{bob, carol}, EdgeFields{Strength: StrengthOf(0.8)})
+	if err != nil {
+		t.Fatalf("ReconcileOutboundEdges: %v", err)
+	}
+	if result.Added != 2 || result.Removed != 0 || result.Unchanged != 0 {
+		t.Fatalf("expected Added=2 Removed=0 Unchanged=0, got %+v", result)
+	}
+	edges, _ := st.OutboundEdges(alice, "knows")
+	if len(edges) != 2 {
+		t.Fatalf("expected 2 edges, got %d", len(edges))
+	}
+}
+
+func TestReconcileOutboundEdgesRemoveStale(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "reconcile-remove.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	alice, _ := st.PutNode("person", "alice", NodeFields{Title: "Alice"}, nil)
+	bob, _ := st.PutNode("person", "bob", NodeFields{Title: "Bob"}, nil)
+	carol, _ := st.PutNode("person", "carol", NodeFields{Title: "Carol"}, nil)
+	st.PutEdge(alice, "knows", bob, EdgeFields{})
+	st.PutEdge(alice, "knows", carol, EdgeFields{})
+
+	// Reconcile to only bob
+	result, err := st.ReconcileOutboundEdges(alice, "knows", []NodeRef{bob}, EdgeFields{})
+	if err != nil {
+		t.Fatalf("ReconcileOutboundEdges: %v", err)
+	}
+	if result.Added != 0 || result.Removed != 1 || result.Unchanged != 1 {
+		t.Fatalf("expected Added=0 Removed=1 Unchanged=1, got %+v", result)
+	}
+	edges, _ := st.OutboundEdges(alice, "knows")
+	if len(edges) != 1 || edges[0].To.ID != "bob" {
+		t.Fatalf("expected only bob edge, got %v", edges)
+	}
+}
+
+func TestReconcileOutboundEdgesUnrelatedUnchanged(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "reconcile-unrelated.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	alice, _ := st.PutNode("person", "alice", NodeFields{Title: "Alice"}, nil)
+	bob, _ := st.PutNode("person", "bob", NodeFields{Title: "Bob"}, nil)
+	carol, _ := st.PutNode("person", "carol", NodeFields{Title: "Carol"}, nil)
+	// Different relation: "likes"
+	st.PutEdge(alice, "likes", carol, EdgeFields{})
+
+	_, err = st.ReconcileOutboundEdges(alice, "knows", []NodeRef{bob}, EdgeFields{})
+	if err != nil {
+		t.Fatalf("ReconcileOutboundEdges: %v", err)
+	}
+	// "likes" edge should still exist
+	likes, _ := st.OutboundEdges(alice, "likes")
+	if len(likes) != 1 {
+		t.Fatalf("unrelated 'likes' edge removed, should be unchanged")
+	}
+}
+
+// --- SDK-PARITY-007: cascade delete ---
+
+func TestDeleteNodeCascadeRemovesEdgesAndNode(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "cascade.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	alice, _ := st.PutNode("person", "alice", NodeFields{Title: "Alice"}, nil)
+	bob, _ := st.PutNode("person", "bob", NodeFields{Title: "Bob"}, nil)
+	carol, _ := st.PutNode("person", "carol", NodeFields{Title: "Carol"}, nil)
+	st.PutEdge(alice, "knows", bob, EdgeFields{})   // outbound from alice
+	st.PutEdge(carol, "knows", alice, EdgeFields{}) // inbound to alice
+
+	result, err := st.DeleteNodeCascade("person", "alice")
+	if err != nil {
+		t.Fatalf("DeleteNodeCascade: %v", err)
+	}
+	if result.DeletedInboundEdges != 1 || result.DeletedOutboundEdges != 1 || !result.DeletedNode {
+		t.Fatalf("unexpected result: %+v", result)
+	}
+	node, _ := st.GetNode("person", "alice")
+	if node != nil {
+		t.Fatal("alice should be absent after cascade delete")
+	}
+	edges, _ := st.OutboundEdges(bob, "knows")
+	_ = edges
+	inbound, _ := st.InboundEdges(NodeRef{Type: "person", ID: "bob"}, "")
+	if len(inbound) != 0 {
+		t.Fatalf("expected no inbound edges to bob, got %d", len(inbound))
+	}
+}
+
+func TestDeleteNodeNormalStillBlockedByEdges(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "no-cascade.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	alice, _ := st.PutNode("person", "alice", NodeFields{Title: "Alice"}, nil)
+	bob, _ := st.PutNode("person", "bob", NodeFields{Title: "Bob"}, nil)
+	st.PutEdge(alice, "knows", bob, EdgeFields{})
+
+	if err := st.DeleteNode("person", "alice"); !errors.Is(err, ErrInvalidInput) {
+		t.Fatalf("expected ErrInvalidInput when node has edges, got %v", err)
+	}
+}
+
+func TestDeleteNodeCascadeNotFound(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "cascade-notfound.akg")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	if _, err := st.DeleteNodeCascade("person", "nonexistent"); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("expected ErrNotFound, got %v", err)
+	}
+}
+
+// --- helpers ---
+
+func nodeIDs(nodes []Node) []string {
+	ids := make([]string, len(nodes))
+	for i, n := range nodes {
+		ids[i] = n.ID
+	}
+	return ids
 }

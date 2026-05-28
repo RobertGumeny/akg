@@ -141,11 +141,11 @@ Writes or replaces the edge at `(fromRef, relation, toRef)`. Both referenced nod
 
 | Field        | Required | Type                      | Default |
 |--------------|----------|---------------------------|---------|
-| `strength`   | no       | `number`                  | `0`     |
+| `strength`   | no       | `number`                  | `0.5`   |
 | `confidence` | no       | `number \| null`          | `null`  |
 | `meta`       | no       | `Record<string, unknown>` | `{}`    |
 
-**`strength`** is a caller-defined weight for the edge — how strongly the relationship holds. The SDK stores and returns it as-is; no semantic is imposed. Use it for ranking, sorting, or filtering (e.g. `0.0`–`1.0` for weak-to-strong, or an integer priority). Default `0`.
+**`strength`** is a caller-defined weight for the edge — how strongly the relationship holds. The SDK stores and returns it as-is; no semantic is imposed. Use it for ranking, sorting, or filtering (e.g. `0.0`–`1.0` for weak-to-strong, or an integer priority). If omitted (`undefined` in `EdgeFields`), the AKG v1 spec default of `0.5` is applied.
 
 **`confidence`** represents how certain you are that the edge is correct — for example when it was inferred rather than asserted. `null` means no confidence value was recorded (i.e. the edge was asserted directly). When set, the convention is `0.0`–`1.0`. The SDK does not enforce a range. Default `null`.
 
@@ -167,11 +167,7 @@ const edges: Edge[] = store.outboundEdges(nodeRef: NodeRef, relation?: string)
 const edges: Edge[] = store.inboundEdges(nodeRef: NodeRef, relation?: string)
 ```
 
-To filter by both type and tag, call `listNodes(typeName)` and filter the result:
-
-```typescript
-const activeResearchers = store.listNodes('person').filter(n => n.tags.includes('researcher'));
-```
+To filter by both type and tag, call `listNodesFiltered` (see [Filtering and inspection helpers](#filtering-and-inspection-helpers)), or call `listNodes(typeName)` and filter the result.
 
 ### Metadata fields
 
@@ -269,9 +265,150 @@ const ref = store.putNode('person', '', { title: 'New person' }, []);
 console.log(ref.id); // e.g. "01J2K3..."
 ```
 
-## Concurrency
+## Compaction
 
-A store is not safe for concurrent access. Only one process should open a given `.akg` file at a time. Opening the same file from two processes simultaneously produces undefined behavior — there is no lock file or advisory lock. If you need concurrent access, serialize it at the application layer.
+```typescript
+await store.compact(): Promise<void>
+```
+
+`compact` rewrites the `.akg` file to contain only live records, discarding all tombstones and prior WAL history. Before compacting, it automatically commits any pending in-memory mutations. If the auto-commit fails, compaction does not run.
+
+After a successful compaction:
+- The logical graph content (nodes and edges) is unchanged.
+- The file contains no WAL section.
+- The open store remains fully usable.
+
+**Compaction is always caller-triggered — it is never automatic.** Callers that do not call `compact` will accumulate WAL entries over time; this is safe but eventually increases file size.
+
+```typescript
+store.deleteEdge(alice, 'knows', bob);
+await store.compact();
+// file now contains only live records; no WAL, no tombstones
+const nodes = store.listNodes();
+```
+
+## Filtering and inspection helpers
+
+### listNodesFiltered
+
+```typescript
+store.listNodesFiltered(filter: NodeFilter): Node[]
+```
+
+`NodeFilter` fields:
+
+| Field  | Type                      | Matches |
+|--------|---------------------------|---------|
+| `type` | `string`                  | Nodes of this type (omitted = all types) |
+| `tag`  | `string`                  | Nodes carrying this tag (omitted = all tags) |
+| `meta` | `Record<string, unknown>` | Nodes whose metadata contains all key/value pairs |
+
+Non-empty fields combine with AND semantics. Unknown types or tags return empty results rather than errors. Metadata filtering uses JSON-like deep equality: scalars by value, arrays by ordered equality, objects by recursive equality ignoring key order.
+
+```typescript
+const nodes = store.listNodesFiltered({
+  type: 'decision',
+  tag: 'active',
+  meta: { status: 'accepted' },
+});
+```
+
+### getNodes
+
+```typescript
+store.getNodes(refs: NodeRef[]): Array<Node | null>
+```
+
+Returns one output position per input ref. Preserves input order. Preserves duplicate refs as duplicate output positions. Returns `null` at positions where the referenced node does not exist.
+
+```typescript
+const selected = store.getNodes([
+  { type: 'decision', id: 'd1' },
+  { type: 'task', id: 't1' },
+]);
+// selected[0] is Node for d1, or null if missing
+// selected[1] is Node for t1, or null if missing
+```
+
+### listEdges
+
+```typescript
+store.listEdges(filter?: EdgeFilter): Edge[]
+```
+
+`EdgeFilter` fields:
+
+| Field      | Type                      | Matches |
+|------------|---------------------------|---------|
+| `relation` | `string`                  | Edges with this relation (omitted = all relations) |
+| `meta`     | `Record<string, unknown>` | Edges whose metadata contains all key/value pairs |
+
+```typescript
+const allEdges = store.listEdges();
+const knowsEdges = store.listEdges({ relation: 'knows' });
+const inferred = store.listEdges({ meta: { source: 'inferred' } });
+```
+
+### snapshot
+
+```typescript
+store.snapshot(): Snapshot
+```
+
+Returns all live nodes and all live edges in deterministic order. The `Snapshot` object is JSON-serializable.
+
+```typescript
+const snap = store.snapshot();
+const encoded = JSON.stringify(snap);
+console.log(`${snap.nodes.length} nodes, ${snap.edges.length} edges`);
+```
+
+## Recency helpers
+
+Recency helpers return records sorted newest-first by `updatedAt` (Unix microseconds). Tie-breaker for nodes: `createdAt` desc, `type` asc, `id` asc. Tie-breaker for edges: `createdAt` desc, `from.type` asc, `from.id` asc, `relation` asc, `to.type` asc, `to.id` asc.
+
+Time-window bounds are inclusive: `sinceUpdatedAt <= updatedAt <= untilUpdatedAt`. Timestamps are Unix microseconds, matching `Node.updatedAt` and `Edge.updatedAt`.
+
+```typescript
+const recentNodes = store.recentNodes({ type: 'task', tag: 'active', limit: 20 });
+
+const taskRef = { type: 'task', id: 't1' };
+const recentEdges = store.recentEdges({ from: taskRef, relation: 'depends_on', limit: 20 });
+```
+
+`limit` omitted or `0` means unlimited. Positive `limit` caps results after filtering and sorting. Negative `limit` throws `InvalidInputError`.
+
+These helpers are not cursor-pagination APIs; callers that need duplicate-free checkpoint pagination should track a full cursor separately.
+
+## Edge reconciliation
+
+`reconcileOutboundEdges` synchronizes the outbound edges for a source node and relation to exactly the desired target set. Missing desired edges are added; stale edges (same source+relation, not in desired) are removed; edges for other relations or other source nodes are unchanged.
+
+```typescript
+const result = store.reconcileOutboundEdges(alice, 'knows', [bob], { strength: 0.8 });
+console.log(result.added, result.removed, result.unchanged);
+```
+
+## Cascade delete
+
+Normal `deleteNode` rejects nodes with live edges. `deleteNodeCascade` is an explicit opt-in helper that deletes all inbound and outbound edges first, then deletes the node. It is auditable: the returned `CascadeDeleteResult` reports how many edges and nodes were deleted.
+
+```typescript
+const result = store.deleteNodeCascade('person', 'alice');
+console.log(result.deletedInboundEdges, result.deletedOutboundEdges, result.deletedNode);
+```
+
+`deleteNode` behavior is unchanged — it still rejects nodes with live edges. Only callers that explicitly call `deleteNodeCascade` get cascade behavior.
+
+## Concurrency and single-writer semantics
+
+**One active writer per `.akg` file.** Only one process should have a store open for writing at a time.
+
+Mutations (`putNode`, `putEdge`, `deleteNode`, `deleteEdge`) are held in memory until `commit` or `close` is called. They are not visible to other processes until after a successful commit or close.
+
+Opening the same file from two processes simultaneously, or concurrent access without external serialization, produces undefined behavior — there is no lock file or advisory lock. If you need concurrent access, serialize writes at the application layer.
+
+Cross-platform lock-file or advisory locking is an explicit future enhancement.
 
 ## Run the example
 
