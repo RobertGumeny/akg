@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.1.2
+
+### Added
+
+- **Docs CLI** — `akg-go-docs` binary with four sub-commands: `overview` (type-grouped summary of the API), `explain <Name>` (full detail for a symbol with its relations), `search <query>` (substring match across titles), and `dump [--format markdown|json]` (full graph export). The CLI reads from an embedded, pre-built AKG graph so no external files are needed at runtime.
+- **Embedded docs graph** — `docs` sub-package exposes the compiled `akg-go-docs.akg` graph as `docs.Graph ([]byte)`, enabling programmatic access to the documentation graph via `akg.OpenBytes`.
+- **`akg.OpenBytes`** — opens a store from an in-memory byte slice rather than a file path; used by the docs CLI and useful for testing or embedding pre-built graphs.
+
 ## v0.1.1
 
 ### Added

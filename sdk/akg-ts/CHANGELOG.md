@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.1.2
+
+### Added
+
+- **Docs CLI** — `akg-ts-docs` binary (via `npx akg-ts docs`) with four sub-commands: `overview` (type-grouped summary of the API), `explain <Name>` (full detail for a symbol with its relations), `search <query>` (substring match across titles), and `dump [--format markdown|json]` (full graph export). The CLI reads from a bundled, pre-built AKG graph so no external files are needed at runtime.
+- **Bundled docs graph** — `docs/akg-ts-docs.json` is the compiled documentation graph shipped with the package; the CLI loads it directly.
+
 ## v0.1.1
 
 ### Added
