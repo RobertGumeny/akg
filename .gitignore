@@ -30,6 +30,7 @@ go.work.sum
 # Keep curated fixtures under testdata/conformance tracked.
 *.akg
 !testdata/conformance/*.akg
+!testdata/behavior/*.akg
 *.akg.tmp
 *.akg.bak
 *.akg.compact
