@@ -468,7 +468,7 @@ describe('compact', () => {
     await s.close();
   });
 
-  it('produces a file with no WAL section after compaction', async () => {
+  it('produces a file with an empty WAL section after compaction', async () => {
     const { readFileSync } = await import('node:fs');
     const { decodeContainer } = await import('../src/internal/format.js');
     const s = await open(storePath);
@@ -480,7 +480,10 @@ describe('compact', () => {
     const file = readFileSync(storePath);
     const bytes = new Uint8Array(file.buffer, file.byteOffset, file.byteLength);
     const c = decodeContainer(bytes);
-    expect(c.wal).toBeNull();
+    // Compaction resets the WAL to an empty section (present but zero-length),
+    // matching the Go reference so incremental commit() can append onto it.
+    expect(c.wal).not.toBeNull();
+    expect(c.wal!.length).toBe(0);
     await s.close();
   });
 

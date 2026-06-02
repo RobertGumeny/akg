@@ -1,5 +1,5 @@
-import { readFileSync, writeFileSync, existsSync, mkdirSync, openSync, writeSync, fsyncSync, closeSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { readFileSync, existsSync, mkdirSync, openSync, writeSync, fsyncSync, closeSync, renameSync, unlinkSync, statSync } from 'node:fs';
+import { dirname, basename, join } from 'node:path';
 import { randomBytes } from 'node:crypto';
 import { NotFoundError, InvalidInputError, MissingRequiredFieldError } from './errors.js';
 import type {
@@ -137,34 +137,60 @@ interface PendingRecord {
   payload: Uint8Array;
 }
 
+// Writer-side flush thresholds (spec docs/spec/05-wal.md:116-121, mirrored from
+// the Go reference internal/store/file.go:16-17). The first threshold reached
+// wins. This is a durability safety valve, not a compaction trigger.
+const WAL_ENTRY_FLUSH_THRESHOLD = 1000;
+const WAL_BYTE_FLUSH_THRESHOLD = 10 * 1024 * 1024;
+
+// Per-record WAL framing overhead: 13-byte header + 4-byte trailing CRC. Used to
+// estimate pending byte growth for the flush policy.
+const WAL_RECORD_OVERHEAD = 13 + 4;
+
 export class Store {
   private path: string;
   private state: StoreState;
   private pending: PendingRecord[];
-  private committedWAL: WALRecord[];
+  private pendingBytes: number;
   private nextWALSeq: bigint;
   private closed: boolean;
+  // Byte/entry length of the persisted WAL prefix up to and including the last
+  // COMMIT record. commit() appends new records after walAppendBytes instead of
+  // rewriting the WAL. compact() resets both to 0.
+  private walAppendBytes: number;
+  private walAppendEntries: number;
+  // Totals for the uncompacted WAL after the most recent commit. Drive the
+  // flush policy and the hasUncompactedWAL accessor.
+  private uncompactedWALEntries: number;
+  private uncompactedWALBytes: number;
 
   private constructor(
     path: string,
     state: StoreState,
-    committedWAL: WALRecord[],
     nextWALSeq: bigint,
+    walAppendBytes: number,
+    walAppendEntries: number,
+    uncompactedWALEntries: number,
+    uncompactedWALBytes: number,
   ) {
     this.path = path;
     this.state = state;
     this.pending = [];
-    this.committedWAL = committedWAL;
+    this.pendingBytes = 0;
     this.nextWALSeq = nextWALSeq;
     this.closed = false;
+    this.walAppendBytes = walAppendBytes;
+    this.walAppendEntries = walAppendEntries;
+    this.uncompactedWALEntries = uncompactedWALEntries;
+    this.uncompactedWALBytes = uncompactedWALBytes;
   }
 
   static async open(path: string): Promise<Store> {
     if (!existsSync(path)) {
       const dir = dirname(path);
       mkdirSync(dir, { recursive: true });
-      const st = new Store(path, newStoreState(), [], 1n);
-      await st.writeFile();
+      const st = new Store(path, newStoreState(), 1n, 0, 0, 0, 0);
+      st.writeSnapshot();
       return st;
     }
     const file = readFileSync(path);
@@ -186,8 +212,9 @@ export class Store {
     }
 
     const state = hydrateDataEntries(entries);
-    const [committedWAL, nextSeq] = inspectAndReplayWAL(state, c.wal);
-    return new Store(path, state, committedWAL, nextSeq);
+    const info = inspectAndReplayWAL(state, c.wal);
+    const walBytes = c.wal ? c.wal.length : 0;
+    return new Store(path, state, info.next, info.appendBytes, info.appendEntries, info.entries, walBytes);
   }
 
   // ---- write operations (sync, in-memory) ---------------------------------
@@ -213,7 +240,7 @@ export class Store {
 
     const rec = putNodeInState(this.state, actualID, n, clock());
     const payload = encodeNodePutPayload({ id: rec.id, node: rec.node });
-    this.pending.push({ op: WAL_OP_PUT_NODE, payload });
+    this.stagePending(WAL_OP_PUT_NODE, payload);
     return { type: typeName, id: rec.id };
   }
 
@@ -273,7 +300,7 @@ export class Store {
 
     const rec = putEdgeInState(this.state, e, clock());
     const payload = encodeEdgePutPayload(rec);
-    this.pending.push({ op: WAL_OP_PUT_EDGE, payload });
+    this.stagePending(WAL_OP_PUT_EDGE, payload);
   }
 
   outboundEdges(nodeRef: NodeRef, relation?: string): Edge[] {
@@ -314,7 +341,7 @@ export class Store {
     }
     this.state.nodes.delete(k);
     const payload = encodeNodeDeletePayload({ type: typeName, id });
-    this.pending.push({ op: WAL_OP_DELETE_NODE, payload });
+    this.stagePending(WAL_OP_DELETE_NODE, payload);
   }
 
   deleteEdge(fromRef: NodeRef, relation: string, toRef: NodeRef): void {
@@ -326,7 +353,7 @@ export class Store {
     if (!this.state.edges.has(k)) throw new NotFoundError(`edge not found`);
     this.state.edges.delete(k);
     const payload = encodeEdgeDeletePayload({ fromType: fromRef.type, fromNode: fromRef.id, relation, toType: toRef.type, toNode: toRef.id });
-    this.pending.push({ op: WAL_OP_DELETE_EDGE, payload });
+    this.stagePending(WAL_OP_DELETE_EDGE, payload);
   }
 
   // ---- global edge listing and snapshots ---------------------------------
@@ -475,7 +502,7 @@ export class Store {
         const ek = edgeKey({ fromType: source.type, from: source.id, relation, toType: ref.type, to: ref.id });
         this.state.edges.delete(ek);
         const payload = encodeEdgeDeletePayload({ fromType: source.type, fromNode: source.id, relation, toType: ref.type, toNode: ref.id });
-        this.pending.push({ op: WAL_OP_DELETE_EDGE, payload });
+        this.stagePending(WAL_OP_DELETE_EDGE, payload);
         removed++;
       }
     }
@@ -497,7 +524,7 @@ export class Store {
         };
         const rec = putEdgeInState(this.state, e, clock());
         const payload = encodeEdgePutPayload(rec);
-        this.pending.push({ op: WAL_OP_PUT_EDGE, payload });
+        this.stagePending(WAL_OP_PUT_EDGE, payload);
         added++;
       }
     }
@@ -527,13 +554,13 @@ export class Store {
     for (const d of toDelete) {
       this.state.edges.delete(d.ek);
       const payload = encodeEdgeDeletePayload({ fromType: d.fromType, fromNode: d.fromNode, relation: d.relation, toType: d.toType, toNode: d.toNode });
-      this.pending.push({ op: WAL_OP_DELETE_EDGE, payload });
+      this.stagePending(WAL_OP_DELETE_EDGE, payload);
       if (d.isOutbound) deletedOutboundEdges++; else deletedInboundEdges++;
     }
 
     this.state.nodes.delete(nk);
     const payload = encodeNodeDeletePayload({ type: typeName, id });
-    this.pending.push({ op: WAL_OP_DELETE_NODE, payload });
+    this.stagePending(WAL_OP_DELETE_NODE, payload);
 
     return { deletedInboundEdges, deletedOutboundEdges, deletedNode: true };
   }
@@ -541,11 +568,19 @@ export class Store {
   // ---- internal inspection (for testing/conformance) ---------------------
 
   get hasUncompactedWAL(): boolean {
-    return this.committedWAL.length > 0;
+    return this.walAppendEntries > 0;
   }
 
   get nextWALSequence(): bigint {
     return this.nextWALSeq;
+  }
+
+  get uncompactedWALEntryCount(): number {
+    return this.uncompactedWALEntries;
+  }
+
+  get uncompactedWALByteCount(): number {
+    return this.uncompactedWALBytes;
   }
 
   // ---- lifecycle (async, I/O) ---------------------------------------------
@@ -556,20 +591,59 @@ export class Store {
   // remains fully usable. Compaction is never triggered automatically.
   async compact(): Promise<void> {
     if (this.closed) throw new InvalidInputError('store is closed');
-    await this.commit();
-    const entries = materializeDataEntries(this.state);
-    const data = encodeDataEntries(entries);
-    const keys = entries.map(e => e.key);
-    const bloom = encodeBloom(keys);
-    const file = encodeContainer({ data, bloom, wal: null });
-    writeFileAtomic(this.path, file);
-    this.committedWAL = [];
-    this.nextWALSeq = 1n;
+    this.commitSync();
+    this.writeSnapshot();
   }
 
   async commit(): Promise<void> {
+    this.commitSync();
+  }
+
+  async close(): Promise<void> {
+    if (this.closed) return;
+    this.commitSync();
+    this.closed = true;
+  }
+
+  // ---- internal -----------------------------------------------------------
+
+  // stagePending buffers a mutation record and, if the buffered or uncompacted
+  // WAL has crossed the spec flush thresholds, commits it automatically. The
+  // auto-flush is a durability safety valve (docs/spec/05-wal.md:112-123); it is
+  // never a compaction trigger.
+  private stagePending(op: number, payload: Uint8Array): void {
+    this.pending.push({ op, payload });
+    // Each persisted record carries the WAL record framing overhead too.
+    this.pendingBytes += payload.length + WAL_RECORD_OVERHEAD;
+    if (this.shouldAutoFlush()) {
+      this.commitSync();
+    }
+  }
+
+  private shouldAutoFlush(): boolean {
+    const entries = this.uncompactedWALEntries + this.pending.length;
+    const bytes = this.uncompactedWALBytes + this.pendingBytes;
+    return entries >= WAL_ENTRY_FLUSH_THRESHOLD || bytes >= WAL_BYTE_FLUSH_THRESHOLD;
+  }
+
+  // commitSync persists pending mutations by appending only the new WAL records
+  // (plus a COMMIT record) onto the existing persisted WAL prefix, reusing the
+  // file's Data and Bloom bytes unchanged. Mirrors the Go reference
+  // internal/store/file.go:148-193. compact() is the only path that rebuilds
+  // Data/Bloom and resets the WAL to empty.
+  private commitSync(): void {
     if (this.closed) throw new InvalidInputError('store is closed');
     if (this.pending.length === 0) return;
+
+    const file = readFileSync(this.path);
+    const bytes = new Uint8Array(file.buffer, file.byteOffset, file.byteLength);
+    const c = decodeContainer(bytes);
+    const existingWAL = c.wal ?? new Uint8Array(0);
+    if (this.walAppendBytes > existingWAL.length) {
+      throw new InvalidInputError('invalid wal replay: append offset past persisted WAL');
+    }
+    const walPrefix = existingWAL.slice(0, this.walAppendBytes);
+
     const records: WALRecord[] = [];
     let next = this.nextWALSeq;
     for (const p of this.pending) {
@@ -577,28 +651,38 @@ export class Store {
       next++;
     }
     records.push({ sequence: next, operation: WAL_OP_COMMIT, payload: new Uint8Array(0) });
-    this.committedWAL = [...this.committedWAL, ...records];
+    const encoded = encodeWALRecords(records);
+
+    const newWAL = new Uint8Array(walPrefix.length + encoded.length);
+    newWAL.set(walPrefix, 0);
+    newWAL.set(encoded, walPrefix.length);
+
+    const newFile = encodeContainer({ data: c.data, bloom: c.bloom, wal: newWAL });
+    writeFileAtomic(this.path, newFile);
+
     this.pending = [];
+    this.pendingBytes = 0;
     this.nextWALSeq = next + 1n;
-    await this.writeFile();
+    this.uncompactedWALEntries = this.walAppendEntries + records.length;
+    this.uncompactedWALBytes = newWAL.length;
+    this.walAppendEntries = this.uncompactedWALEntries;
+    this.walAppendBytes = this.uncompactedWALBytes;
   }
 
-  async close(): Promise<void> {
-    if (this.closed) return;
-    await this.commit();
-    this.closed = true;
-  }
-
-  // ---- internal -----------------------------------------------------------
-
-  private async writeFile(): Promise<void> {
+  // writeSnapshot rebuilds Data/Bloom from current live state and writes a file
+  // with an empty WAL section. Used for fresh-file creation and compaction.
+  private writeSnapshot(): void {
     const entries = materializeDataEntries(this.state);
     const data = encodeDataEntries(entries);
     const keys = entries.map(e => e.key);
     const bloom = encodeBloom(keys);
-    const walPayload = encodeWALRecords(this.committedWAL);
-    const file = encodeContainer({ data, bloom, wal: walPayload });
+    const file = encodeContainer({ data, bloom, wal: new Uint8Array(0) });
     writeFileAtomic(this.path, file);
+    this.nextWALSeq = 1n;
+    this.walAppendBytes = 0;
+    this.walAppendEntries = 0;
+    this.uncompactedWALEntries = 0;
+    this.uncompactedWALBytes = 0;
   }
 }
 
@@ -704,12 +788,23 @@ export function materializeDataEntries(state: StoreState): DataEntry[] {
   return entries;
 }
 
-function inspectAndReplayWAL(state: StoreState, walPayload: Uint8Array | null): [WALRecord[], bigint] {
-  if (!walPayload || walPayload.length === 0) return [[], 1n];
+interface WALInfo {
+  next: bigint;        // next WAL sequence number to assign
+  entries: number;     // total decoded WAL records (committed + trailing)
+  appendBytes: number; // byte length of the WAL prefix up to & incl. last COMMIT
+  appendEntries: number; // record count of that prefix
+}
+
+function inspectAndReplayWAL(state: StoreState, walPayload: Uint8Array | null): WALInfo {
+  if (!walPayload || walPayload.length === 0) {
+    return { next: 1n, entries: 0, appendBytes: 0, appendEntries: 0 };
+  }
 
   let next = 1n;
+  let entries = 0;
   const all: WALRecord[] = [];
   let lastCommit = -1;
+  let lastCommitEnd = 0;
   let pos = 0;
 
   while (pos < walPayload.length) {
@@ -722,12 +817,16 @@ function inspectAndReplayWAL(state: StoreState, walPayload: Uint8Array | null): 
       throw e;
     }
     all.push(r);
+    entries++;
     if (r.sequence >= next) next = r.sequence + 1n;
-    if (r.operation === WAL_OP_COMMIT) lastCommit = all.length - 1;
+    if (r.operation === WAL_OP_COMMIT) {
+      lastCommit = all.length - 1;
+      lastCommitEnd = pos + n;
+    }
     pos += n;
   }
 
-  if (lastCommit < 0) return [[], next];
+  if (lastCommit < 0) return { next, entries, appendBytes: 0, appendEntries: 0 };
 
   const committed = all.slice(0, lastCommit + 1);
   let prev = 0n;
@@ -769,7 +868,7 @@ function inspectAndReplayWAL(state: StoreState, walPayload: Uint8Array | null): 
     }
   }
 
-  return [committed, next];
+  return { next, entries, appendBytes: lastCommitEnd, appendEntries: lastCommit + 1 };
 }
 
 // ---- Node/Edge conversions -------------------------------------------------
@@ -877,12 +976,62 @@ function deepEqual(a: unknown, b: unknown): boolean {
 
 // ---- File I/O --------------------------------------------------------------
 
+// writeFileAtomic durably replaces path with data using the crash-atomic
+// sequence from the Go reference (internal/store/file.go:446): write a
+// same-directory temp file, fsync it, rename it over the target, then fsync the
+// directory. A crash at any point before the rename leaves the prior committed
+// file fully intact; the rename itself is atomic. On any error before the
+// rename, the temp file is removed.
 function writeFileAtomic(path: string, data: Uint8Array): void {
-  const fd = openSync(path, 'w');
+  const dir = dirname(path);
+  const base = basename(path);
+
+  // Preserve the existing file's permission bits if it is already present.
+  let mode = 0o666;
+  try {
+    mode = statSync(path).mode & 0o777;
+  } catch {
+    // Target does not exist yet; fall back to the default mode.
+  }
+
+  const tmpPath = join(dir, `.${base}.commit-${randomBytes(8).toString('hex')}`);
+  // 'wx' fails if the temp path somehow already exists, guaranteeing we never
+  // clobber an unrelated file with our half-written bytes.
+  const fd = openSync(tmpPath, 'wx', mode);
   try {
     writeSync(fd, data);
     fsyncSync(fd);
-  } finally {
     closeSync(fd);
+  } catch (e) {
+    try { closeSync(fd); } catch { /* fd may already be closed */ }
+    try { unlinkSync(tmpPath); } catch { /* best-effort cleanup */ }
+    throw e;
+  }
+
+  try {
+    renameSync(tmpPath, path);
+  } catch (e) {
+    try { unlinkSync(tmpPath); } catch { /* best-effort cleanup */ }
+    throw e;
+  }
+
+  // fsync the directory so the rename itself is durable.
+  fsyncDir(dir);
+}
+
+function fsyncDir(dir: string): void {
+  let dfd: number;
+  try {
+    dfd = openSync(dir, 'r');
+  } catch {
+    // Some platforms disallow opening a directory for fsync; best-effort only.
+    return;
+  }
+  try {
+    fsyncSync(dfd);
+  } catch {
+    // Directory fsync is a durability hint; ignore platform refusals.
+  } finally {
+    closeSync(dfd);
   }
 }

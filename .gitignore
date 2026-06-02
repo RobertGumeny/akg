@@ -31,6 +31,7 @@ go.work.sum
 *.akg
 !testdata/conformance/*.akg
 !testdata/behavior/*.akg
+!testdata/roundtrip/*.akg
 *.akg.tmp
 *.akg.bak
 *.akg.compact

@@ -192,6 +192,14 @@ Mutations (`putNode`, `putEdge`, `deleteNode`, `deleteEdge`) are held in memory 
 
 Call `commit` periodically in long-running processes where losing a batch of work would be costly. Call `close` when you're done with the store — it commits any outstanding mutations and releases the file handle. `close` is safe to call on a store with no pending mutations.
 
+A `commit` appends only the new mutation records (plus a `COMMIT` marker) to the file's WAL; it reuses the existing `Data`/`Bloom` bytes rather than rewriting the whole file. The file is replaced crash-atomically — the new bytes are written to a same-directory temp file, fsynced, and renamed over the target — so an interrupted write can never destroy the previously committed store.
+
+### Automatic flush policy
+
+To prevent unbounded in-memory or WAL growth, the SDK runs a writer-side safety valve: when the buffered pending mutations **or** the uncompacted WAL cross either of the spec-recommended thresholds — **1,000 entries** or **10 MB**, whichever is reached first — the store automatically performs a `commit()`, flushing the buffered records durably to disk.
+
+This valve is a **durability safeguard, not a compaction trigger**: it only appends to the WAL, exactly as a manual `commit()` would. It never rewrites the `Data` section or discards WAL history. Reclaiming space from accumulated WAL records still requires an explicit `compact()` (see [Compaction](#compaction)), which remains caller-triggered. The thresholds match the recommendations in `docs/spec/05-wal.md` and the Go reference SDK.
+
 ## Deleting nodes and edges
 
 ```typescript
@@ -275,7 +283,7 @@ await store.compact(): Promise<void>
 
 After a successful compaction:
 - The logical graph content (nodes and edges) is unchanged.
-- The file contains no WAL section.
+- The WAL is reset to empty (the file carries a zero-length WAL section).
 - The open store remains fully usable.
 
 **Compaction is always caller-triggered — it is never automatic.** Callers that do not call `compact` will accumulate WAL entries over time; this is safe but eventually increases file size.

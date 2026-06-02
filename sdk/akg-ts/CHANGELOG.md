@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.1.3
+
+### Added
+
+- **Automatic flush safety valve** — the store now auto-commits buffered mutations once the pending buffer **or** the uncompacted WAL crosses the spec-recommended thresholds (1,000 entries or 10 MB, whichever comes first; `docs/spec/05-wal.md`). This bounds in-memory and WAL growth in long-running writers without an explicit `commit()`. It is a durability safeguard only — it appends to the WAL exactly as a manual `commit()` would and never triggers compaction.
+- **WAL introspection accessors** — `store.uncompactedWALEntryCount` and `store.uncompactedWALByteCount` expose the size of the uncompacted WAL, mirroring the inputs to the flush policy.
+- **Cross-SDK round-trip coverage** — `npm run generate:roundtrip` writes a deterministic `testdata/roundtrip/ts-written.akg` fixture, and `test/roundtrip.test.ts` exercises the write → commit → close → reopen path, crash-atomicity, and the incremental-commit behavior. The Go SDK reads the same fixture to prove cross-SDK compatibility.
+
+### Changed
+
+- **Incremental `commit()`** — a commit now appends only the new mutation records (plus a `COMMIT` marker) to the file's WAL, reusing the existing `Data`/`Bloom` bytes instead of re-materializing and rewriting the whole file. Reclaiming WAL space still requires an explicit `compact()`.
+- **Crash-atomic file replacement** — every durable write now goes to a same-directory temp file that is fsynced, renamed over the target, and followed by a directory fsync. An interrupted write can no longer destroy the previously committed store; on error the temp file is cleaned up.
+- **`compact()` WAL section** — a compacted file now carries a zero-length WAL section rather than omitting the WAL section entirely, matching the Go reference SDK so incremental `commit()` can append onto it.
+
 ## v0.1.2
 
 ### Added
