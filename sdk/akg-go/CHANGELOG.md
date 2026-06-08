@@ -4,6 +4,8 @@
 
 ### Added
 
+- **Automatic flush safety valve** — the store now auto-commits buffered mutations once the pending buffer **or** the uncompacted WAL crosses the spec-recommended thresholds (1,000 entries or 10 MB, whichever comes first; `docs/spec/05-wal.md`). This bounds in-memory and WAL growth in long-running writers without an explicit `Commit()`, matching the TypeScript SDK. It is a durability safeguard only — it appends to the WAL exactly as a manual `Commit()` would and never triggers compaction.
+- **WAL introspection accessors** — `Store.UncompactedWALEntries()` and `Store.UncompactedWALBytes()` expose the size of the uncompacted WAL, mirroring the inputs to the flush policy and the TypeScript SDK's `uncompactedWALEntryCount` / `uncompactedWALByteCount`.
 - **`akg-go show <PATH>`** — renders a `.akg` file as readable text, grouping nodes by the types an application invented and printing each node's title and body, with edges listed as `from -relation-> to`. High-volume node types are collapsed unless `--all` is passed; `--json` emits the full `Snapshot`. The human-facing companion to the reference CLI's JSON `akg inspect`.
 
 ### Changed

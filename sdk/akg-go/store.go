@@ -16,6 +16,19 @@ var (
 	errInvalidDataPayload   = errors.New("invalid data payload")
 )
 
+// Writer-side flush thresholds (spec docs/spec/05-wal.md:116-121, matching the
+// Go reference internal/store/file.go:16-17 and the TypeScript SDK). The first
+// threshold reached wins. This is a durability safety valve, not a compaction
+// trigger: an auto-flush appends a COMMIT exactly as a manual Commit would and
+// never rewrites Data/Bloom or discards WAL history.
+const (
+	walEntryFlushThreshold = 1000
+	walByteFlushThreshold  = 10 * 1024 * 1024
+	// walRecordOverhead is the per-record WAL framing (13-byte header + 4-byte
+	// trailing CRC) used to estimate pending byte growth for the flush policy.
+	walRecordOverhead = 13 + 4
+)
+
 type pendingWALRecord struct {
 	op      walOperation
 	payload []byte
@@ -29,6 +42,11 @@ type Store struct {
 	committedWAL []walRecord
 	nextWALSeq   walSequenceNumber
 	closed       bool
+	// pendingBytes estimates the persisted size of buffered (uncommitted)
+	// mutations; uncompactedWALBytes is the persisted size of the committed WAL
+	// after the most recent write. Together they drive the auto-flush policy.
+	pendingBytes        int
+	uncompactedWALBytes int
 }
 
 // Open opens an existing store or creates a new empty store if path does not exist.
@@ -86,7 +104,7 @@ func openBytes(file []byte) (*Store, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Store{state: state, committedWAL: committedWAL, nextWALSeq: nextSeq}, nil
+	return &Store{state: state, committedWAL: committedWAL, nextWALSeq: nextSeq, uncompactedWALBytes: len(c.WAL)}, nil
 }
 
 // OpenBytes opens an AKG store from in-memory bytes. The store is fully
@@ -335,8 +353,49 @@ func (s *Store) Commit() error {
 	records = append(records, walRecord{Sequence: next, Operation: walOpCommit})
 	s.committedWAL = append(s.committedWAL, records...)
 	s.pending = nil
+	s.pendingBytes = 0
 	s.nextWALSeq = next + 1
 	return s.writeFile()
+}
+
+// maybeAutoFlush commits buffered mutations when the buffered-plus-uncompacted
+// WAL crosses a flush threshold. It is the writer-side safety valve described in
+// docs/spec/05-wal.md: it appends a COMMIT exactly as Commit would and never
+// compacts. Stores opened from bytes (no backing path) and closed stores never
+// auto-flush.
+func (s *Store) maybeAutoFlush() error {
+	if s.path == "" || s.closed {
+		return nil
+	}
+	if !s.shouldAutoFlush() {
+		return nil
+	}
+	return s.Commit()
+}
+
+func (s *Store) shouldAutoFlush() bool {
+	entries := len(s.committedWAL) + len(s.pending)
+	byteCount := s.uncompactedWALBytes + s.pendingBytes
+	return entries >= walEntryFlushThreshold || byteCount >= walByteFlushThreshold
+}
+
+// UncompactedWALEntries reports the number of committed WAL records accumulated
+// since the last compaction. It mirrors the input to the auto-flush policy and
+// resets to zero on Compact.
+func (s *Store) UncompactedWALEntries() int {
+	if s == nil {
+		return 0
+	}
+	return len(s.committedWAL)
+}
+
+// UncompactedWALBytes reports the persisted size in bytes of the committed WAL
+// accumulated since the last compaction. It resets to zero on Compact.
+func (s *Store) UncompactedWALBytes() int {
+	if s == nil {
+		return 0
+	}
+	return s.uncompactedWALBytes
 }
 
 // Close commits any pending mutations and then marks the store as closed.
@@ -378,7 +437,11 @@ func (s *Store) writeFile() error {
 	if err != nil {
 		return err
 	}
-	return writeFileSync(s.path, file)
+	if err := writeFileSync(s.path, file); err != nil {
+		return err
+	}
+	s.uncompactedWALBytes = len(walPayload)
+	return nil
 }
 
 func (s *Store) putNode(id nodeID, n coreNode) (nodeRecord, error) {
@@ -391,6 +454,10 @@ func (s *Store) putNode(id nodeID, n coreNode) (nodeRecord, error) {
 		return nodeRecord{}, err
 	}
 	s.pending = append(s.pending, pendingWALRecord{op: walOpPutNode, payload: payload})
+	s.pendingBytes += len(payload) + walRecordOverhead
+	if err := s.maybeAutoFlush(); err != nil {
+		return nodeRecord{}, err
+	}
 	return rec, nil
 }
 
@@ -404,6 +471,10 @@ func (s *Store) putEdge(e coreEdge) (coreEdge, error) {
 		return coreEdge{}, err
 	}
 	s.pending = append(s.pending, pendingWALRecord{op: walOpPutEdge, payload: payload})
+	s.pendingBytes += len(payload) + walRecordOverhead
+	if err := s.maybeAutoFlush(); err != nil {
+		return coreEdge{}, err
+	}
 	return rec, nil
 }
 
@@ -423,7 +494,8 @@ func (s *Store) deleteNode(typeName string, id nodeID) error {
 		return err
 	}
 	s.pending = append(s.pending, pendingWALRecord{op: walOpDeleteNode, payload: payload})
-	return nil
+	s.pendingBytes += len(payload) + walRecordOverhead
+	return s.maybeAutoFlush()
 }
 
 func (s *Store) deleteEdge(fromType string, fromNode nodeID, rel relation, toType string, toNode nodeID) error {
@@ -437,7 +509,8 @@ func (s *Store) deleteEdge(fromType string, fromNode nodeID, rel relation, toTyp
 		return err
 	}
 	s.pending = append(s.pending, pendingWALRecord{op: walOpDeleteEdge, payload: payload})
-	return nil
+	s.pendingBytes += len(payload) + walRecordOverhead
+	return s.maybeAutoFlush()
 }
 
 func hydrateDataEntries(entries []dataEntry) (*storeState, error) {

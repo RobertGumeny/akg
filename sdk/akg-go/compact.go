@@ -41,6 +41,8 @@ func (s *Store) Compact() error {
 	}
 	s.committedWAL = nil
 	s.nextWALSeq = 1
+	s.uncompactedWALBytes = 0
+	s.pendingBytes = 0
 	return nil
 }
 

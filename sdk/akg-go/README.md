@@ -256,6 +256,12 @@ Mutations (`PutNode`, `PutEdge`, `DeleteNode`, `DeleteEdge`) are held in memory 
 
 Call `Commit` periodically in long-running processes where losing a batch of work would be costly. Call `Close` when you're done with the store — it commits any outstanding mutations and releases the file handle. `Close` is safe to call on a store with no pending mutations.
 
+### Automatic flush policy
+
+To prevent unbounded in-memory or WAL growth, the SDK runs a writer-side safety valve: when the buffered pending mutations **or** the uncompacted WAL cross either of the spec-recommended thresholds — **1,000 entries** or **10 MB**, whichever is reached first — the store automatically performs a `Commit()`, flushing the buffered records durably to disk.
+
+This valve is a **durability safeguard, not a compaction trigger**: it appends a `COMMIT` exactly as a manual `Commit()` would and never discards WAL history. Reclaiming space from accumulated WAL records still requires an explicit `Compact()` (see [Compaction](#compaction)), which remains caller-triggered. The thresholds match the recommendations in `docs/spec/05-wal.md` and the TypeScript SDK. `UncompactedWALEntries()` and `UncompactedWALBytes()` expose the same counters the policy reads.
+
 ## Deleting nodes and edges
 
 ```go
