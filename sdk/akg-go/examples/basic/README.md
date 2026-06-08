@@ -34,7 +34,7 @@ Active people:
 
 Outbound edges from person/alice:
   -[authored]-> paper/paper-001 (strength 1.0)
-  -[collaborates_with]-> person/bob (strength 0.0)
+  -[collaborates_with]-> person/bob (strength 0.5)
 ```
 
 The store is written to a temp file (`$TMPDIR/akg-basic-example.akg`) and cleaned up at the start of each run, so repeated runs always produce the same output.

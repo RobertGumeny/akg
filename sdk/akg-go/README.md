@@ -468,7 +468,7 @@ These helpers are not cursor-pagination APIs; callers that need duplicate-free c
 `ReconcileOutboundEdges` synchronizes the outbound edges for a source node and relation to exactly the desired target set. Missing desired edges are added; stale edges (same source+relation, not in desired) are removed; edges for other relations or other source nodes are unchanged.
 
 ```go
-result, _ := store.ReconcileOutboundEdges(alice, "knows", []akg.NodeRef{bob}, akg.EdgeFields{Strength: 0.8})
+result, _ := store.ReconcileOutboundEdges(alice, "knows", []akg.NodeRef{bob}, akg.EdgeFields{Strength: akg.StrengthOf(0.8)})
 fmt.Println(result.Added, result.Removed, result.Unchanged)
 ```
 
