@@ -5,7 +5,7 @@ import { join, dirname } from 'node:path';
 import type { Node, Edge, Snapshot } from './types.js';
 
 // Node types above this count are collapsed to a summary so a long session
-// (hundreds of per-hand nodes) still prints as one clean screen. --all overrides.
+// (hundreds of nodes of one type) still prints as one clean screen. --all overrides.
 const COLLAPSE_THRESHOLD = 12;
 
 const __filename = fileURLToPath(import.meta.url);
@@ -38,7 +38,7 @@ function edgeKey(e: Edge): string {
 
 // Renders a snapshot as readable text: knowledge grouped by the node types an
 // application invented, smallest groups first (curated, high-signal types lead;
-// bulky per-hand logs sink to the bottom), with edges as `from -relation-> to`.
+// bulky high-volume types sink to the bottom), with edges as `from -relation-> to`.
 function renderText(path: string, snap: Snapshot, all: boolean): string {
   const out: string[] = [`${path}\n${snap.nodes.length} nodes / ${snap.edges.length} edges`];
 

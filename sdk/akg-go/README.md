@@ -46,7 +46,7 @@ go build -o akg-go ./cmd/akg-go
 # render a .akg file as readable text, grouped by node type
 akg-go show memory.akg
 akg-go show memory.akg --json   # full snapshot as JSON
-akg-go show memory.akg --all    # don't collapse large/per-hand node types
+akg-go show memory.akg --all    # don't collapse high-volume node types
 
 # look up the SDK's own API — shipped as an AKG graph, for an agent coding against akg-go
 akg-go docs explain PutNode

@@ -42,7 +42,7 @@ npm run build   # produces dist/cli.js (the akg-ts bin)
 # render a .akg file as readable text, grouped by node type
 akg-ts show memory.akg
 akg-ts show memory.akg --json   # full snapshot as JSON
-akg-ts show memory.akg --all    # don't collapse large/per-hand node types
+akg-ts show memory.akg --all    # don't collapse high-volume node types
 
 # look up the SDK's own API — shipped as an AKG graph, for an agent coding against akg-ts
 akg-ts docs explain putNode

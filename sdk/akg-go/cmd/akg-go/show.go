@@ -13,7 +13,7 @@ import (
 )
 
 // Node types above this count are collapsed to a summary so a long session
-// (hundreds of per-hand nodes) still prints as one clean screen. --all overrides.
+// (hundreds of nodes of one type) still prints as one clean screen. --all overrides.
 const collapseThreshold = 12
 
 // runShow renders a .akg file as readable text: the knowledge an agent wrote,
@@ -24,7 +24,7 @@ func runShow(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("akg-go show", flag.ContinueOnError)
 	fs.SetOutput(stderr)
 	asJSON := fs.Bool("json", false, "emit the full snapshot as JSON instead of readable text")
-	all := fs.Bool("all", false, "print every node body, including large/per-hand types")
+	all := fs.Bool("all", false, "print every node body, including high-volume types")
 	fs.Usage = func() {
 		fmt.Fprintln(stderr, "usage: akg-go show [--json] [--all] PATH")
 	}
@@ -80,7 +80,7 @@ func renderText(w io.Writer, path string, snap akg.Snapshot, all bool) {
 	}
 
 	// Smallest groups first: the curated, high-signal types an agent distills
-	// (opponent, pattern) lead; bulky per-hand logs sink to the bottom.
+	// curated, high-signal types lead; bulky high-volume types sink to the bottom.
 	types := make([]string, 0, len(byType))
 	for t := range byType {
 		types = append(types, t)
