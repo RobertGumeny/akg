@@ -122,7 +122,7 @@ func (s *State) PutNode(id record.NodeID, n record.Node) (NodeRecord, error) {
 	return cloneNodeRecord(rec), nil
 }
 
-// PutEdge upserts an edge by (from_node, relation, to_node). Dangling edges are
+// PutEdge upserts an edge by (from_node_type, from_node, relation, to_node_type, to_node). Dangling edges are
 // accepted; no referential-integrity or cascade policy is enforced here.
 func (s *State) PutEdge(e record.Edge) (record.Edge, error) {
 	if s == nil {

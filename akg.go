@@ -88,7 +88,7 @@ func (s *Store) PutNode(id string, n Node) (NodeRecord, error) {
 	return fromStateNode(rec), nil
 }
 
-// PutEdge upserts an edge by (from_node, relation, to_node).
+// PutEdge upserts an edge by (from_node_type, from_node, relation, to_node_type, to_node).
 func (s *Store) PutEdge(e Edge) (Edge, error) {
 	edge, err := s.inner.PutEdge(toRecordEdge(e))
 	if err != nil {

@@ -74,8 +74,8 @@ func run(path string) error {
 		return fmt.Errorf("put conformance artifact: %w", err)
 	}
 
-	// Edges make relationships explicit. An edge identity is the triple
-	// (from node, relation, to node), so later we can read this exact edge back.
+	// Edges make relationships explicit. An edge's identity is
+	// (from type, from node, relation, to type, to node), so later we can read this exact edge back.
 	if _, err := store.PutEdge(akg.Edge{
 		FromType:  "note",
 		FromNode:  "paper-akg-v1",
