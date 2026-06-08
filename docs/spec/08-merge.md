@@ -20,7 +20,7 @@ Merge comparison is defined over AKG record identity.
 
 For nodes, identity is the node-key identity defined by `n:{type}:{id}`.
 
-For edges, identity is the natural key `(from_node, relation, to_node)`.
+For edges, identity is the natural key `(from_node_type, from_node, relation, to_node_type, to_node)`.
 
 Two records with different identities are not in conflict merely because their payload contents are similar or identical.
 
