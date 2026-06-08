@@ -1,10 +1,16 @@
 # Changelog
 
-## Unreleased
+## v0.1.4
 
 ### Added
 
 - **`akg-ts show <PATH>`** — renders a `.akg` file as readable text, grouping nodes by the types an application invented and printing each node's title and body, with edges listed as `from -relation-> to`. High-volume node types are collapsed unless `--all` is passed; `--json` emits the full snapshot. The general-purpose companion to the `akg-ts docs` API browser, for reading any store (an agent's memory, the docs graph) without parsing the binary format by hand.
+- **tsdoc on the public API** — every exported symbol (the `Store` class and its methods, the WAL accessors, the `open` factory, the exported interfaces, and the three error classes) now carries a doc comment. The comments flow into the bundled `dist/*.d.ts`, so editors show them on hover.
+
+### Fixed
+
+- **`akg-ts docs` after `npm install`** — the published package omitted the bundled `docs/akg-ts-docs.akg` graph that the `docs` command loads, so every `akg-ts docs` subcommand failed with `ENOENT` for installed users. Root cause: the blanket `*.akg` gitignore rule excluded the generated graph and it was missing from the package's `files` list. The graph is now committed (via a gitignore exception) and shipped in `files`, so `docs` works after a plain install.
+- **Error-table docs** — the `MissingRequiredFieldError` row now documents the `putEdge` missing-identity-field case, which the SDK already throws.
 
 ## v0.1.3
 
