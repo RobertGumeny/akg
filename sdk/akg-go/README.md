@@ -35,6 +35,41 @@ bob, err := store.PutNode("person", "bob", akg.NodeFields{
 err = store.PutEdge(alice, "knows", bob, akg.EdgeFields{})
 ```
 
+## Command-line tool
+
+The SDK ships a single `akg-go` binary in the conventional `akg-go <command> [args]`
+shape:
+
+```sh
+go build -o akg-go ./cmd/akg-go
+
+# render a .akg file as readable text, grouped by node type
+akg-go show memory.akg
+akg-go show memory.akg --json   # full snapshot as JSON
+akg-go show memory.akg --all    # don't collapse large/per-hand node types
+
+# look up the SDK's own API — shipped as an AKG graph, for an agent coding against akg-go
+akg-go docs explain PutNode
+akg-go docs search commit
+akg-go docs overview
+akg-go docs dump --format markdown
+
+# (maintainers) regenerate the embedded docs graph from docs/manifest.json
+akg-go gen-docs
+```
+
+**akg-go ships with full documentation encoded in a `.akg` file.** Install the SDK,
+and then you — or your coding agent — can use `akg-go docs` to implement it in your
+project: pull exactly the symbol you need — `explain PutNode`, `search "delete"` —
+instead of loading the whole API doc into context. The SDK is both the tool and a
+worked example of the knowledge graph it builds.
+
+`show` is the general-purpose reader, the human-facing companion to the reference
+CLI's JSON `akg inspect`: it opens any store with `Open`, takes a `Snapshot`, and
+prints each node's title and body under its type, so you can read what *any*
+application wrote — an agent's memory, the docs graph above — without parsing the
+binary format by hand.
+
 ## Getting started
 
 Create a project, write a graph, run it.

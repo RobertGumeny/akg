@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -42,27 +42,34 @@ type manifest struct {
 	Edges []manifestEdge `json:"edges"`
 }
 
-func main() {
+// runGenDocs regenerates the embedded docs graph (docs/akg-go-docs.akg and the
+// companion JSON) from docs/manifest.json, relative to the current directory.
+// This is a maintainer/build step, run by CI as `go run ./cmd/akg-go gen-docs`.
+func runGenDocs(_ []string, stdout, stderr io.Writer) int {
 	cwd, err := os.Getwd()
 	if err != nil {
-		log.Fatal(err)
+		fmt.Fprintf(stderr, "%v\n", err)
+		return 1
 	}
 	docsDir := filepath.Join(cwd, "docs")
 	manifestPath := filepath.Join(docsDir, "manifest.json")
 
 	data, err := os.ReadFile(manifestPath)
 	if err != nil {
-		log.Fatalf("reading manifest: %v", err)
+		fmt.Fprintf(stderr, "reading manifest: %v\n", err)
+		return 1
 	}
 
 	var m manifest
 	if err := json.Unmarshal(data, &m); err != nil {
-		log.Fatalf("parsing manifest: %v", err)
+		fmt.Fprintf(stderr, "parsing manifest: %v\n", err)
+		return 1
 	}
 
 	generatedAt, err := time.Parse(time.RFC3339, m.Meta.GeneratedAt)
 	if err != nil {
-		log.Fatalf("parsing generated_at: %v", err)
+		fmt.Fprintf(stderr, "parsing generated_at: %v\n", err)
+		return 1
 	}
 	fixedMicros := uint64(generatedAt.UnixMicro())
 	akg.SetTestNow(fixedMicros)
@@ -72,12 +79,14 @@ func main() {
 	outJSON := filepath.Join(docsDir, "akg-go-docs.json")
 
 	if err := os.Remove(outAkg); err != nil && !os.IsNotExist(err) {
-		log.Fatalf("removing old akg file: %v", err)
+		fmt.Fprintf(stderr, "removing old akg file: %v\n", err)
+		return 1
 	}
 
 	store, err := akg.Open(outAkg)
 	if err != nil {
-		log.Fatalf("opening store: %v", err)
+		fmt.Fprintf(stderr, "opening store: %v\n", err)
+		return 1
 	}
 
 	refs := make(map[string]akg.NodeRef)
@@ -85,7 +94,8 @@ func main() {
 	for _, node := range m.Nodes {
 		colonIdx := strings.Index(node.ID, ":")
 		if colonIdx < 0 {
-			log.Fatalf("invalid node id (no colon): %s", node.ID)
+			fmt.Fprintf(stderr, "invalid node id (no colon): %s\n", node.ID)
+			return 1
 		}
 		akgType := node.ID[:colonIdx]
 		akgID := node.ID[colonIdx+1:]
@@ -104,7 +114,8 @@ func main() {
 			},
 		}, node.Tags)
 		if err != nil {
-			log.Fatalf("PutNode %s: %v", node.ID, err)
+			fmt.Fprintf(stderr, "PutNode %s: %v\n", node.ID, err)
+			return 1
 		}
 		refs[node.ID] = ref
 	}
@@ -112,38 +123,47 @@ func main() {
 	for _, edge := range m.Edges {
 		fromRef, ok := refs[edge.From]
 		if !ok {
-			log.Fatalf("edge references unknown node: %s", edge.From)
+			fmt.Fprintf(stderr, "edge references unknown node: %s\n", edge.From)
+			return 1
 		}
 		toRef, ok := refs[edge.To]
 		if !ok {
-			log.Fatalf("edge references unknown node: %s", edge.To)
+			fmt.Fprintf(stderr, "edge references unknown node: %s\n", edge.To)
+			return 1
 		}
 		if err := store.PutEdge(fromRef, edge.Relation, toRef, akg.EdgeFields{}); err != nil {
-			log.Fatalf("PutEdge %s -> %s: %v", edge.From, edge.To, err)
+			fmt.Fprintf(stderr, "PutEdge %s -> %s: %v\n", edge.From, edge.To, err)
+			return 1
 		}
 	}
 
 	snap, err := store.Snapshot()
 	if err != nil {
-		log.Fatalf("snapshot: %v", err)
+		fmt.Fprintf(stderr, "snapshot: %v\n", err)
+		return 1
 	}
 
 	if err := store.Compact(); err != nil {
-		log.Fatalf("compact: %v", err)
+		fmt.Fprintf(stderr, "compact: %v\n", err)
+		return 1
 	}
 	if err := store.Close(); err != nil {
-		log.Fatalf("close: %v", err)
+		fmt.Fprintf(stderr, "close: %v\n", err)
+		return 1
 	}
 
 	jsonData, err := json.MarshalIndent(snap, "", "  ")
 	if err != nil {
-		log.Fatalf("marshal json: %v", err)
+		fmt.Fprintf(stderr, "marshal json: %v\n", err)
+		return 1
 	}
 	if err := os.WriteFile(outJSON, append(jsonData, '\n'), 0o644); err != nil {
-		log.Fatalf("writing json: %v", err)
+		fmt.Fprintf(stderr, "writing json: %v\n", err)
+		return 1
 	}
 
-	fmt.Printf("Generated %d nodes, %d edges\n", len(m.Nodes), len(m.Edges))
-	fmt.Printf("  %s\n", outAkg)
-	fmt.Printf("  %s\n", outJSON)
+	fmt.Fprintf(stdout, "Generated %d nodes, %d edges\n", len(m.Nodes), len(m.Edges))
+	fmt.Fprintf(stdout, "  %s\n", outAkg)
+	fmt.Fprintf(stdout, "  %s\n", outJSON)
+	return 0
 }

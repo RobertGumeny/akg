@@ -10,10 +10,10 @@ import (
 
 var updateGolden = flag.Bool("update", false, "update golden snapshot files")
 
-func runCmd(t *testing.T, args ...string) (stdout, stderr string, exitCode int) {
+func runDocsCmd(t *testing.T, args ...string) (stdout, stderr string, exitCode int) {
 	t.Helper()
 	var outBuf, errBuf bytes.Buffer
-	code := run(args, &outBuf, &errBuf)
+	code := runDocs(args, &outBuf, &errBuf)
 	return outBuf.String(), errBuf.String(), code
 }
 
@@ -39,7 +39,7 @@ func checkGolden(t *testing.T, goldenFile, got string) {
 }
 
 func TestOverview(t *testing.T) {
-	stdout, _, code := runCmd(t, "overview")
+	stdout, _, code := runDocsCmd(t, "overview")
 	if code != 0 {
 		t.Fatalf("overview exited %d", code)
 	}
@@ -47,7 +47,7 @@ func TestOverview(t *testing.T) {
 }
 
 func TestExplainPutNode(t *testing.T) {
-	stdout, _, code := runCmd(t, "explain", "PutNode")
+	stdout, _, code := runDocsCmd(t, "explain", "PutNode")
 	if code != 0 {
 		t.Fatalf("explain PutNode exited %d", code)
 	}
@@ -55,7 +55,7 @@ func TestExplainPutNode(t *testing.T) {
 }
 
 func TestSearchCommit(t *testing.T) {
-	stdout, _, code := runCmd(t, "search", "commit")
+	stdout, _, code := runDocsCmd(t, "search", "commit")
 	if code != 0 {
 		t.Fatalf("search commit exited %d", code)
 	}
@@ -63,7 +63,7 @@ func TestSearchCommit(t *testing.T) {
 }
 
 func TestDumpJSON(t *testing.T) {
-	stdout, _, code := runCmd(t, "dump", "--format", "json")
+	stdout, _, code := runDocsCmd(t, "dump", "--format", "json")
 	if code != 0 {
 		t.Fatalf("dump --format json exited %d", code)
 	}
@@ -71,7 +71,7 @@ func TestDumpJSON(t *testing.T) {
 }
 
 func TestOverviewHasAPISymbolSection(t *testing.T) {
-	stdout, _, code := runCmd(t, "overview")
+	stdout, _, code := runDocsCmd(t, "overview")
 	if code != 0 {
 		t.Fatalf("overview exited %d", code)
 	}
@@ -81,7 +81,7 @@ func TestOverviewHasAPISymbolSection(t *testing.T) {
 }
 
 func TestExplainPutNodeContent(t *testing.T) {
-	stdout, _, code := runCmd(t, "explain", "PutNode")
+	stdout, _, code := runDocsCmd(t, "explain", "PutNode")
 	if code != 0 {
 		t.Fatalf("explain PutNode exited %d", code)
 	}
@@ -94,7 +94,7 @@ func TestExplainPutNodeContent(t *testing.T) {
 }
 
 func TestSearchDeleteContainsDeleteNodeAndEdge(t *testing.T) {
-	stdout, _, code := runCmd(t, "search", "delete")
+	stdout, _, code := runDocsCmd(t, "search", "delete")
 	if code != 0 {
 		t.Fatalf("search delete exited %d", code)
 	}
@@ -107,7 +107,7 @@ func TestSearchDeleteContainsDeleteNodeAndEdge(t *testing.T) {
 }
 
 func TestDumpJSONIsValidJSON(t *testing.T) {
-	stdout, _, code := runCmd(t, "dump", "--format", "json")
+	stdout, _, code := runDocsCmd(t, "dump", "--format", "json")
 	if code != 0 {
 		t.Fatalf("dump --format json exited %d", code)
 	}
@@ -120,7 +120,7 @@ func TestDumpJSONIsValidJSON(t *testing.T) {
 }
 
 func TestExplainUnknownExits1(t *testing.T) {
-	_, stderr, code := runCmd(t, "explain", "UnknownSymbol")
+	_, stderr, code := runDocsCmd(t, "explain", "UnknownSymbol")
 	if code != 1 {
 		t.Fatalf("expected exit 1, got %d", code)
 	}

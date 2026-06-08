@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"os"
 	"sort"
 	"strings"
 
@@ -13,13 +12,11 @@ import (
 	akgdocs "github.com/RobertGumeny/akg/sdk/akg-go/docs"
 )
 
-func main() {
-	os.Exit(run(os.Args[1:], os.Stdout, os.Stderr))
-}
-
-func run(args []string, stdout, stderr io.Writer) int {
+// runDocs queries the embedded, pre-built akg-go API documentation graph. It
+// reads from docs.Graph via akg.OpenBytes, so no external files are needed.
+func runDocs(args []string, stdout, stderr io.Writer) int {
 	if len(args) == 0 {
-		fmt.Fprintln(stderr, "Usage: akg-go-docs <overview|explain <Name>|search <query>|dump [--format markdown|json]>")
+		fmt.Fprintln(stderr, "usage: akg-go docs <overview|explain <Name>|search <query>|dump [--format markdown|json]>")
 		return 1
 	}
 
@@ -35,13 +32,13 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return cmdOverview(store, stdout, stderr)
 	case "explain":
 		if len(args) < 2 {
-			fmt.Fprintln(stderr, "Usage: akg-go-docs explain <Name>")
+			fmt.Fprintln(stderr, "usage: akg-go docs explain <Name>")
 			return 1
 		}
 		return cmdExplain(store, args[1], stdout, stderr)
 	case "search":
 		if len(args) < 2 {
-			fmt.Fprintln(stderr, "Usage: akg-go-docs search <query>")
+			fmt.Fprintln(stderr, "usage: akg-go docs search <query>")
 			return 1
 		}
 		return cmdSearch(store, args[1], stdout, stderr)
@@ -58,7 +55,7 @@ func run(args []string, stdout, stderr io.Writer) int {
 		}
 		return cmdDump(store, *format, stdout, stderr)
 	default:
-		fmt.Fprintf(stderr, "unknown subcommand %q\n", args[0])
+		fmt.Fprintf(stderr, "unknown docs subcommand %q\n", args[0])
 		return 1
 	}
 }

@@ -21,7 +21,7 @@ jobs:
         run: go test -count=1 ./...
       - name: Generate Go SDK docs graph
         working-directory: sdk/akg-go
-        run: go run ./cmd/akg-go-docs-gen
+        run: go run ./cmd/akg-go gen-docs
       - name: Check docs graph freshness
         working-directory: sdk/akg-go
         run: git diff --exit-code docs/

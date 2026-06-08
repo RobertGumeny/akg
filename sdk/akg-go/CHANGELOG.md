@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- **`akg-go show <PATH>`** — renders a `.akg` file as readable text, grouping nodes by the types an application invented and printing each node's title and body, with edges listed as `from -relation-> to`. Large/per-hand node types are collapsed unless `--all` is passed; `--json` emits the full `Snapshot`. The human-facing companion to the reference CLI's JSON `akg inspect`.
+
+### Changed
+
+- **Single `akg-go` CLI** — the command-line tools are now one multiplexer binary in the conventional `akg-go <command> [args]` shape. The former `akg-go-docs` and `akg-go-docs-gen` binaries are now the `akg-go docs` and `akg-go gen-docs` subcommands; behavior is unchanged.
+
 ## v0.1.3
 
 ### Fixed
