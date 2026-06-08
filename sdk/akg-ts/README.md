@@ -259,7 +259,7 @@ Three error classes are exported for callers that need to branch on error type:
 |---|---|
 | `NotFoundError` | A `deleteNode` or `deleteEdge` call targets a node or edge that does not exist. |
 | `InvalidInputError` | A caller passes an argument that violates a format or semantic constraint — invalid type name, missing required field, or attempting to delete a node that still has live edges. |
-| `MissingRequiredFieldError` | A required field is absent. Returned in two situations: (1) a `putNode` call omits `title`; (2) a decoded record in a file is structurally valid but missing a required field — callers see this when opening a malformed file written by a buggy writer. |
+| `MissingRequiredFieldError` | A required field is absent. Thrown in two situations: (1) a `putNode` call omits `title`, or a `putEdge` call omits a required identity field; (2) a decoded record in a file is structurally valid but missing a required field — callers see this when opening a malformed file written by a buggy writer. |
 
 Use `instanceof` to test:
 

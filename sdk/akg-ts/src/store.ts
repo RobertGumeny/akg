@@ -147,6 +147,11 @@ const WAL_BYTE_FLUSH_THRESHOLD = 10 * 1024 * 1024;
 // estimate pending byte growth for the flush policy.
 const WAL_RECORD_OVERHEAD = 13 + 4;
 
+/**
+ * A read/write handle to a single AKG knowledge graph file. Mutations are held
+ * in memory until commit() or close() persists them. Open one via the `open`
+ * factory; one active writer per file.
+ */
 export class Store {
   private path: string;
   private state: StoreState;
@@ -219,6 +224,11 @@ export class Store {
 
   // ---- write operations (sync, in-memory) ---------------------------------
 
+  /**
+   * Writes or replaces the node at (typeName, id). `fields.title` is required;
+   * an empty `id` generates a new id. Returns a NodeRef usable with putEdge.
+   * Throws synchronously on validation errors. Held in memory until commit/close.
+   */
   putNode(typeName: string, id: string, fields: NodeFields, tags: string[]): NodeRef {
     if (this.closed) throw new InvalidInputError('store is closed');
     validateComponent(typeName);
@@ -244,6 +254,7 @@ export class Store {
     return { type: typeName, id: rec.id };
   }
 
+  /** Returns the node at (typeName, id), or null (not an error) if it does not exist. */
   getNode(typeName: string, id: string): Node | null {
     if (this.closed) throw new InvalidInputError('store is closed');
     buildNodeKey(typeName, id);
@@ -253,6 +264,7 @@ export class Store {
     return nodeFromRecord(rec);
   }
 
+  /** Returns all nodes carrying the given tag, sorted by key. */
   listNodesByTag(tag: string): Node[] {
     if (this.closed) throw new InvalidInputError('store is closed');
     validateTag(tag);
@@ -263,6 +275,7 @@ export class Store {
     return sortAndMapNodes(matches);
   }
 
+  /** Returns all nodes, optionally filtered to typeName (omitted = all types). Unknown type returns empty. Sorted by key. */
   listNodes(typeName?: string): Node[] {
     if (this.closed) throw new InvalidInputError('store is closed');
     if (typeName) validateComponent(typeName);
@@ -274,6 +287,10 @@ export class Store {
     return sortAndMapNodes(matches);
   }
 
+  /**
+   * Writes or replaces the edge at (fromRef, relation, toRef). Both endpoints
+   * must already exist, or NotFoundError is thrown. Held in memory until commit/close.
+   */
   putEdge(fromRef: NodeRef, relation: string, toRef: NodeRef, fields: EdgeFields): void {
     if (this.closed) throw new InvalidInputError('store is closed');
     if (!this.state.nodes.has(nodeKey({ type: fromRef.type, id: fromRef.id }))) {
@@ -303,6 +320,7 @@ export class Store {
     this.stagePending(WAL_OP_PUT_EDGE, payload);
   }
 
+  /** Returns edges originating at nodeRef, optionally filtered to a relation (omitted = all). */
   outboundEdges(nodeRef: NodeRef, relation?: string): Edge[] {
     if (this.closed) throw new InvalidInputError('store is closed');
     buildNodeKey(nodeRef.type, nodeRef.id);
@@ -316,6 +334,7 @@ export class Store {
     return sortAndMapEdgesByKey(matches);
   }
 
+  /** Returns edges pointing at nodeRef, optionally filtered to a relation (omitted = all). */
   inboundEdges(nodeRef: NodeRef, relation?: string): Edge[] {
     if (this.closed) throw new InvalidInputError('store is closed');
     buildNodeKey(nodeRef.type, nodeRef.id);
@@ -329,6 +348,10 @@ export class Store {
     return sortAndMapEdgesByIndexKey(matches);
   }
 
+  /**
+   * Deletes the node at (typeName, id). Throws NotFoundError if it does not exist,
+   * or InvalidInputError if it still has live edges — delete those edges first.
+   */
   deleteNode(typeName: string, id: string): void {
     if (this.closed) throw new InvalidInputError('store is closed');
     buildNodeKey(typeName, id);
@@ -344,6 +367,7 @@ export class Store {
     this.stagePending(WAL_OP_DELETE_NODE, payload);
   }
 
+  /** Deletes the edge at (fromRef, relation, toRef). Throws NotFoundError if it does not exist. */
   deleteEdge(fromRef: NodeRef, relation: string, toRef: NodeRef): void {
     if (this.closed) throw new InvalidInputError('store is closed');
     buildNodeKey(fromRef.type, fromRef.id);
@@ -358,6 +382,7 @@ export class Store {
 
   // ---- global edge listing and snapshots ---------------------------------
 
+  /** Returns all edges, optionally narrowed by an EdgeFilter (relation and/or meta). Sorted by key. */
   listEdges(filter?: EdgeFilter): Edge[] {
     if (this.closed) throw new InvalidInputError('store is closed');
     if (filter?.relation) validateComponent(filter.relation);
@@ -370,6 +395,7 @@ export class Store {
     return sortAndMapEdgesByKey(matches);
   }
 
+  /** Returns all live nodes and edges in deterministic order as a JSON-serializable Snapshot. */
   snapshot(): Snapshot {
     if (this.closed) throw new InvalidInputError('store is closed');
     return {
@@ -380,6 +406,10 @@ export class Store {
 
   // ---- node filtering and batch inspection --------------------------------
 
+  /**
+   * Returns nodes matching the NodeFilter (type, tag, and/or meta) with AND
+   * semantics. Unknown types or tags return empty results, not errors.
+   */
   listNodesFiltered(filter: NodeFilter): Node[] {
     if (this.closed) throw new InvalidInputError('store is closed');
     if (filter.type) validateComponent(filter.type);
@@ -394,6 +424,10 @@ export class Store {
     return sortAndMapNodes(matches);
   }
 
+  /**
+   * Batch lookup: returns one output position per input ref, in input order,
+   * preserving duplicates. A position is null where the referenced node is missing.
+   */
   getNodes(refs: NodeRef[]): Array<Node | null> {
     if (this.closed) throw new InvalidInputError('store is closed');
     return refs.map(ref => {
@@ -406,6 +440,11 @@ export class Store {
 
   // ---- recency helpers ----------------------------------------------------
 
+  /**
+   * Returns nodes newest-first by updatedAt (tie-broken by createdAt desc, type
+   * asc, id asc), filtered by the RecencyFilter. limit 0/omitted = unlimited;
+   * negative throws InvalidInputError.
+   */
   recentNodes(filter?: RecencyFilter): Node[] {
     if (this.closed) throw new InvalidInputError('store is closed');
     const limit = filter?.limit ?? 0;
@@ -439,6 +478,11 @@ export class Store {
     return result.map(nodeFromRecord);
   }
 
+  /**
+   * Returns edges newest-first by updatedAt (tie-broken by createdAt desc then
+   * endpoint/relation order), filtered by the EdgeRecencyFilter. limit 0/omitted
+   * = unlimited; negative throws InvalidInputError.
+   */
   recentEdges(filter?: EdgeRecencyFilter): Edge[] {
     if (this.closed) throw new InvalidInputError('store is closed');
     const limit = filter?.limit ?? 0;
@@ -477,6 +521,11 @@ export class Store {
 
   // ---- edge reconciliation ------------------------------------------------
 
+  /**
+   * Synchronizes the outbound edges from `source` for `relation` to exactly the
+   * `desired` target set: missing edges are added, stale ones removed, edges for
+   * other relations or sources are untouched. Returns the add/remove/unchanged counts.
+   */
   reconcileOutboundEdges(source: NodeRef, relation: string, desired: NodeRef[], fields: EdgeFields): ReconcileResult {
     if (this.closed) throw new InvalidInputError('store is closed');
     buildNodeKey(source.type, source.id);
@@ -534,6 +583,11 @@ export class Store {
 
   // ---- cascade delete -----------------------------------------------------
 
+  /**
+   * Deletes all inbound and outbound edges of the node at (typeName, id), then
+   * deletes the node. Throws NotFoundError if the node does not exist. Returns
+   * the counts of edges removed and whether the node was deleted.
+   */
   deleteNodeCascade(typeName: string, id: string): CascadeDeleteResult {
     if (this.closed) throw new InvalidInputError('store is closed');
     buildNodeKey(typeName, id);
@@ -575,16 +629,24 @@ export class Store {
     return this.nextWALSeq;
   }
 
+  /** Number of WAL entries accumulated since the last compaction. */
   get uncompactedWALEntryCount(): number {
     return this.uncompactedWALEntries;
   }
 
+  /** Byte size of the WAL accumulated since the last compaction. */
   get uncompactedWALByteCount(): number {
     return this.uncompactedWALBytes;
   }
 
   // ---- lifecycle (async, I/O) ---------------------------------------------
 
+  /**
+   * Compacts the file: auto-commits any pending mutations, then rewrites it to
+   * contain only live records with an empty WAL, discarding tombstones and prior
+   * WAL history. If the auto-commit fails, compaction does not run. The store
+   * stays usable. Always caller-triggered — never automatic.
+   */
   // Compact commits any pending mutations and rewrites the file to contain only
   // live records, discarding all tombstones and prior WAL history. If the
   // auto-commit fails, compaction does not run. After compaction the store
@@ -595,10 +657,12 @@ export class Store {
     this.writeSnapshot();
   }
 
+  /** Durably persists all pending in-memory mutations by appending them (plus a COMMIT marker) to the file's WAL. */
   async commit(): Promise<void> {
     this.commitSync();
   }
 
+  /** Commits any outstanding mutations and closes the store. Safe to call when nothing is pending; subsequent operations throw. */
   async close(): Promise<void> {
     if (this.closed) return;
     this.commitSync();
@@ -688,6 +752,7 @@ export class Store {
 
 // ---- Open factory ----------------------------------------------------------
 
+/** Opens an existing .akg file or creates a new empty one if the path does not exist. Rejects if the file exists but is malformed. */
 export async function open(path: string): Promise<Store> {
   return Store.open(path);
 }
