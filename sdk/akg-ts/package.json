@@ -24,6 +24,7 @@
   },
   "scripts": {
     "build": "tsup",
+    "prepublishOnly": "npm run build",
     "generate:docs": "tsx scripts/generate-docs.ts",
     "generate:roundtrip": "tsx scripts/generate-roundtrip-fixture.ts",
     "test": "vitest run",
