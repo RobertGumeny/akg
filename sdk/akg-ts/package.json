@@ -11,6 +11,7 @@
   },
   "files": [
     "dist",
+    "docs/akg-ts-docs.akg",
     "docs/akg-ts-docs.json",
     "README.md",
     "CHANGELOG.md"

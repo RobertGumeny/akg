@@ -32,6 +32,10 @@ go.work.sum
 !testdata/conformance/*.akg
 !testdata/behavior/*.akg
 !testdata/roundtrip/*.akg
+# Generated SDK docs graphs: go:embed source for akg-go and the akg-ts CLI's
+# bundled graph. Required build/runtime inputs, so they are committed.
+!sdk/akg-go/docs/akg-go-docs.akg
+!sdk/akg-ts/docs/akg-ts-docs.akg
 *.akg.tmp
 *.akg.bak
 *.akg.compact
