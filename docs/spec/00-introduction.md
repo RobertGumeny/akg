@@ -5,7 +5,7 @@ status: v1 draft
 
 # Introduction
 
-AKG is a structured, single-file knowledge graph format for AI agents. It defines a portable binary representation for graph-shaped working memory: nodes that capture durable facts or artifacts, edges that capture explicit relationships between them, and the file structures required to store, validate, and recover that data reliably.
+AKG is a structured, single-file knowledge graph format designed for AI agents. It defines a portable binary representation for graph-shaped working memory: nodes that capture durable facts or artifacts, edges that capture explicit relationships between them, and the file structures required to store, validate, and recover that data reliably.
 
 Knowledge graphs are already useful for agent context, but they are often bound to graph servers, framework-specific stores, or app-specific schemas. AKG makes the knowledge graph a portable file an agent can carry with it.
 
