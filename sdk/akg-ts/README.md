@@ -33,12 +33,24 @@ await store.close();
 
 ## Command-line tool
 
-The SDK ships a single `akg-ts` binary in the conventional `akg-ts <command> [args]`
-shape:
+The SDK ships a single `akg-ts` CLI in the conventional `akg-ts <command> [args]`
+shape. Install it globally for a bare `akg-ts` command, or install it as a project
+dependency and invoke it with `npx`:
 
 ```sh
-npm run build   # produces dist/cli.js (the akg-ts bin)
+# Option A — global install: `akg-ts` is on your PATH
+npm install -g akg-ts
+akg-ts docs explain putNode
 
+# Option B — project-local install: invoke through npx (or an npm script)
+npm install akg-ts
+npx akg-ts docs explain putNode
+```
+
+Either way the commands are the same — just prefix them with `npx ` if you installed
+locally:
+
+```sh
 # render a .akg file as readable text, grouped by node type
 akg-ts show memory.akg
 akg-ts show memory.akg --json   # full snapshot as JSON

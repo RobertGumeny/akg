@@ -38,11 +38,22 @@ err = store.PutEdge(alice, "knows", bob, akg.EdgeFields{})
 ## Command-line tool
 
 The SDK ships a single `akg-go` binary in the conventional `akg-go <command> [args]`
-shape:
+shape. Install it onto your `PATH` with `go install`, or build a local binary and run
+it directly:
 
 ```sh
-go build -o akg-go ./cmd/akg-go
+# Option A — install onto your PATH (GOBIN): bare `akg-go` command
+go install github.com/RobertGumeny/akg/sdk/akg-go/cmd/akg-go@latest
+akg-go docs explain PutNode
 
+# Option B — build a local binary and run it directly
+go build -o akg-go ./cmd/akg-go
+./akg-go docs explain PutNode
+```
+
+The commands are the same either way (use `./akg-go` for a local build):
+
+```sh
 # render a .akg file as readable text, grouped by node type
 akg-go show memory.akg
 akg-go show memory.akg --json   # full snapshot as JSON
