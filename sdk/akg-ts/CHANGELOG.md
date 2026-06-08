@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- **`akg-ts show <PATH>`** — renders a `.akg` file as readable text, grouping nodes by the types an application invented and printing each node's title and body, with edges listed as `from -relation-> to`. Large/per-hand node types are collapsed unless `--all` is passed; `--json` emits the full snapshot. The general-purpose companion to the `akg-ts docs` API browser, for reading any store (an agent's memory, the docs graph) without parsing the binary format by hand.
+
 ## v0.1.3
 
 ### Added

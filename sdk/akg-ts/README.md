@@ -31,6 +31,37 @@ store.putEdge(alice, 'knows', bob, {});
 await store.close();
 ```
 
+## Command-line tool
+
+The SDK ships a single `akg-ts` binary in the conventional `akg-ts <command> [args]`
+shape:
+
+```sh
+npm run build   # produces dist/cli.js (the akg-ts bin)
+
+# render a .akg file as readable text, grouped by node type
+akg-ts show memory.akg
+akg-ts show memory.akg --json   # full snapshot as JSON
+akg-ts show memory.akg --all    # don't collapse large/per-hand node types
+
+# look up the SDK's own API — shipped as an AKG graph, for an agent coding against akg-ts
+akg-ts docs explain putNode
+akg-ts docs search commit
+akg-ts docs overview
+akg-ts docs dump --format markdown
+```
+
+**akg-ts ships with full documentation encoded in a `.akg` file.** Install the SDK,
+and then you — or your coding agent — can use `akg-ts docs` to implement it in your
+project: pull exactly the symbol you need — `explain putNode`, `search "delete"` —
+instead of loading the whole API doc into context. The SDK is both the tool and a
+worked example of the knowledge graph it builds.
+
+`show` is the general-purpose reader: it opens any store with `open`, takes a
+`snapshot`, and prints each node's title and body under its type, so you can read
+what *any* application wrote — an agent's memory, the docs graph above — without
+parsing the binary format by hand.
+
 ## Getting started
 
 Create a project, write a graph, run it.
