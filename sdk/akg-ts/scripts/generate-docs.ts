@@ -27,7 +27,6 @@ interface Manifest {
   meta: {
     language: string;
     package: string;
-    version: string;
     source_path: string;
     generated_at: string;
   };
@@ -39,8 +38,18 @@ const manifest: Manifest = JSON.parse(
   readFileSync(join(root, 'docs/manifest.json'), 'utf-8'),
 );
 
+// Version is sourced from package.json — the single source of truth for the
+// shipped SDK version — not a hand-edited manifest constant that drifts.
+const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf-8')) as { version: string };
+const version = pkg.version;
+
+// generated_at is build-time-stampable (a release can inject a real timestamp via
+// AKG_DOCS_GENERATED_AT) but defaults to the committed manifest value so CI's
+// freshness `git diff` stays deterministic and never churns on a wall clock.
+const generatedAt = process.env.AKG_DOCS_GENERATED_AT ?? manifest.meta.generated_at;
+
 // Pin clock for determinism: all createdAt/updatedAt will be this fixed value.
-const fixedMicros = BigInt(new Date(manifest.meta.generated_at).getTime()) * 1000n;
+const fixedMicros = BigInt(new Date(generatedAt).getTime()) * 1000n;
 _setTestNow(fixedMicros);
 
 const outAkg = join(root, 'docs/akg-ts-docs.akg');
@@ -70,8 +79,8 @@ for (const node of manifest.nodes) {
         anchor: node.anchor,
         language: manifest.meta.language,
         package: manifest.meta.package,
-        version: manifest.meta.version,
-        generated_at: manifest.meta.generated_at,
+        version: version,
+        generated_at: generatedAt,
       },
     },
     node.tags,

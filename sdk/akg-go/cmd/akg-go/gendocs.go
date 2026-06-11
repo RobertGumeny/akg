@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -31,9 +33,35 @@ type manifestEdge struct {
 type manifestMeta struct {
 	Language    string `json:"language"`
 	Package     string `json:"package"`
-	Version     string `json:"version"`
 	SourcePath  string `json:"source_path"`
 	GeneratedAt string `json:"generated_at"`
+}
+
+// changelogVersionRE matches a released CHANGELOG heading like `## v0.1.4`,
+// capturing the bare version (`0.1.4`). `## Unreleased` does not match, so the
+// most recent *released* version is the first match scanning top-down.
+var changelogVersionRE = regexp.MustCompile(`^##\s+v(\d+\.\d+\.\d+)\s*$`)
+
+// latestChangelogVersion returns the most recent released version recorded in a
+// CHANGELOG.md (the first `## vX.Y.Z` heading from the top, skipping
+// `## Unreleased`). It is the single source of truth for the git-tag-versioned
+// Go SDK's doc-graph version stamp.
+func latestChangelogVersion(path string) (string, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		if m := changelogVersionRE.FindStringSubmatch(scanner.Text()); m != nil {
+			return m[1], nil
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		return "", err
+	}
+	return "", fmt.Errorf("no released version heading (## vX.Y.Z) found in %s", path)
 }
 
 type manifest struct {
@@ -66,7 +94,24 @@ func runGenDocs(_ []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 
-	generatedAt, err := time.Parse(time.RFC3339, m.Meta.GeneratedAt)
+	// Version is sourced from the CHANGELOG's latest released heading — the Go SDK
+	// has no version field (it is git-tag versioned), and the CHANGELOG is the
+	// in-repo artifact prep-for-release stamps on release. This avoids a
+	// hand-edited manifest constant that drifts from the shipped version.
+	version, err := latestChangelogVersion(filepath.Join(cwd, "CHANGELOG.md"))
+	if err != nil {
+		fmt.Fprintf(stderr, "resolving version: %v\n", err)
+		return 1
+	}
+
+	// generated_at is build-time-stampable (a release can inject a real timestamp
+	// via AKG_DOCS_GENERATED_AT) but defaults to the committed manifest value so
+	// CI's freshness `git diff` stays deterministic and never churns on a clock.
+	generatedAtStr := m.Meta.GeneratedAt
+	if env := os.Getenv("AKG_DOCS_GENERATED_AT"); env != "" {
+		generatedAtStr = env
+	}
+	generatedAt, err := time.Parse(time.RFC3339, generatedAtStr)
 	if err != nil {
 		fmt.Fprintf(stderr, "parsing generated_at: %v\n", err)
 		return 1
@@ -109,8 +154,8 @@ func runGenDocs(_ []string, stdout, stderr io.Writer) int {
 				"anchor":       node.Anchor,
 				"language":     m.Meta.Language,
 				"package":      m.Meta.Package,
-				"version":      m.Meta.Version,
-				"generated_at": m.Meta.GeneratedAt,
+				"version":      version,
+				"generated_at": generatedAtStr,
 			},
 		}, node.Tags)
 		if err != nil {

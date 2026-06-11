@@ -2,7 +2,6 @@
   "meta": {
     "language": "typescript",
     "package": "akg-ts",
-    "version": "0.1.1",
     "source_path": "sdk/akg-ts/README.md",
     "generated_at": "2026-05-28T00:00:00Z"
   },
