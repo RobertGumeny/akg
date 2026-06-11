@@ -42,6 +42,15 @@ type Store struct {
 	committedWAL []walRecord
 	nextWALSeq   walSequenceNumber
 	closed       bool
+	// baseData and baseBloom are the compaction-baseline Data and Bloom sections
+	// exactly as they sit on disk. A commit leaves them untouched and only grows
+	// the WAL (logical append — the reference SDK and akg-ts do the same); only
+	// Compact re-materializes them from live state. Re-materializing Data on every
+	// commit (the prior behavior) wrote the whole Data section each time and
+	// recorded mutations twice (Data + WAL); appending writes only the new WAL
+	// records.
+	baseData  []byte
+	baseBloom []byte
 	// pendingBytes estimates the persisted size of buffered (uncommitted)
 	// mutations; uncompactedWALBytes is the persisted size of the committed WAL
 	// after the most recent write. Together they drive the auto-flush policy.
@@ -55,7 +64,11 @@ func Open(path string) (*Store, error) {
 		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 			return nil, err
 		}
-		st := &Store{path: path, state: newStoreState(), nextWALSeq: 1}
+		emptyData, err := encodeDataEntries(nil)
+		if err != nil {
+			return nil, err
+		}
+		st := &Store{path: path, state: newStoreState(), nextWALSeq: 1, baseData: emptyData, baseBloom: encodeBloom(nil)}
 		if err := st.writeFile(); err != nil {
 			return nil, err
 		}
@@ -104,7 +117,14 @@ func openBytes(file []byte) (*Store, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Store{state: state, committedWAL: committedWAL, nextWALSeq: nextSeq, uncompactedWALBytes: len(c.WAL)}, nil
+	return &Store{
+		state:               state,
+		committedWAL:        committedWAL,
+		nextWALSeq:          nextSeq,
+		uncompactedWALBytes: len(c.WAL),
+		baseData:            c.Data,
+		baseBloom:           c.Bloom,
+	}, nil
 }
 
 // OpenBytes opens an AKG store from in-memory bytes. The store is fully
@@ -416,24 +436,17 @@ func (s *Store) Close() error {
 	return nil
 }
 
+// writeFile persists the store by logical append: the compaction-baseline Data
+// and Bloom sections are written back unchanged and only the committed WAL grows.
+// It does NOT re-materialize Data from live state — that is Compact's job. The
+// write itself is crash-atomic (temp + fsync + rename). This matches the
+// reference SDK (internal/store) and akg-ts byte-for-byte.
 func (s *Store) writeFile() error {
-	entries, err := materializeDataEntries(s.state)
-	if err != nil {
-		return err
-	}
-	data, err := encodeDataEntries(entries)
-	if err != nil {
-		return err
-	}
-	keys := make([][]byte, len(entries))
-	for i, entry := range entries {
-		keys[i] = entry.Key
-	}
 	walPayload, err := encodeWALRecords(s.committedWAL)
 	if err != nil {
 		return err
 	}
-	file, err := encodeContainer(container{Data: data, Bloom: encodeBloom(keys), WAL: walPayload})
+	file, err := encodeContainer(container{Data: s.baseData, Bloom: s.baseBloom, WAL: walPayload})
 	if err != nil {
 		return err
 	}

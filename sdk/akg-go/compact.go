@@ -35,13 +35,18 @@ func (s *Store) Compact() error {
 	for i, e := range entries {
 		keys[i] = e.Key
 	}
-	file, err := encodeContainer(container{Data: data, Bloom: encodeBloom(keys)})
+	bloom := encodeBloom(keys)
+	file, err := encodeContainer(container{Data: data, Bloom: bloom})
 	if err != nil {
 		return err
 	}
 	if err := writeFileAtomicRename(s.path, file); err != nil {
 		return err
 	}
+	// Compaction establishes a new baseline: live Data/Bloom become the sections
+	// future commits append onto, and the WAL is emptied.
+	s.baseData = data
+	s.baseBloom = bloom
 	s.committedWAL = nil
 	s.nextWALSeq = 1
 	s.uncompactedWALBytes = 0
