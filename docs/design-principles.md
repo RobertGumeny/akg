@@ -101,20 +101,3 @@ feature.
 8. **Documents over triples.** A node is a substantial unit of memory with typed
    fields, not an atomized subject-predicate-object fragment. AKG models knowledge
    as documents with relationships, not an RDF-style triple store.
-
-## Merge
-
-Merge semantics — how two divergent `.akg` files reconcile into one — is the
-deepest design problem in AKG and gets its own focused design pass. The scope
-line for it is fixed: **how merge works is in scope; when and how files reach
-merge is not.** AKG ships a merge primitive; the orchestrator decides when to
-call it and how the two files arrived.
-
-## A note on tone
-
-The specification is a technical document. It describes bytes and operations. It
-does not position AKG against RAG, vector databases, graph servers, or any other
-tool, except to state plainly where AKG's scope ends and those tools' begins.
-There is no thesis to prove, no benchmark to win, and no contrarian framing. A
-reader should finish the spec knowing exactly what the format is and how to
-operate on it, and nothing about what it is "better" than.
