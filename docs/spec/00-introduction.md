@@ -17,19 +17,8 @@ AKG is designed around a small set of principles:
 
 - Portable graph state is the core abstraction. AKG stores explicit records and explicit relations in a file that can move across tools and hosts.
 - Documents are preferred over triples. Nodes are substantial units of memory with typed fields, not atomized subject-predicate-object fragments.
-- Exact structure is a first-class access path. The format supports identifiers, typed scans, tags, and graph traversal; higher-level systems may add semantic recall or ranking above it.
-- Embeddings are not required for format compatibility.
-- Vector indexes are not part of the core on-disk format.
+- Exact structure is the core access path. The format supports identifiers, typed scans, tags, graph traversal, and recency. Ranked or semantic recall — embeddings, vector indexes — is an optional layer above the format and is not required for format compatibility.
 
-These constraints are intentional. AKG is a format for durable agent memory, not a general-purpose similarity engine. It can be used alongside RAG, embeddings, vector search, graph servers, or application databases when those are the right tools for a larger system.
+AKG is a format, not a service or an application database. It can be used alongside RAG, embeddings, vector search, graph servers, or application databases when those are the right tools for a larger system; it does not attempt to subsume them.
 
-Accordingly, AKG is not any of the following:
-
-- a vector database
-- a conversation store
-- a replacement for application databases
-- an MCP server
-
-A conformant implementation may be used alongside those systems, but the AKG format does not attempt to subsume them.
-
-The Go Reference SDK for AKG lives alongside this specification. In Phase 1, its scope is limited to the format layer: reading, writing, compaction, WAL replay during ordinary open, and explicit recovery tooling. AKG v1 uses an accumulating WAL between compactions rather than rewriting the full file on every commit. The Reference SDK lives alongside the conformance test suite, which is the cross-implementation test set for format behavior.
+The Go Reference SDK for AKG lives alongside this specification. Its scope is the format layer: reading, writing, compaction, WAL replay during ordinary open, and explicit recovery tooling. AKG defines an accumulating WAL between compactions, so a writer may append committed mutations rather than rewriting the full file on every commit; the commit write strategy is an implementation choice, not a format mandate (see Section 5). The Reference SDK lives alongside the conformance test suite, which is the cross-implementation test set for format behavior.

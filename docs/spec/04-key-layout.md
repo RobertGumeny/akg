@@ -31,6 +31,8 @@ A conformant writer must ensure that every node identifier satisfies all of the 
 - it is at most 64 characters long
 - it is unique within a node type's key space
 
+Because the node `type` is also a key component, it is subject to the same key-component constraints: a conformant writer must reject a `type` that contains a `:` character, is empty, or exceeds 64 bytes.
+
 Node identity is the tuple `(type, id)`, matching the full `n:{type}:{id}` primary key. The same `id` string may appear under different `type` values; those are distinct logical nodes. Changing a node's `type` is therefore an identity change, not an in-place mutation of the existing node.
 
 Writers must reject a node identifier that violates any of these constraints. They must not normalize, truncate, or silently rewrite it.
@@ -48,6 +50,8 @@ The primary key for an edge is:
 This key orders edges by source node type first, then by source node ID, then by relation, then by destination node type, then by destination node ID. A reader that needs outbound edges for a node of type `T` and ID `X` performs a prefix scan on `e:{T}:{X}:`.
 
 Because edge identity in AKG is the tuple `(from_node_type, from_node, relation, to_node_type, to_node)`, the edge primary key encodes the full edge identity.
+
+Because the `relation` string is a key component, it is subject to the same key-component constraints as node types and identifiers: a conformant writer must reject a `relation` that contains a `:` character, is empty, or exceeds 64 bytes.
 
 ## Inverted Edge Index
 
@@ -67,14 +71,13 @@ For each tag on a node, the writer must produce one tag index entry with the key
 
 A reader that needs all nodes carrying a given tag performs a prefix scan on `t:{tag}:`.
 
-Tag values are subject to the following format-level constraints:
+Tag values are subject to the following format-level constraints, which exist for key safety and resource bounds:
 
-- tags must be lowercase
-- multi-word tags must use snake_case
+- a tag contains no `:` characters
+- a tag is non-empty and at most 64 bytes
 - a node may carry at most 32 tags
-- tags containing spaces must be rejected
 
-Writers must reject non-conformant tags. They must not lowercase, normalize whitespace, replace spaces with underscores, or otherwise silently correct input.
+Casing and word separation (for example, lowercase and snake_case) are an SDK-level convention, not a format rule; see the SDK author guide. Writers must reject tags that violate the format-level constraints above, and must not silently correct input — no lowercasing, whitespace normalization, or space-to-underscore rewriting.
 
 ## Temporal Index
 

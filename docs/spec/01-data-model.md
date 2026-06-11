@@ -15,7 +15,7 @@ A node payload in AKG has the following schema:
 - `updated_at: timestamp` — Unix microseconds, `uint64`
 - `version: uint32` — optional, default `1`
 
-`type` classifies the node at the application level. The AKG format does not prescribe a closed vocabulary for this field. Any UTF-8 string is valid at the format level.
+`type` classifies the node at the application level. The AKG format does not prescribe a closed vocabulary for this field. Any UTF-8 string is valid as a `type` value, subject to the key-component constraints in Section 4 (no `:` delimiter, non-empty, at most 64 bytes), because `type` is part of the node key.
 
 `title` is the required human-readable label for the node.
 
@@ -59,7 +59,7 @@ An edge payload in AKG has the following schema:
 
 `from_node` and `to_node` identify the source and destination node IDs of the directed relationship.
 
-`relation` names the relationship. The AKG format does not prescribe a closed vocabulary for this field. Any UTF-8 string is valid at the format level.
+`relation` names the relationship. The AKG format does not prescribe a closed vocabulary for this field. Any UTF-8 string is valid as a `relation` value, subject to the key-component constraints in Section 4 (no `:` delimiter, non-empty, at most 64 bytes), because `relation` is part of the edge key.
 
 `strength` expresses the importance, centrality, or salience of the relationship. If omitted, readers apply the read-time default value `0.5`.
 
@@ -113,6 +113,6 @@ The distinction between `confidence: null` and a numeric confidence value is sig
 
 ## Type and Relation Vocabularies
 
-AKG is format-agnostic with respect to node types and edge relations. The format validates only that `type` and `relation` are strings. It does not require a registry, fixed taxonomy, or predefined ontology.
+AKG is format-agnostic with respect to node types and edge relations. The format validates only that `type` and `relation` are strings meeting the key-component constraints in Section 4 (no `:` delimiter, non-empty, at most 64 bytes). It does not require a registry, fixed taxonomy, or predefined ontology.
 
 Implementations may publish default node type taxonomies, default relation vocabularies, or informational registries for interoperability and ergonomics. Such conventions are outside the format contract. A conformant AKG reader or writer must accept custom `type` and `relation` strings without treating them as schema violations.

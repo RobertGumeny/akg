@@ -21,6 +21,23 @@ on-disk format, encoding rules, validation requirements, and interoperability
 constraints. Your internal architecture is your business; the spec only constrains
 what you read and write.
 
+## Recommended conventions (not format rules)
+
+These are ergonomic conventions, not part of the format contract. The format
+accepts any key-safe string; following these keeps data interoperable across SDKs.
+
+**Tag casing.** The format accepts any key-safe tag (no `:`, non-empty, ≤64 bytes,
+≤32 per node). To keep the tag index from fragmenting across implementations, write
+tags **lowercase** and use **snake_case** for multi-word tags (`auth_flow`, not
+`Auth Flow`). A reader should not assume tags are normalized.
+
+**Default vocabularies.** AKG mandates no taxonomy. For interoperability, SDKs may
+adopt these common defaults; any UTF-8 string remains valid.
+
+- Node types: `entity`, `decision`, `preference`, `task`, `fact`, `note`
+- Relations: `depends_on`, `supports`, `contradicts`, `mentions`, `caused_by`,
+  `related_to`
+
 ## How to verify it
 
 Run your implementation against the conformance fixtures in `testdata/conformance/`.

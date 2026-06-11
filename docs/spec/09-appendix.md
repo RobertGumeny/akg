@@ -135,27 +135,7 @@ Unknown extra fields in these delete payloads are tolerated on read and ignored.
 
 ## Default SDK Taxonomy Conventions
 
-AKG does not require a fixed node-type taxonomy or relation vocabulary. Implementations may nevertheless publish defaults for interoperability.
-
-Typical default node-type conventions include values such as:
-
-- `entity`
-- `decision`
-- `preference`
-- `task`
-- `fact`
-- `note`
-
-Typical default relation conventions include values such as:
-
-- `depends_on`
-- `supports`
-- `contradicts`
-- `mentions`
-- `caused_by`
-- `related_to`
-
-These are SDK conventions only. Any UTF-8 string remains valid for `type` and `relation` at the format level.
+AKG does not require a fixed node-type taxonomy or relation vocabulary. Any UTF-8 string (subject to the Section 4 key-component constraints) remains valid for `type` and `relation` at the format level. Recommended default vocabularies are an SDK-level convention and live in the [SDK author guide](../sdk-author-guide.md), not in this format specification.
 
 ## Glossary
 

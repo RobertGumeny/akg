@@ -1,21 +1,23 @@
 # Write-Ahead Log
 
-AKG uses a write-ahead log (WAL) to provide crash safety for in-place file mutation. A conformant writer must append the corresponding WAL records before treating the associated logical mutation as part of durable file state.
+AKG defines a write-ahead log (WAL) as a file section that records committed mutations. It serves two purposes: crash-safe recovery of committed state, and — for writers that choose it — cheap append-on-commit that avoids rewriting the whole file between compactions.
+
+The commit write strategy is an implementation choice, not a format mandate. A writer MAY append WAL records as its durable commit path, leaving the Data section as the last-compacted baseline; or it MAY rewrite the whole file on commit, folding mutations into the Data section and leaving the WAL empty. Both are conformant, and both must be crash-atomic. The rules in this section govern the WAL when a writer uses it, and govern how any reader replays whatever WAL is present.
 
 The WAL is represented as a section in the AKG file, as defined in Section 2. Its contents are an ordered sequence of WAL records.
 
 ## Purpose
 
-The WAL exists to ensure that mutation intent is recorded before main data structures are considered durably updated.
+The WAL records committed mutation intent so that committed state is recoverable after a crash.
 
-For node and edge writes, the writer-first ordering is:
+For a writer using the append strategy, the writer-first ordering is:
 
 1. append WAL records
 2. reach a `COMMIT` record at the chosen durability boundary
 3. fsync on `commit()`
 4. treat the committed mutation set as durable
 
-A process crash before `commit()` may lose recent buffered work. A process crash after a successful `commit()` must leave enough WAL state for a conformant implementation to recover the committed logical mutations.
+A process crash before `commit()` may lose recent buffered work. A process crash after a successful `commit()` must leave enough durable state to recover the committed logical mutations — an appended-and-fsynced WAL prefix for the append strategy, or an atomically-renamed rewritten file for the rewrite strategy.
 
 ## Operation Types
 
@@ -101,9 +103,7 @@ If no valid `COMMIT` record is present, the WAL contains no committed batch. A c
 
 ## Lifecycle
 
-The WAL accumulates between compactions.
-
-A conformant writer must not partially clear the WAL as individual mutations are absorbed into the main data section. Ordinary committed files may therefore contain a non-empty WAL. The WAL remains associated with the file until compaction writes a fresh compacted file.
+Under the append strategy, the WAL accumulates between compactions: a conformant writer must not partially clear it as individual mutations are absorbed into the Data section, so an ordinary committed file may contain a non-empty WAL that remains until compaction writes a fresh file. Under the rewrite strategy, each commit rewrites the Data section to reflect all committed mutations and the WAL is written empty. Either way, a reader replays whatever committed WAL prefix is present; an empty WAL replays to nothing.
 
 During compaction, live data is rewritten into the new file and the old WAL is discarded entirely.
 
@@ -124,9 +124,9 @@ This flush policy is a writer-side safety valve. It is not a compaction trigger.
 
 ## Durability Boundary
 
-`commit()` is the WAL durability boundary.
+`commit()` is the durability boundary.
 
-A conformant writer may buffer writes in memory before `commit()`. On explicit `commit()`, it must append the corresponding mutation record or records, append `COMMIT`, and fsync the file state required for durable recovery of the committed batch. `commit()` does not imply immediate whole-file rewrite or compaction.
+A conformant writer may buffer writes in memory before `commit()`. On explicit `commit()`, it must make the committed batch durable and crash-atomic, fsyncing the file state required for recovery. A writer using the append strategy appends the mutation record or records followed by a `COMMIT` record; a writer using the rewrite strategy rewrites the file and atomically renames it into place. `commit()` does not by itself require compaction.
 
 A conformant implementation must call `commit()` automatically on clean close unless the current mutation set has already been committed.
 
