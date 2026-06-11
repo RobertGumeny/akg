@@ -49,6 +49,7 @@ function errorCategory(err: unknown): string {
   if (msg.includes('invalid wal payload')) return 'invalid_wal_payload';
   if (msg.includes('invalid data payload')) return 'invalid_data_payload';
   if (msg.includes('derived index mismatch')) return 'derived_index_mismatch';
+  if (msg.includes('malformed') && msg.includes('key')) return 'malformed_key';
   return 'unknown';
 }
 

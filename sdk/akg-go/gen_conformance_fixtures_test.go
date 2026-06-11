@@ -1,12 +1,14 @@
 package akg
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -33,6 +35,8 @@ func TestGenEdgeConformanceFixtures(t *testing.T) {
 		{"m2-edge-deletion-survives-reopen.akg", genFixtureEdgeDeletionSurvivesReopen},
 		{"m2-reject-derived-index-mismatch.akg", genFixtureRejectDerivedIndexMismatch},
 		{"m2-reject-malformed-committed-wal.akg", genFixtureRejectMalformedCommittedWAL},
+		{"m2-utf8-keys.akg", genFixtureUTF8Keys},
+		{"m3-reject-oversize-type-key.akg", genFixtureRejectOversizeTypeKey},
 	}
 
 	for _, fx := range fixtures {
@@ -393,6 +397,72 @@ func genFixtureRejectMalformedCommittedWAL(path string) error {
 		return err
 	}
 	file, err := encodeContainer(container{Data: emptyData, WAL: walBytes})
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(path, file, 0o644)
+}
+
+// genFixtureUTF8Keys: compacted graph proving CONF-1/CONF-2 — type, relation, and
+// tag are any key-safe UTF-8 string (no snake_case rule), each capped at 64 bytes.
+// Uses an uppercase type (Person), an uppercase relation (KNOWS), and non-ASCII
+// tags (café), plus a node whose type sits exactly at the 64-byte cap. A
+// conformant reader MUST accept all of these. (Fails against the pre-CONF-1
+// snake_case-only validators, which rejected uppercase/non-ASCII keys on load.)
+func genFixtureUTF8Keys(path string) error {
+	const ts = timestampMicros(4_000_000)
+	s := newStoreState()
+	s.now = func() timestampMicros { return ts }
+	if _, err := s.putNode("ada", coreNode{Type: "Person", Title: "Ada", Tags: []string{"café", "Active"}}); err != nil {
+		return err
+	}
+	if _, err := s.putNode("bob", coreNode{Type: "Person", Title: "Bob"}); err != nil {
+		return err
+	}
+	// A node whose type is exactly 64 bytes — at the cap, must be accepted.
+	if _, err := s.putNode("edge-case", coreNode{Type: strings.Repeat("a", 64), Title: "AtCap"}); err != nil {
+		return err
+	}
+	if _, err := s.putEdge(coreEdge{FromType: "Person", FromNode: "ada", Relation: "KNOWS", ToType: "Person", ToNode: "bob"}); err != nil {
+		return err
+	}
+	return writeCompactedStore(path, s)
+}
+
+// genFixtureRejectOversizeTypeKey: a Data section whose primary node key carries a
+// 65-byte type — one over the 64-byte cap (CONF-2). A conformant reader MUST reject
+// it on load. Built by materializing a valid at-cap (64-byte type) store, then
+// extending the type by one byte in every key that embeds it, so only the byte cap
+// (not an identity/derived-index mismatch) is what fails. Fails against the
+// pre-CONF-2 behavior, which had no length cap on type and would accept this file.
+func genFixtureRejectOversizeTypeKey(path string) error {
+	const ts = timestampMicros(5_000_000)
+	atCap := strings.Repeat("a", 64) // valid: exactly at the cap
+	overCap := strings.Repeat("a", 65)
+	s := newStoreState()
+	s.now = func() timestampMicros { return ts }
+	if _, err := s.putNode("x", coreNode{Type: atCap, Title: "over"}); err != nil {
+		return err
+	}
+	entries, err := materializeDataEntries(s)
+	if err != nil {
+		return err
+	}
+	// Push the type one byte over the cap in every key that embeds it. The id ("x")
+	// and the numeric timestamp contain no 'a' run, so this replacement is
+	// unambiguous and preserves byte-ordering of the entry set.
+	for i := range entries {
+		entries[i].Key = bytes.Replace(entries[i].Key, []byte(atCap), []byte(overCap), 1)
+	}
+	data, err := encodeDataEntries(entries)
+	if err != nil {
+		return err
+	}
+	keys := make([][]byte, len(entries))
+	for i, e := range entries {
+		keys[i] = e.Key
+	}
+	file, err := encodeContainer(container{Data: data, Bloom: encodeBloom(keys), WAL: nil})
 	if err != nil {
 		return err
 	}

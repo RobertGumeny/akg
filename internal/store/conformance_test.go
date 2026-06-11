@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/RobertGumeny/akg/internal/format"
+	"github.com/RobertGumeny/akg/internal/keys"
 	"github.com/RobertGumeny/akg/internal/record"
 	"github.com/RobertGumeny/akg/internal/wal"
 )
@@ -173,6 +174,8 @@ func conformanceErrorCategory(category string) error {
 		return format.ErrInvalidBloomSection
 	case "invalid_data_payload", "invalid_wal_payload":
 		return record.ErrInvalidPayload
+	case "malformed_key":
+		return keys.ErrMalformedKey
 	case "invalid_wal_record":
 		return wal.ErrInvalidRecord
 	case "invalid_header":

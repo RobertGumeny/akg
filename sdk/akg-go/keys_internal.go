@@ -8,7 +8,10 @@ import (
 	"unicode/utf8"
 )
 
-const maxNodeIDLen = 64
+// maxComponentBytes caps every key component — node-id, type, relation, and tag
+// — at 64 UTF-8 bytes (spec 04:31/34/54/77, echoed 01:18/62/116). Bytes, not
+// codepoints: unambiguous and identical across language implementations.
+const maxComponentBytes = 64
 
 var (
 	errMalformedKey     = fmt.Errorf("malformed key")
@@ -199,32 +202,16 @@ func splitKey(key []byte, want int) []string {
 }
 
 func validateNodeID(id nodeID) error {
-	value := string(id)
-	if value == "" || !utf8.ValidString(value) || utf8.RuneCountInString(value) > maxNodeIDLen || strings.ContainsRune(value, ':') {
-		return errInvalidComponent
-	}
-	return nil
+	return validateComponent(string(id))
 }
 
+// validateComponent enforces only the format-level key-safety rules that apply
+// to every component (type, relation, tag, node-id): non-empty, valid UTF-8, no
+// colon delimiter, and at most 64 UTF-8 bytes (spec 01:18/62/116, 04:31/34/54/77).
+// Casing and word-separation (lowercase, snake_case) are an SDK-level convention,
+// not a format rule (04:80) — writers must not reject or silently correct them.
 func validateComponent(value string) error {
-	if value == "" {
-		return errInvalidComponent
-	}
-	prevUnderscore := false
-	for i, r := range value {
-		switch {
-		case r >= 'a' && r <= 'z', r >= '0' && r <= '9':
-			prevUnderscore = false
-		case r == '_':
-			if i == 0 || prevUnderscore {
-				return errInvalidComponent
-			}
-			prevUnderscore = true
-		default:
-			return errInvalidComponent
-		}
-	}
-	if prevUnderscore {
+	if value == "" || !utf8.ValidString(value) || len(value) > maxComponentBytes || strings.ContainsRune(value, ':') {
 		return errInvalidComponent
 	}
 	return nil

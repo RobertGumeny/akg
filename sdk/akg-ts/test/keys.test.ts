@@ -12,33 +12,35 @@ describe('validateComponent', () => {
     expect(() => validateComponent('abc123')).not.toThrow();
   });
 
+  // CONF-1: type/relation/tag are any key-safe UTF-8 string — casing and
+  // word-separation are an SDK convention, not a format rule (spec 04:80).
+  it('accepts uppercase and non-ascii (no snake_case rule)', () => {
+    expect(() => validateComponent('Person')).not.toThrow();
+    expect(() => validateComponent('BadType')).not.toThrow();
+    expect(() => validateComponent('café')).not.toThrow();
+    expect(() => validateComponent('_type')).not.toThrow();
+    expect(() => validateComponent('type_')).not.toThrow();
+    expect(() => validateComponent('type__name')).not.toThrow();
+    expect(() => validateComponent('in progress')).not.toThrow();
+  });
+
   it('rejects empty', () => {
     expect(() => validateComponent('')).toThrow(InvalidInputError);
-  });
-
-  it('rejects uppercase', () => {
-    expect(() => validateComponent('BadType')).toThrow(InvalidInputError);
-    expect(() => validateComponent('Person')).toThrow(InvalidInputError);
-  });
-
-  it('rejects leading underscore', () => {
-    expect(() => validateComponent('_type')).toThrow(InvalidInputError);
-  });
-
-  it('rejects trailing underscore', () => {
-    expect(() => validateComponent('type_')).toThrow(InvalidInputError);
-  });
-
-  it('rejects consecutive underscores', () => {
-    expect(() => validateComponent('type__name')).toThrow(InvalidInputError);
   });
 
   it('rejects colons', () => {
     expect(() => validateComponent('bad:type')).toThrow(InvalidInputError);
   });
 
-  it('rejects spaces', () => {
-    expect(() => validateComponent('bad type')).toThrow(InvalidInputError);
+  // CONF-2: the cap is 64 UTF-8 bytes, not codepoints.
+  it('accepts exactly 64 bytes, rejects 65', () => {
+    expect(() => validateComponent('a'.repeat(64))).not.toThrow();
+    expect(() => validateComponent('a'.repeat(65))).toThrow(InvalidInputError);
+  });
+
+  it('accepts 32 multibyte chars (64 bytes), rejects 33 (66 bytes)', () => {
+    expect(() => validateComponent('é'.repeat(32))).not.toThrow();
+    expect(() => validateComponent('é'.repeat(33))).toThrow(InvalidInputError);
   });
 });
 
@@ -56,8 +58,10 @@ describe('validateNodeID', () => {
     expect(() => validateNodeID('bad:id')).toThrow(InvalidInputError);
   });
 
-  it('rejects IDs too long', () => {
+  it('rejects IDs over 64 bytes', () => {
     expect(() => validateNodeID('a'.repeat(65))).toThrow(InvalidInputError);
+    // 33 two-byte chars = 66 bytes > 64, even though only 33 codepoints.
+    expect(() => validateNodeID('é'.repeat(33))).toThrow(InvalidInputError);
   });
 });
 

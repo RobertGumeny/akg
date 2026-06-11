@@ -71,6 +71,21 @@
       "features": ["nodes", "edges"]
     },
     {
+      "path": "m2-utf8-keys.akg",
+      "purpose": "Compacted graph whose type (Person), relation (KNOWS), and tags (café, Active) are key-safe UTF-8 strings, not snake_case, plus a node whose type is exactly 64 bytes. A conformant reader must accept all of these (CONF-1/CONF-2: casing and word-separation are an SDK convention, not a format rule; the cap is 64 bytes).",
+      "expected_result": "accept",
+      "validation_scope": "store",
+      "store_expectation": {
+        "nodes": 3,
+        "edges": 1,
+        "has_uncompacted_wal": false,
+        "next_wal_sequence": 1
+      },
+      "sha256": "af1bc75fe10330918f14b764f1ab9fffa8e212ccb2121c7367b7e33c2b87b9a1",
+      "generated_by": "Go SDK TestGenEdgeConformanceFixtures (genFixtureUTF8Keys)",
+      "features": ["nodes", "edges", "tags"]
+    },
+    {
       "path": "m2-small-graph.akg",
       "purpose": "Compacted small graph with mixed node types, tags, and edges.",
       "expected_result": "accept",
@@ -435,6 +450,16 @@
       "sha256": "efb8be8652d8b307d3a7e75d674fcb9b94ef21d49fd376de0956a2111c0c8fc5",
       "corruption": "Generated from canonical node Data entries, then the required tag-derived index entry is omitted while Bloom matches the remaining keys.",
       "features": ["nodes", "tags"]
+    },
+    {
+      "path": "m3-reject-oversize-type-key.akg",
+      "purpose": "Primary Data node key whose type is 65 bytes — one over the 64-byte cap (CONF-2). A conformant reader must reject it on load.",
+      "expected_result": "reject",
+      "expected_error_category": "malformed_key",
+      "validation_scope": "store",
+      "sha256": "60562dc196390bb350f5a3fd51a56e77c424ba5f548510af5e419003dfa9a81b",
+      "corruption": "Generated from a valid single-node store whose type sits exactly at the 64-byte cap, then the type is extended by one byte in every key that embeds it (Bloom regenerated to match), so the 64-byte cap — not an identity or derived-index mismatch — is what fails.",
+      "features": ["nodes"]
     }
   ]
 }

@@ -1,22 +1,31 @@
 import { InvalidInputError } from '../errors.js';
 
-export const MAX_NODE_ID_LEN = 64;
+// MAX_COMPONENT_BYTES caps every key component — node-id, type, relation, and
+// tag — at 64 UTF-8 bytes (spec 04:31/34/54/77, echoed 01:18/62/116). Bytes, not
+// codepoints: unambiguous and identical across language implementations.
+export const MAX_COMPONENT_BYTES = 64;
 
+const utf8Encoder = new TextEncoder();
+
+// validateComponent enforces only the format-level key-safety rules that apply
+// to every component (type, relation, tag, node-id): non-empty, valid UTF-8, no
+// colon delimiter, and at most 64 UTF-8 bytes (spec 01:18/62/116, 04:31/34/54/77).
+// Casing and word-separation (lowercase, snake_case) are an SDK-level convention,
+// not a format rule (04:80) — writers must not reject or silently correct them.
 export function validateComponent(value: string): void {
   if (!value) throw new InvalidInputError('empty component');
-  let prevUnderscore = false;
-  for (let i = 0; i < value.length; i++) {
-    const c = value[i];
-    if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) {
-      prevUnderscore = false;
-    } else if (c === '_') {
-      if (i === 0 || prevUnderscore) throw new InvalidInputError(`invalid component: ${value}`);
-      prevUnderscore = true;
-    } else {
-      throw new InvalidInputError(`invalid component: ${value}`);
-    }
+  if (value.includes(':')) throw new InvalidInputError(`invalid component: ${value}`);
+  // A JS string holding a lone surrogate is not valid UTF-8; encode→decode(fatal)
+  // surfaces that before we measure byte length.
+  const bytes = utf8Encoder.encode(value);
+  try {
+    new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+  } catch {
+    throw new InvalidInputError(`invalid component: ${value}`);
   }
-  if (prevUnderscore) throw new InvalidInputError(`invalid component: ${value}`);
+  if (bytes.length > MAX_COMPONENT_BYTES) {
+    throw new InvalidInputError(`component exceeds ${MAX_COMPONENT_BYTES} bytes: ${value}`);
+  }
 }
 
 export function validateTag(tag: string): void {
@@ -24,19 +33,7 @@ export function validateTag(tag: string): void {
 }
 
 export function validateNodeID(id: string): void {
-  if (!id) throw new InvalidInputError('empty node ID');
-  if (id.includes(':')) throw new InvalidInputError('node ID must not contain colons');
-  const encoder = new TextEncoder();
-  const bytes = encoder.encode(id);
-  const decoder = new TextDecoder('utf-8', { fatal: true });
-  try {
-    decoder.decode(bytes);
-  } catch {
-    throw new InvalidInputError('node ID must be valid UTF-8');
-  }
-  if ([...id].length > MAX_NODE_ID_LEN) {
-    throw new InvalidInputError(`node ID exceeds ${MAX_NODE_ID_LEN} characters`);
-  }
+  validateComponent(id);
 }
 
 export function buildNodeKey(type: string, id: string): string {

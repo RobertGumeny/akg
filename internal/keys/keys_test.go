@@ -3,6 +3,7 @@ package keys
 import (
 	"bytes"
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/RobertGumeny/akg/internal/record"
@@ -111,22 +112,28 @@ func TestTemporalEdgeKeyBuildParse(t *testing.T) {
 }
 
 func TestBuildersRejectInvalidInputs(t *testing.T) {
-	longID := record.NodeID("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+	over := record.NodeID(strings.Repeat("a", 65))          // 65 bytes, one over the cap
+	overType := strings.Repeat("a", 65)                     // 65 bytes
+	multibyteOver := strings.Repeat("é", 33)                // 33 codepoints, 66 bytes
 	tests := []struct {
 		name string
 		fn   func() ([]byte, error)
 	}{
 		{"node empty type", func() ([]byte, error) { return BuildNodeKey("", "id") }},
 		{"node id colon", func() ([]byte, error) { return BuildNodeKey("note", "bad:id") }},
-		{"node id too long", func() ([]byte, error) { return BuildNodeKey("note", longID) }},
+		{"node id too long", func() ([]byte, error) { return BuildNodeKey("note", over) }},
+		{"node id multibyte over cap", func() ([]byte, error) { return BuildNodeKey("note", record.NodeID(multibyteOver)) }},
+		{"node type too long", func() ([]byte, error) { return BuildNodeKey(overType, "id") }},
 		{"edge empty from type", func() ([]byte, error) { return BuildEdgeKey("", "a", "rel", "note", "b") }},
 		{"edge empty from", func() ([]byte, error) { return BuildEdgeKey("note", "", "rel", "note", "b") }},
 		{"edge relation colon", func() ([]byte, error) { return BuildEdgeKey("note", "a", "bad:rel", "note", "b") }},
+		{"edge relation too long", func() ([]byte, error) { return BuildEdgeKey("note", "a", record.Relation(overType), "note", "b") }},
 		{"edge index empty to type", func() ([]byte, error) { return BuildEdgeIndexKey("", "b", "rel", "note", "a") }},
 		{"edge index empty to", func() ([]byte, error) { return BuildEdgeIndexKey("note", "", "rel", "note", "a") }},
-		{"tag uppercase", func() ([]byte, error) { return BuildTagKey("Bad", "id") }},
-		{"tag spaces", func() ([]byte, error) { return BuildTagKey("bad tag", "id") }},
-		{"tag double underscore", func() ([]byte, error) { return BuildTagKey("bad__tag", "id") }},
+		{"tag colon", func() ([]byte, error) { return BuildTagKey("bad:tag", "id") }},
+		{"tag empty", func() ([]byte, error) { return BuildTagKey("", "id") }},
+		{"tag too long", func() ([]byte, error) { return BuildTagKey(overType, "id") }},
+		{"tag multibyte over cap", func() ([]byte, error) { return BuildTagKey(multibyteOver, "id") }},
 		{"temporal node bad id", func() ([]byte, error) { return BuildTemporalNodeKey(1, "note", "bad:id") }},
 	}
 	for _, tt := range tests {
@@ -134,6 +141,37 @@ func TestBuildersRejectInvalidInputs(t *testing.T) {
 			_, err := tt.fn()
 			if !errors.Is(err, ErrInvalidComponent) {
 				t.Fatalf("err = %v, want ErrInvalidComponent", err)
+			}
+		})
+	}
+}
+
+// TestBuildersAcceptUTF8AndByteCap pins the CONF-1/CONF-2 contract: type,
+// relation, and tag are any key-safe UTF-8 string (no snake_case rule), capped
+// at 64 bytes. Casing and non-ASCII values are accepted; the cap is on bytes.
+func TestBuildersAcceptUTF8AndByteCap(t *testing.T) {
+	atCap := strings.Repeat("a", 64)        // exactly 64 bytes
+	multibyteAtCap := strings.Repeat("é", 32) // 32 codepoints, 64 bytes
+	tests := []struct {
+		name string
+		fn   func() ([]byte, error)
+	}{
+		{"type uppercase", func() ([]byte, error) { return BuildNodeKey("Person", "id") }},
+		{"type non-ascii", func() ([]byte, error) { return BuildNodeKey("café", "id") }},
+		{"relation uppercase", func() ([]byte, error) { return BuildEdgeKey("Person", "a", "KNOWS", "Person", "b") }},
+		{"relation non-ascii", func() ([]byte, error) { return BuildEdgeKey("note", "a", "café", "note", "b") }},
+		{"tag uppercase", func() ([]byte, error) { return BuildTagKey("Active", "id") }},
+		{"tag non-ascii", func() ([]byte, error) { return BuildTagKey("café", "id") }},
+		{"tag with space", func() ([]byte, error) { return BuildTagKey("in progress", "id") }},
+		{"type at byte cap", func() ([]byte, error) { return BuildNodeKey(atCap, "id") }},
+		{"type multibyte at byte cap", func() ([]byte, error) { return BuildNodeKey(multibyteAtCap, "id") }},
+		{"id at byte cap", func() ([]byte, error) { return BuildNodeKey("note", record.NodeID(atCap)) }},
+		{"tag at byte cap", func() ([]byte, error) { return BuildTagKey(atCap, "id") }},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if _, err := tt.fn(); err != nil {
+				t.Fatalf("err = %v, want nil", err)
 			}
 		})
 	}
@@ -151,7 +189,7 @@ func TestParsersRejectMalformedKeys(t *testing.T) {
 		{"edge incomplete", []byte("e:note:a:rel:note"), func(k []byte) error { _, err := ParseEdgeKey(k); return err }},
 		{"edge empty component", []byte("e:note:a::note:b"), func(k []byte) error { _, err := ParseEdgeKey(k); return err }},
 		{"edge index wrong prefix", []byte("e:note:b:rel:note:a"), func(k []byte) error { _, err := ParseEdgeIndexKey(k); return err }},
-		{"tag uppercase", []byte("t:Bad:id"), func(k []byte) error { _, err := ParseTagKey(k); return err }},
+		{"tag over byte cap", []byte("t:" + strings.Repeat("a", 65) + ":id"), func(k []byte) error { _, err := ParseTagKey(k); return err }},
 		{"temporal missing suffix", []byte("ts:123"), func(k []byte) error { _, err := ParseTemporalKey(k); return err }},
 		{"temporal unknown kind", []byte("ts:123:x:a:b"), func(k []byte) error { _, err := ParseTemporalKey(k); return err }},
 		{"temporal non numeric", []byte("ts:abc:n:note:id"), func(k []byte) error { _, err := ParseTemporalKey(k); return err }},

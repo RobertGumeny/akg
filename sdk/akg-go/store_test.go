@@ -576,8 +576,8 @@ func TestListNodes(t *testing.T) {
 		t.Fatalf("expected empty for unknown type, got %d nodes", len(unknown))
 	}
 
-	// invalid typeName (uppercase rejected by tightened validateComponent) returns error
-	_, err = st.ListNodes("BadType")
+	// invalid typeName (colon is the key delimiter — always rejected) returns error
+	_, err = st.ListNodes("bad:type")
 	if err == nil {
 		t.Fatal("expected error for invalid typeName")
 	}
@@ -701,8 +701,8 @@ func TestValidationErrorsErrInvalidInput(t *testing.T) {
 	}
 	defer st.Close()
 
-	// Invalid type name (uppercase) → ErrInvalidInput
-	if _, err := st.PutNode("BadType", "id", NodeFields{Title: "t"}, nil); !errors.Is(err, ErrInvalidInput) {
+	// Invalid type name (over the 64-byte cap) → ErrInvalidInput
+	if _, err := st.PutNode(strings.Repeat("a", 65), "id", NodeFields{Title: "t"}, nil); !errors.Is(err, ErrInvalidInput) {
 		t.Fatalf("invalid type name: expected ErrInvalidInput, got %v", err)
 	}
 	// Invalid type name (contains colon) → ErrInvalidInput
@@ -719,14 +719,27 @@ func TestValidationErrorsErrInvalidInput(t *testing.T) {
 	if err != nil {
 		t.Fatalf("PutNode n2: %v", err)
 	}
-	// Invalid relation name (uppercase) → ErrInvalidInput
-	if err := st.PutEdge(n1, "BadRelation", n2, EdgeFields{}); !errors.Is(err, ErrInvalidInput) {
+	// Invalid relation name (contains colon) → ErrInvalidInput
+	if err := st.PutEdge(n1, "bad:relation", n2, EdgeFields{}); !errors.Is(err, ErrInvalidInput) {
 		t.Fatalf("invalid relation name: expected ErrInvalidInput, got %v", err)
 	}
 
-	// Invalid tag (uppercase) → ErrInvalidInput
-	if _, err := st.PutNode("note", "n3", NodeFields{Title: "three"}, []string{"BadTag"}); !errors.Is(err, ErrInvalidInput) {
+	// Invalid tag (contains colon) → ErrInvalidInput
+	if _, err := st.PutNode("note", "n3", NodeFields{Title: "three"}, []string{"bad:tag"}); !errors.Is(err, ErrInvalidInput) {
 		t.Fatalf("invalid tag: expected ErrInvalidInput, got %v", err)
+	}
+
+	// CONF-1: uppercase / non-ASCII type, relation, and tag are now accepted.
+	un, err := st.PutNode("Person", "u1", NodeFields{Title: "upper"}, []string{"Active", "café"})
+	if err != nil {
+		t.Fatalf("uppercase/non-ascii type+tags should be accepted, got %v", err)
+	}
+	un2, err := st.PutNode("Person", "u2", NodeFields{Title: "upper2"}, nil)
+	if err != nil {
+		t.Fatalf("PutNode u2: %v", err)
+	}
+	if err := st.PutEdge(un, "KNOWS", un2, EdgeFields{}); err != nil {
+		t.Fatalf("uppercase relation should be accepted, got %v", err)
 	}
 }
 

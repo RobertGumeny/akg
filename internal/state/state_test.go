@@ -88,9 +88,8 @@ func TestPutNodeRejectsInvalidIDsAndTags(t *testing.T) {
 		{name: "id with colon", id: "bad:id"},
 		{name: "id too long", id: "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklm"},
 		{name: "duplicate tags", id: "n1", tags: []string{"a", "a"}},
-		{name: "uppercase tag", id: "n1", tags: []string{"Bad"}},
-		{name: "tag with space", id: "n1", tags: []string{"bad tag"}},
-		{name: "malformed tag leading underscore", id: "n1", tags: []string{"_bad"}},
+		{name: "tag with colon", id: "n1", tags: []string{"bad:tag"}},
+		{name: "empty tag", id: "n1", tags: []string{""}},
 		{name: "too many tags", id: "n1", tags: []string{
 			"t00", "t01", "t02", "t03", "t04", "t05", "t06", "t07",
 			"t08", "t09", "t10", "t11", "t12", "t13", "t14", "t15",

@@ -131,6 +131,8 @@ func errorCategory(err error) string {
 		return "derived_index_mismatch"
 	case errors.Is(err, errInvalidDataPayload):
 		return "invalid_data_payload"
+	case errors.Is(err, errMalformedKey):
+		return "malformed_key"
 	default:
 		return "unknown"
 	}

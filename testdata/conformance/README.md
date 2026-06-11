@@ -113,6 +113,7 @@ These should open normally:
 - `m2-uncommitted-wal-tail.akg` — committed WAL followed by uncommitted trailing bytes that ordinary open must ignore.
 - `m2-compacted.akg` — live Data/Bloom after compaction, with no carried-forward WAL.
 - `m2-deletes-before-compaction.akg` — WAL history with deletes before the final committed state.
+- `m2-utf8-keys.akg` — a compacted graph whose type (`Person`), relation (`KNOWS`), and tags (`café`, `Active`) are key-safe UTF-8 strings rather than snake_case, plus a node whose type is exactly 64 bytes. A conformant reader must accept all of these: casing and word-separation are an SDK convention, not a format rule, and the length cap is 64 bytes.
 - `m3-unknown-section-tolerated.akg` — a normal store file with a structurally valid unknown section that readers skip while hydrating known sections.
 
 ### Milestone 2 rejected files
@@ -145,3 +146,4 @@ These expand fail-closed coverage for v1 format and validation errors:
 - `m3-reject-invalid-node-data-payload.akg` — primary node Data key with an invalid node payload.
 - `m3-reject-invalid-node-data-utf8-payload.akg` — primary node Data key with invalid nested UTF-8.
 - `m3-reject-missing-derived-tag-index.akg` — node tag without the required derived tag index key.
+- `m3-reject-oversize-type-key.akg` — primary node Data key whose type is 65 bytes, one over the 64-byte cap. Built from a valid at-cap store, then the type is pushed one byte over in every key that embeds it (Bloom regenerated), so the byte cap is what fails.

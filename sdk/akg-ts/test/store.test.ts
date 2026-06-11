@@ -140,8 +140,12 @@ describe('node operations', () => {
 
   it('validates type name', async () => {
     const s = await open(storePath);
-    expect(() => s.putNode('BadType', 'id', { title: 'T' }, [])).toThrow(InvalidInputError);
+    // colon is the key delimiter; over-64-bytes exceeds the cap — both reject.
     expect(() => s.putNode('bad:type', 'id', { title: 'T' }, [])).toThrow(InvalidInputError);
+    expect(() => s.putNode('a'.repeat(65), 'id', { title: 'T' }, [])).toThrow(InvalidInputError);
+    // CONF-1: uppercase / non-ASCII type is accepted (no snake_case rule).
+    expect(() => s.putNode('Person', 'id', { title: 'T' }, [])).not.toThrow();
+    expect(() => s.putNode('café', 'id2', { title: 'T' }, [])).not.toThrow();
     await s.close();
   });
 
@@ -313,8 +317,8 @@ describe('delete operations', () => {
 describe('error handling', () => {
   it('throws InvalidInputError on invalid component names', async () => {
     const s = await open(storePath);
-    expect(() => s.putNode('Bad', 'id', { title: 'T' }, [])).toThrow(InvalidInputError);
-    expect(() => s.listNodes('BadType')).toThrow(InvalidInputError);
+    expect(() => s.putNode('bad:type', 'id', { title: 'T' }, [])).toThrow(InvalidInputError);
+    expect(() => s.listNodes('bad:type')).toThrow(InvalidInputError);
     await s.close();
   });
 

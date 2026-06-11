@@ -18,7 +18,10 @@ const (
 	prefixTemporal   = "ts"
 	temporalNodeKind = "n"
 	temporalEdgeKind = "e"
-	maxNodeIDLen     = 64
+	// maxComponentBytes caps every key component — node-id, type, relation, and
+	// tag — at 64 UTF-8 bytes (spec 04:31/34/54/77, echoed 01:18/62/116). Bytes,
+	// not codepoints: unambiguous and identical across language implementations.
+	maxComponentBytes = 64
 )
 
 var (
@@ -234,42 +237,23 @@ func splitKey(key []byte, want int) []string {
 }
 
 func validateNodeID(id record.NodeID) error {
-	value := string(id)
-	if value == "" || !utf8.ValidString(value) || utf8.RuneCountInString(value) > maxNodeIDLen || strings.ContainsRune(value, ':') {
-		return ErrInvalidComponent
-	}
-	return nil
+	return validateComponent(string(id))
 }
 
+// validateComponent enforces only the format-level key-safety rules that apply
+// to every component (type, relation, tag, node-id): non-empty, valid UTF-8, no
+// colon delimiter, and at most 64 UTF-8 bytes (spec 01:18/62/116, 04:31/34/54/77).
+// Casing and word-separation (lowercase, snake_case) are an SDK-level convention,
+// not a format rule (04:80) — writers must not reject or silently correct them.
 func validateComponent(value string) error {
-	if value == "" || !utf8.ValidString(value) || strings.ContainsRune(value, ':') {
+	if value == "" || !utf8.ValidString(value) || len(value) > maxComponentBytes || strings.ContainsRune(value, ':') {
 		return ErrInvalidComponent
 	}
 	return nil
 }
 
 func validateTag(tag string) error {
-	if validateComponent(tag) != nil {
-		return ErrInvalidComponent
-	}
-	prevUnderscore := false
-	for i, r := range tag {
-		switch {
-		case r >= 'a' && r <= 'z', r >= '0' && r <= '9':
-			prevUnderscore = false
-		case r == '_':
-			if i == 0 || prevUnderscore {
-				return ErrInvalidComponent
-			}
-			prevUnderscore = true
-		default:
-			return ErrInvalidComponent
-		}
-	}
-	if prevUnderscore {
-		return ErrInvalidComponent
-	}
-	return nil
+	return validateComponent(tag)
 }
 
 func parseCanonicalTimestamp(value string) (record.TimestampMicros, error) {
