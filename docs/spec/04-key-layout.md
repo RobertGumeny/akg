@@ -28,7 +28,7 @@ A conformant writer must ensure that every node identifier satisfies all of the 
 
 - it is an opaque string
 - it contains no `:` characters
-- it is at most 64 characters long
+- it is at most 64 bytes long
 - it is unique within a node type's key space
 
 Because the node `type` is also a key component, it is subject to the same key-component constraints: a conformant writer must reject a `type` that contains a `:` character, is empty, or exceeds 64 bytes.
