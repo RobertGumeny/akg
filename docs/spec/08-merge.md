@@ -26,17 +26,15 @@ Two records with different identities are not in conflict merely because their p
 
 ## Conflict Detection
 
-A merge conflict exists when two candidate records have the same identity and different logical content.
+Conflict detection in AKG v1 is based on the scalar `version` counter, not on timestamps. Wall-clock timestamps are not reliable across independent devices and must not be used to determine ordering; an implementation may use them only as input to its own resolution policy (see Resolution Policy). Logical content is evaluated after normal AKG decoding — MessagePack map decoding, application of all defined read-time defaults for omitted optional fields, and interpretation per Sections 1 and 3.
 
-For this purpose, logical content is evaluated after normal AKG decoding rules have been applied, including:
+For two candidate records with the same identity:
 
-- MessagePack map decoding
-- application of all defined read-time defaults for omitted optional fields
-- interpretation of node and edge payloads according to Sections 1 and 3
+- **Different `version`:** the higher-versioned record is treated as the presumed successor (a fast-forward) and supersedes the lower-versioned one. This is not a conflict.
+- **Same `version`, different logical content:** the records have diverged from a common base and are in **conflict**. Both must be preserved (see Required Preservation of Conflicting State).
+- **Same `version`, same logical content:** the records are equivalent; not a conflict.
 
-If two same-identity records decode to the same logical field values after default application, they are not in conflict.
-
-If they differ in any logical field value, including `version`, timestamps, payload fields, or other defined record content, they are in conflict.
+**Known limitation (scalar version).** A scalar counter cannot distinguish a true successor from a concurrent edit that happens to carry a higher version — for example, two replicas diverging from a common base and making unequal numbers of subsequent edits. In that case the lower-versioned concurrent edit is silently superseded rather than reported as a conflict. Reliable concurrency detection requires per-record causal metadata (a version vector), which AKG v1 does not define; it may be added as an optional, additive structure in a future minor version without invalidating existing files.
 
 ## Required Preservation of Conflicting State
 
@@ -72,7 +70,7 @@ Compaction removes tombstones permanently, as defined in Section 6.
 
 As a result, absence of a record from a compacted AKG file is not sufficient evidence that the record was deleted. The record may instead never have existed in that file's history, or it may have been deleted before compaction erased the tombstone.
 
-A merge implementation must not infer a definite deletion solely from absence in a compacted input file.
+A merge implementation must not infer a definite deletion solely from absence in a compacted input file. The conformant v1 default is therefore a **union-biased merge**: a record present on either side is kept, and a deletion does not propagate across a compacted boundary. Today's delete is effectively an eviction that a later merge may resurrect; making a deletion durable across independently compacted files requires the deletion log deferred below.
 
 If correct deletion-aware merge requires distinguishing deletion from nonexistence, the implementation must rely on information outside the compacted live-record set. In AKG v1, this information is not standardized.
 
@@ -84,15 +82,17 @@ AKG v1 does not define that mechanism. Its design is deferred to a future versio
 
 Until such a mechanism is standardized, deletion-aware merge across independently compacted files is inherently incomplete.
 
+When it is defined, its format surface is intended to be minimal: a deletion record needs only the record identity (key) and the deletion `version` — never the deleted payload. If opaque deletion entries are wanted, so that the log does not expose which identities were removed, the keys may be hashed with a format-fixed hash, exactly as the bloom filter fixes MurmurHash3 for cross-implementation determinism. Indexing, retention and erasure policy, and techniques such as crypto-shredding are implementation and deployment concerns, not part of the format.
+
 ## v1 Status
 
-Merge behavior is intentionally underspecified in AKG v1.
+Merge in AKG v1 is deliberately minimal: the format defines conflict *detection* and the *preservation* of conflicting state, and leaves *resolution* to the implementer — a consolidation layer or a managed service above the format. This is a settled scope decision, not a placeholder.
 
 This specification defines only:
 
 - how identity is determined for merge comparison
-- what constitutes a conflict
-- the requirement not to discard conflicting versions implicitly
-- the limitation created by compaction erasing tombstones
+- what constitutes a conflict, on the scalar `version` basis, including the known concurrency limitation
+- the requirement not to discard a *detected* conflict implicitly
+- the union-biased default and the limitation created by compaction erasing tombstones
 
-All richer merge behavior remains outside the v1 format contract.
+Two capabilities are deliberately deferred and, when added, are additive — files written to this version stay valid: per-record **version vectors** for reliable concurrency detection, and a **persistent deletion log** for deletion-aware merge across compacted files. Until then, automatic resolution and cross-device deletion are outside the v1 format contract.
