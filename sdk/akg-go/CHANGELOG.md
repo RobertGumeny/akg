@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- **Crash-atomic commit** — `Commit` (and the auto-flush and initial-create paths it shares) now writes through the same atomic temp → fsync → rename → directory-fsync sequence that compaction already used, instead of rewriting the live file in place with `O_TRUNC`. A crash or power loss mid-commit can no longer tear a previously committed `.akg` store; the rename either fully lands or doesn't. The in-place `writeFileSync` writer has been removed. File permissions are preserved across writes (new files honor umask, matching the TypeScript SDK).
+
 ## v0.1.4
 
 ### Added

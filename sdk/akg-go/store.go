@@ -437,7 +437,7 @@ func (s *Store) writeFile() error {
 	if err != nil {
 		return err
 	}
-	if err := writeFileSync(s.path, file); err != nil {
+	if err := writeFileAtomicRename(s.path, file); err != nil {
 		return err
 	}
 	s.uncompactedWALBytes = len(walPayload)
@@ -747,29 +747,3 @@ func inspectAndReplayWAL(state *storeState, payload []byte) ([]walRecord, walSeq
 	return committed, next, nil
 }
 
-func writeFileSync(path string, data []byte) error {
-	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o666)
-	if err != nil {
-		return err
-	}
-	n, writeErr := f.Write(data)
-	syncErr := f.Sync()
-	closeErr := f.Close()
-	if writeErr != nil {
-		return writeErr
-	}
-	if n != len(data) {
-		return errors.New("short file write")
-	}
-	if syncErr != nil {
-		return syncErr
-	}
-	if closeErr != nil {
-		return closeErr
-	}
-	if dir, err := os.Open(filepath.Dir(path)); err == nil {
-		_ = dir.Sync()
-		_ = dir.Close()
-	}
-	return nil
-}

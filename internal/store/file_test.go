@@ -458,12 +458,64 @@ func TestStoreCompactCommitsPendingAndAtomicallyReplacesPath(t *testing.T) {
 	if len(container.WAL) != 0 {
 		t.Fatalf("Store.Compact kept WAL bytes: %d", len(container.WAL))
 	}
-	matches, err := filepath.Glob(filepath.Join(filepath.Dir(path), "."+filepath.Base(path)+".compact-*"))
+	matches, err := filepath.Glob(filepath.Join(filepath.Dir(path), "."+filepath.Base(path)+".akg.tmp-*"))
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(matches) != 0 {
 		t.Fatalf("atomic compaction left temp files: %v", matches)
+	}
+}
+
+// TestCommitRenameFailureLeavesPriorFileIntact verifies that when the atomic
+// rename fails mid-commit, the previously committed file is untouched and no
+// temp file is left behind. Commit now goes through writeFileAtomic, so this
+// exercises the same crash-safety guarantee compaction already had.
+func TestCommitRenameFailureLeavesPriorFileIntact(t *testing.T) {
+	path := tempPath(t)
+	dir := filepath.Dir(path)
+	base := filepath.Base(path)
+
+	st, err := Create(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := st.PutNode("n1", record.Node{Type: "note", Title: "first"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := st.Commit(); err != nil {
+		t.Fatalf("baseline Commit: %v", err)
+	}
+
+	baseline, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := st.PutNode("n2", record.Node{Type: "note", Title: "second"}); err != nil {
+		t.Fatal(err)
+	}
+	saved := osRename
+	osRename = func(_, _ string) error { return errors.New("injected rename failure") }
+	defer func() { osRename = saved }()
+
+	if err := st.Commit(); err == nil {
+		t.Fatal("expected Commit to fail when rename fails")
+	}
+
+	after, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(baseline, after) {
+		t.Fatalf("prior committed file was modified by a failed commit: %d vs %d bytes", len(baseline), len(after))
+	}
+	matches, err := filepath.Glob(filepath.Join(dir, "."+base+".akg.tmp-*"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(matches) != 0 {
+		t.Fatalf("temp files left behind after failed commit: %v", matches)
 	}
 }
 

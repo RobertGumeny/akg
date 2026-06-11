@@ -2,7 +2,10 @@ package store
 
 import (
 	"bytes"
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -180,7 +183,7 @@ func (s *Store) Commit() error {
 	if err != nil {
 		return err
 	}
-	if err := writeFileSync(s.path, newFile); err != nil {
+	if err := writeFileAtomic(s.path, newFile); err != nil {
 		return err
 	}
 	s.pending = nil
@@ -416,77 +419,85 @@ func encodeCompactedFile(s *state.State) ([]byte, error) {
 	return file, nil
 }
 
-func writeFileSync(path string, data []byte) error {
-	f, err := os.OpenFile(path, os.O_WRONLY|os.O_TRUNC, 0)
-	if err != nil {
-		return err
+// osRename is a seam so tests can inject a rename failure.
+var osRename = os.Rename
+
+// writeFileAtomic durably replaces path with data using a crash-atomic
+// sequence: write a same-directory temp file, fsync it, rename it over the
+// target, then fsync the directory. A crash before the rename leaves the prior
+// committed file fully intact; the rename itself is atomic. The temp is removed
+// on any error before the rename.
+//
+// The temp is created with the existing file's mode (or 0o666 for a new file)
+// via O_CREATE|O_EXCL, letting the kernel apply umask. There is no explicit
+// chmod, so umask is honored for new files. This matches the akg-go and akg-ts
+// application SDKs byte-for-byte.
+func writeFileAtomic(path string, data []byte) error {
+	dirPath := filepath.Dir(path)
+	base := filepath.Base(path)
+
+	mode := os.FileMode(0o666)
+	if info, err := os.Stat(path); err == nil {
+		mode = info.Mode().Perm()
 	}
-	n, writeErr := f.Write(data)
-	syncErr := f.Sync()
-	closeErr := f.Close()
+
+	tmp, tmpPath, err := createTempExcl(dirPath, base, mode)
+	if err != nil {
+		return fmt.Errorf("akg: atomic write to %q: %w", path, err)
+	}
+
+	n, writeErr := tmp.Write(data)
+	syncErr := tmp.Sync()
+	closeErr := tmp.Close()
 	if writeErr != nil {
-		return writeErr
+		os.Remove(tmpPath)
+		return fmt.Errorf("akg: atomic write to %q: %w", path, writeErr)
 	}
 	if n != len(data) {
-		return errors.New("short file write")
+		os.Remove(tmpPath)
+		return fmt.Errorf("akg: atomic write to %q: short write (%d of %d bytes)", path, n, len(data))
 	}
 	if syncErr != nil {
-		return syncErr
+		os.Remove(tmpPath)
+		return fmt.Errorf("akg: atomic write to %q: %w", path, syncErr)
 	}
 	if closeErr != nil {
-		return closeErr
+		os.Remove(tmpPath)
+		return fmt.Errorf("akg: atomic write to %q: %w", path, closeErr)
 	}
-	if dir, err := os.Open(filepath.Dir(path)); err == nil {
+
+	if err := osRename(tmpPath, path); err != nil {
+		os.Remove(tmpPath)
+		return fmt.Errorf("akg: atomic write to %q: %w", path, err)
+	}
+
+	if dir, err := os.Open(dirPath); err == nil {
 		_ = dir.Sync()
 		_ = dir.Close()
 	}
 	return nil
 }
 
-func writeFileAtomic(path string, data []byte) error {
-	dirPath := filepath.Dir(path)
-	base := filepath.Base(path)
-	mode := os.FileMode(0o666)
-	if info, err := os.Stat(path); err == nil {
-		mode = info.Mode().Perm()
+// createTempExcl creates a uniquely named temp file in dir with the given mode,
+// using O_CREATE|O_EXCL so the kernel applies umask and an existing file is
+// never clobbered. The name is ".<base>.akg.tmp-<random hex>".
+func createTempExcl(dir, base string, mode os.FileMode) (*os.File, string, error) {
+	for i := 0; i < 10000; i++ {
+		var b [8]byte
+		if _, err := rand.Read(b[:]); err != nil {
+			return nil, "", err
+		}
+		name := filepath.Join(dir, "."+base+".akg.tmp-"+hex.EncodeToString(b[:]))
+		f, err := os.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_EXCL, mode)
+		if err != nil {
+			if os.IsExist(err) {
+				continue
+			}
+			return nil, "", err
+		}
+		return f, name, nil
 	}
-	tmp, err := os.CreateTemp(dirPath, "."+base+".compact-*")
-	if err != nil {
-		return err
-	}
-	tmpPath := tmp.Name()
-	defer os.Remove(tmpPath)
-	if err := tmp.Chmod(mode); err != nil {
-		_ = tmp.Close()
-		return err
-	}
-	n, writeErr := tmp.Write(data)
-	syncErr := tmp.Sync()
-	closeErr := tmp.Close()
-	if writeErr != nil {
-		return writeErr
-	}
-	if n != len(data) {
-		return errors.New("short file write")
-	}
-	if syncErr != nil {
-		return syncErr
-	}
-	if closeErr != nil {
-		return closeErr
-	}
-	if dir, err := os.Open(dirPath); err == nil {
-		_ = dir.Sync()
-		_ = dir.Close()
-	}
-	if err := os.Rename(tmpPath, path); err != nil {
-		return err
-	}
-	if dir, err := os.Open(dirPath); err == nil {
-		_ = dir.Sync()
-		_ = dir.Close()
-	}
-	return nil
+	return nil, "", fmt.Errorf("could not create a unique temp file in %q", dir)
 }
 
 func replayWAL(s *state.State, records []wal.Record) error {
