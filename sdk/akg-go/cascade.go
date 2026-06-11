@@ -25,33 +25,32 @@ func (s *Store) DeleteNodeCascade(typeName, id string) (CascadeDeleteResult, err
 
 	var result CascadeDeleteResult
 
-	// Collect all edges to delete to avoid mutating the map while iterating.
-	type edgeKey struct {
-		fromType string
-		from     nodeID
-		rel      relation
-		toType   string
-		to       nodeID
-	}
-	var toDelete []edgeKey
-	for ident := range s.state.edges {
-		if (ident.fromType == typeName && ident.from == nodeID(id)) ||
-			(ident.toType == typeName && ident.to == nodeID(id)) {
-			toDelete = append(toDelete, edgeKey{
-				fromType: ident.fromType,
-				from:     ident.from,
-				rel:      ident.relation,
-				toType:   ident.toType,
-				to:       ident.to,
-			})
+	// Collect incident edges from the secondary indexes — O(degree), not a full
+	// edge scan — copying identities first so deleteEdge can mutate the indexes.
+	// A self-loop appears in both index sets; dedup so it is deleted once.
+	node := nodeIdentity{typeName: typeName, id: nodeID(id)}
+	seen := make(map[edgeIdentity]struct{})
+	var toDelete []edgeIdentity
+	for eid := range s.state.outIndex[node] {
+		if _, dup := seen[eid]; dup {
+			continue
 		}
+		seen[eid] = struct{}{}
+		toDelete = append(toDelete, eid)
+	}
+	for eid := range s.state.inIndex[node] {
+		if _, dup := seen[eid]; dup {
+			continue
+		}
+		seen[eid] = struct{}{}
+		toDelete = append(toDelete, eid)
 	}
 
-	for _, ek := range toDelete {
-		if err := s.deleteEdge(ek.fromType, ek.from, ek.rel, ek.toType, ek.to); err != nil {
+	for _, eid := range toDelete {
+		if err := s.deleteEdge(eid.fromType, eid.from, eid.relation, eid.toType, eid.to); err != nil {
 			return CascadeDeleteResult{}, err
 		}
-		if ek.fromType == typeName && ek.from == nodeID(id) {
+		if eid.fromType == typeName && eid.from == nodeID(id) {
 			result.DeletedOutboundEdges++
 		} else {
 			result.DeletedInboundEdges++

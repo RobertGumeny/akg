@@ -154,13 +154,24 @@ func (e coreEdge) validateForWrite() error {
 type storeState struct {
 	nodes map[nodeIdentity]nodeRecord
 	edges map[edgeIdentity]coreEdge
-	now   func() timestampMicros
+	// Secondary in-memory indexes derived from nodes/edges (PERF-1). They turn
+	// ListNodesByTag / OutboundEdges / InboundEdges from O(total) full scans into
+	// O(matches) lookups. They are pure derived state — rebuilt at load from the
+	// same primary records the persisted derived keys validate — so there is no
+	// format change. Every mutation path keeps them consistent.
+	tagIndex map[string]map[nodeIdentity]struct{} // tag -> node identities
+	outIndex map[nodeIdentity]map[edgeIdentity]struct{} // from-node -> outbound edges
+	inIndex  map[nodeIdentity]map[edgeIdentity]struct{} // to-node -> inbound edges
+	now      func() timestampMicros
 }
 
 func newStoreState() *storeState {
 	return &storeState{
-		nodes: make(map[nodeIdentity]nodeRecord),
-		edges: make(map[edgeIdentity]coreEdge),
+		nodes:    make(map[nodeIdentity]nodeRecord),
+		edges:    make(map[edgeIdentity]coreEdge),
+		tagIndex: make(map[string]map[nodeIdentity]struct{}),
+		outIndex: make(map[nodeIdentity]map[edgeIdentity]struct{}),
+		inIndex:  make(map[nodeIdentity]map[edgeIdentity]struct{}),
 		now: func() timestampMicros {
 			if testNow != nil {
 				return *testNow
@@ -209,8 +220,12 @@ func (s *storeState) putNode(id nodeID, n coreNode) (nodeRecord, error) {
 		n.UpdatedAt = now
 		n.Version = 1
 	}
+	if existing, ok := s.nodes[ident]; ok {
+		s.indexRemoveTags(ident, existing.Node.Tags)
+	}
 	rec := nodeRecord{ID: id, Node: n}
 	s.nodes[ident] = cloneNodeRecord(rec)
+	s.indexAddTags(ident, n.Tags)
 	return cloneNodeRecord(rec), nil
 }
 
@@ -233,7 +248,14 @@ func (s *storeState) loadNodeRecord(rec nodeRecord) error {
 	rec.Node.applyReadDefaults()
 	rec.Node.Meta = cloneMap(rec.Node.Meta)
 	rec.Node.Tags = cloneStrings(rec.Node.Tags)
-	s.nodes[nodeIdentity{typeName: rec.Node.Type, id: rec.ID}] = rec
+	ident := nodeIdentity{typeName: rec.Node.Type, id: rec.ID}
+	// loadNodeRecord is reused for committed-WAL replay, where a later PUT_NODE can
+	// replace an earlier one with different tags — drop the old tags first.
+	if existing, ok := s.nodes[ident]; ok {
+		s.indexRemoveTags(ident, existing.Node.Tags)
+	}
+	s.nodes[ident] = rec
+	s.indexAddTags(ident, rec.Node.Tags)
 	return nil
 }
 
@@ -264,6 +286,7 @@ func (s *storeState) putEdge(e coreEdge) (coreEdge, error) {
 		e.Version = 1
 	}
 	s.edges[ident] = cloneEdge(e)
+	s.indexAddEdge(ident) // idempotent; identity is stable across replace
 	return cloneEdge(e), nil
 }
 
@@ -282,7 +305,9 @@ func (s *storeState) loadEdgeRecord(e coreEdge) error {
 	}
 	e.applyReadDefaults()
 	e.Meta = cloneMap(e.Meta)
-	s.edges[edgeIdentity{fromType: e.FromType, from: e.FromNode, relation: e.Relation, toType: e.ToType, to: e.ToNode}] = e
+	ident := edgeIdentity{fromType: e.FromType, from: e.FromNode, relation: e.Relation, toType: e.ToType, to: e.ToNode}
+	s.edges[ident] = e
+	s.indexAddEdge(ident)
 	return nil
 }
 

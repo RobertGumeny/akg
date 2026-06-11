@@ -51,6 +51,14 @@ interface EdgeIdentity {
 interface StoreState {
   nodes: Map<string, NodeRecord>;
   edges: Map<string, CoreEdge>;
+  // Secondary in-memory indexes derived from nodes/edges (PERF-1). They turn
+  // listNodesByTag / outboundEdges / inboundEdges from O(total) full scans into
+  // O(matches) lookups. Pure derived state, rebuilt at load from the same primary
+  // records the persisted derived keys validate — no format change. Every mutation
+  // path keeps them consistent.
+  tagIndex: Map<string, Set<string>>; // tag -> node keys
+  outIndex: Map<string, Set<string>>; // from-node key -> edge keys
+  inIndex: Map<string, Set<string>>; // to-node key -> edge keys
 }
 
 function nodeKey(ident: NodeIdentity): string {
@@ -77,7 +85,50 @@ function clock(): bigint {
 }
 
 function newStoreState(): StoreState {
-  return { nodes: new Map(), edges: new Map() };
+  return {
+    nodes: new Map(),
+    edges: new Map(),
+    tagIndex: new Map(),
+    outIndex: new Map(),
+    inIndex: new Map(),
+  };
+}
+
+// --- secondary-index maintenance (PERF-1) -----------------------------------
+// All helpers are idempotent at the set level, so callers may re-add an entry.
+
+function addToSet(index: Map<string, Set<string>>, key: string, value: string): void {
+  let set = index.get(key);
+  if (!set) {
+    set = new Set();
+    index.set(key, set);
+  }
+  set.add(value);
+}
+
+function removeFromSet(index: Map<string, Set<string>>, key: string, value: string): void {
+  const set = index.get(key);
+  if (!set) return;
+  set.delete(value);
+  if (set.size === 0) index.delete(key);
+}
+
+function indexAddTags(state: StoreState, nodeK: string, tags: string[]): void {
+  for (const tag of tags) addToSet(state.tagIndex, tag, nodeK);
+}
+
+function indexRemoveTags(state: StoreState, nodeK: string, tags: string[]): void {
+  for (const tag of tags) removeFromSet(state.tagIndex, tag, nodeK);
+}
+
+function indexAddEdge(state: StoreState, e: CoreEdge, edgeK: string): void {
+  addToSet(state.outIndex, nodeKey({ type: e.fromType, id: e.fromNode }), edgeK);
+  addToSet(state.inIndex, nodeKey({ type: e.toType, id: e.toNode }), edgeK);
+}
+
+function indexRemoveEdge(state: StoreState, e: CoreEdge, edgeK: string): void {
+  removeFromSet(state.outIndex, nodeKey({ type: e.fromType, id: e.fromNode }), edgeK);
+  removeFromSet(state.inIndex, nodeKey({ type: e.toType, id: e.toNode }), edgeK);
 }
 
 function putNodeInState(state: StoreState, id: string, n: CoreNode, now: bigint): NodeRecord {
@@ -95,8 +146,10 @@ function putNodeInState(state: StoreState, id: string, n: CoreNode, now: bigint)
   }
   if (!node.meta) node.meta = {};
   if (!node.tags) node.tags = [];
+  if (existing) indexRemoveTags(state, ident, existing.node.tags);
   const rec = { id, node };
   state.nodes.set(ident, rec);
+  indexAddTags(state, ident, node.tags);
   return rec;
 }
 
@@ -115,6 +168,7 @@ function putEdgeInState(state: StoreState, e: CoreEdge, now: bigint): CoreEdge {
   }
   if (!edge.meta) edge.meta = {};
   state.edges.set(ident, edge);
+  indexAddEdge(state, edge, ident); // idempotent; identity is stable across replace
   return edge;
 }
 
@@ -268,9 +322,11 @@ export class Store {
   listNodesByTag(tag: string): Node[] {
     if (this.closed) throw new InvalidInputError('store is closed');
     validateTag(tag);
+    // Index lookup: O(nodes carrying tag), not a full O(total nodes) scan.
     const matches: NodeRecord[] = [];
-    for (const rec of this.state.nodes.values()) {
-      if (rec.node.tags.includes(tag)) matches.push(rec);
+    for (const nk of this.state.tagIndex.get(tag) ?? []) {
+      const rec = this.state.nodes.get(nk);
+      if (rec) matches.push(rec);
     }
     return sortAndMapNodes(matches);
   }
@@ -325,9 +381,11 @@ export class Store {
     if (this.closed) throw new InvalidInputError('store is closed');
     buildNodeKey(nodeRef.type, nodeRef.id);
     if (relation) validateComponent(relation);
+    // Index lookup: O(out-degree of nodeRef), not a full O(total edges) scan.
     const matches: CoreEdge[] = [];
-    for (const e of this.state.edges.values()) {
-      if (e.fromType !== nodeRef.type || e.fromNode !== nodeRef.id) continue;
+    for (const ek of this.state.outIndex.get(nodeKey({ type: nodeRef.type, id: nodeRef.id })) ?? []) {
+      const e = this.state.edges.get(ek);
+      if (!e) continue;
       if (relation && e.relation !== relation) continue;
       matches.push(e);
     }
@@ -339,9 +397,11 @@ export class Store {
     if (this.closed) throw new InvalidInputError('store is closed');
     buildNodeKey(nodeRef.type, nodeRef.id);
     if (relation) validateComponent(relation);
+    // Index lookup: O(in-degree of nodeRef), not a full O(total edges) scan.
     const matches: CoreEdge[] = [];
-    for (const e of this.state.edges.values()) {
-      if (e.toType !== nodeRef.type || e.toNode !== nodeRef.id) continue;
+    for (const ek of this.state.inIndex.get(nodeKey({ type: nodeRef.type, id: nodeRef.id })) ?? []) {
+      const e = this.state.edges.get(ek);
+      if (!e) continue;
       if (relation && e.relation !== relation) continue;
       matches.push(e);
     }
@@ -356,13 +416,14 @@ export class Store {
     if (this.closed) throw new InvalidInputError('store is closed');
     buildNodeKey(typeName, id);
     const k = nodeKey({ type: typeName, id });
-    if (!this.state.nodes.has(k)) throw new NotFoundError(`node ${typeName}/${id} not found`);
-    for (const e of this.state.edges.values()) {
-      if ((e.fromType === typeName && e.fromNode === id) || (e.toType === typeName && e.toNode === id)) {
-        throw new InvalidInputError('node has live edges; delete edges first');
-      }
+    const rec = this.state.nodes.get(k);
+    if (!rec) throw new NotFoundError(`node ${typeName}/${id} not found`);
+    // O(1) incident-edge check via the indexes (replaces a full edge scan).
+    if ((this.state.outIndex.get(k)?.size ?? 0) > 0 || (this.state.inIndex.get(k)?.size ?? 0) > 0) {
+      throw new InvalidInputError('node has live edges; delete edges first');
     }
     this.state.nodes.delete(k);
+    indexRemoveTags(this.state, k, rec.node.tags);
     const payload = encodeNodeDeletePayload({ type: typeName, id });
     this.stagePending(WAL_OP_DELETE_NODE, payload);
   }
@@ -374,8 +435,10 @@ export class Store {
     buildNodeKey(toRef.type, toRef.id);
     validateComponent(relation);
     const k = edgeKey({ fromType: fromRef.type, from: fromRef.id, relation, toType: toRef.type, to: toRef.id });
-    if (!this.state.edges.has(k)) throw new NotFoundError(`edge not found`);
+    const edge = this.state.edges.get(k);
+    if (!edge) throw new NotFoundError(`edge not found`);
     this.state.edges.delete(k);
+    indexRemoveEdge(this.state, edge, k);
     const payload = encodeEdgeDeletePayload({ fromType: fromRef.type, fromNode: fromRef.id, relation, toType: toRef.type, toNode: toRef.id });
     this.stagePending(WAL_OP_DELETE_EDGE, payload);
   }
@@ -592,27 +655,33 @@ export class Store {
     if (this.closed) throw new InvalidInputError('store is closed');
     buildNodeKey(typeName, id);
     const nk = nodeKey({ type: typeName, id });
-    if (!this.state.nodes.has(nk)) throw new NotFoundError(`node ${typeName}/${id} not found`);
+    const rec = this.state.nodes.get(nk);
+    if (!rec) throw new NotFoundError(`node ${typeName}/${id} not found`);
 
     let deletedInboundEdges = 0, deletedOutboundEdges = 0;
 
-    const toDelete: Array<{ ek: string; fromType: string; fromNode: string; relation: string; toType: string; toNode: string; isOutbound: boolean }> = [];
-    for (const [ek, e] of this.state.edges) {
-      if (e.fromType === typeName && e.fromNode === id) {
-        toDelete.push({ ek, fromType: e.fromType, fromNode: e.fromNode, relation: e.relation, toType: e.toType, toNode: e.toNode, isOutbound: true });
-      } else if (e.toType === typeName && e.toNode === id) {
-        toDelete.push({ ek, fromType: e.fromType, fromNode: e.fromNode, relation: e.relation, toType: e.toType, toNode: e.toNode, isOutbound: false });
-      }
+    // Collect incident edge keys from the indexes — O(degree), not a full edge
+    // scan — deduping the self-loop case (present in both index sets).
+    const seen = new Set<string>();
+    const incident: string[] = [];
+    for (const ek of this.state.outIndex.get(nk) ?? []) {
+      if (!seen.has(ek)) { seen.add(ek); incident.push(ek); }
+    }
+    for (const ek of this.state.inIndex.get(nk) ?? []) {
+      if (!seen.has(ek)) { seen.add(ek); incident.push(ek); }
     }
 
-    for (const d of toDelete) {
-      this.state.edges.delete(d.ek);
-      const payload = encodeEdgeDeletePayload({ fromType: d.fromType, fromNode: d.fromNode, relation: d.relation, toType: d.toType, toNode: d.toNode });
+    for (const ek of incident) {
+      const e = this.state.edges.get(ek)!;
+      this.state.edges.delete(ek);
+      indexRemoveEdge(this.state, e, ek);
+      const payload = encodeEdgeDeletePayload({ fromType: e.fromType, fromNode: e.fromNode, relation: e.relation, toType: e.toType, toNode: e.toNode });
       this.stagePending(WAL_OP_DELETE_EDGE, payload);
-      if (d.isOutbound) deletedOutboundEdges++; else deletedInboundEdges++;
+      if (e.fromType === typeName && e.fromNode === id) deletedOutboundEdges++; else deletedInboundEdges++;
     }
 
     this.state.nodes.delete(nk);
+    indexRemoveTags(this.state, nk, rec.node.tags);
     const payload = encodeNodeDeletePayload({ type: typeName, id });
     this.stagePending(WAL_OP_DELETE_NODE, payload);
 
@@ -775,7 +844,9 @@ function hydrateDataEntries(entries: DataEntry[]): StoreState {
         throw wrapDataPayloadError(e);
       }
       if (node.type !== parsed.type) throw new InvalidInputError('node type mismatch in data key');
-      state.nodes.set(nodeKey({ type: parsed.type, id: parsed.id }), { id: parsed.id, node });
+      const nk = nodeKey({ type: parsed.type, id: parsed.id });
+      state.nodes.set(nk, { id: parsed.id, node });
+      indexAddTags(state, nk, node.tags ?? []);
     } else if (key.startsWith('e:')) {
       const parsed = parseEdgeKey(key);
       let edge: CoreEdge;
@@ -787,7 +858,9 @@ function hydrateDataEntries(entries: DataEntry[]): StoreState {
       if (edge.fromType !== parsed.fromType || edge.fromNode !== parsed.fromID || edge.relation !== parsed.relation || edge.toType !== parsed.toType || edge.toNode !== parsed.toID) {
         throw new InvalidInputError('edge identity mismatch in data key');
       }
-      state.edges.set(edgeKey({ fromType: edge.fromType, from: edge.fromNode, relation: edge.relation, toType: edge.toType, to: edge.toNode }), edge);
+      const ek = edgeKey({ fromType: edge.fromType, from: edge.fromNode, relation: edge.relation, toType: edge.toType, to: edge.toNode });
+      state.edges.set(ek, edge);
+      indexAddEdge(state, edge, ek);
     } else if (key.startsWith('t:')) {
       if (entry.value.length !== 0) throw new InvalidInputError('tag key must have empty value');
       parseTagKey(key);
@@ -912,22 +985,35 @@ function inspectAndReplayWAL(state: StoreState, walPayload: Uint8Array | null): 
     switch (r.operation) {
       case WAL_OP_PUT_NODE: {
         const put = decodeNodePutPayload(r.payload);
-        state.nodes.set(nodeKey({ type: put.node.type, id: put.id }), { id: put.id, node: put.node });
+        const nk = nodeKey({ type: put.node.type, id: put.id });
+        // A later PUT_NODE can replace an earlier one with different tags.
+        const prev = state.nodes.get(nk);
+        if (prev) indexRemoveTags(state, nk, prev.node.tags ?? []);
+        state.nodes.set(nk, { id: put.id, node: put.node });
+        indexAddTags(state, nk, put.node.tags ?? []);
         break;
       }
       case WAL_OP_DELETE_NODE: {
         const d = decodeNodeDeletePayload(r.payload);
-        state.nodes.delete(nodeKey({ type: d.type, id: d.id }));
+        const nk = nodeKey({ type: d.type, id: d.id });
+        const prev = state.nodes.get(nk);
+        if (prev) indexRemoveTags(state, nk, prev.node.tags ?? []);
+        state.nodes.delete(nk);
         break;
       }
       case WAL_OP_PUT_EDGE: {
         const e = decodeEdgePutPayload(r.payload);
-        state.edges.set(edgeKey({ fromType: e.fromType, from: e.fromNode, relation: e.relation, toType: e.toType, to: e.toNode }), e);
+        const ek = edgeKey({ fromType: e.fromType, from: e.fromNode, relation: e.relation, toType: e.toType, to: e.toNode });
+        state.edges.set(ek, e);
+        indexAddEdge(state, e, ek);
         break;
       }
       case WAL_OP_DELETE_EDGE: {
         const d = decodeEdgeDeletePayload(r.payload);
-        state.edges.delete(edgeKey({ fromType: d.fromType, from: d.fromNode, relation: d.relation, toType: d.toType, to: d.toNode }));
+        const ek = edgeKey({ fromType: d.fromType, from: d.fromNode, relation: d.relation, toType: d.toType, to: d.toNode });
+        const prev = state.edges.get(ek);
+        state.edges.delete(ek);
+        if (prev) indexRemoveEdge(state, prev, ek);
         break;
       }
     }

@@ -176,13 +176,11 @@ func (s *Store) ListNodesByTag(tag string) ([]Node, error) {
 	if err := validateTag(tag); err != nil {
 		return nil, err
 	}
-	matches := make([]nodeRecord, 0)
-	for _, rec := range s.state.nodes {
-		for _, nodeTag := range rec.Node.Tags {
-			if nodeTag == tag {
-				matches = append(matches, cloneNodeRecord(rec))
-				break
-			}
+	// Index lookup: O(nodes carrying tag), not a full O(total nodes) scan.
+	matches := make([]nodeRecord, 0, len(s.state.tagIndex[tag]))
+	for ident := range s.state.tagIndex[tag] {
+		if rec, ok := s.state.nodes[ident]; ok {
+			matches = append(matches, cloneNodeRecord(rec))
 		}
 	}
 	sort.Slice(matches, func(i, j int) bool {
@@ -262,9 +260,12 @@ func (s *Store) OutboundEdges(nodeRef NodeRef, relationValue string) ([]Edge, er
 			return nil, err
 		}
 	}
-	matches := make([]coreEdge, 0)
-	for _, rec := range s.state.edges {
-		if rec.FromType != nodeRef.Type || rec.FromNode != nodeID(nodeRef.ID) {
+	// Index lookup: O(out-degree of nodeRef), not a full O(total edges) scan.
+	from := nodeIdentity{typeName: nodeRef.Type, id: nodeID(nodeRef.ID)}
+	matches := make([]coreEdge, 0, len(s.state.outIndex[from]))
+	for eid := range s.state.outIndex[from] {
+		rec, ok := s.state.edges[eid]
+		if !ok {
 			continue
 		}
 		if relationValue != "" && rec.Relation != relation(relationValue) {
@@ -298,9 +299,12 @@ func (s *Store) InboundEdges(nodeRef NodeRef, relationValue string) ([]Edge, err
 			return nil, err
 		}
 	}
-	matches := make([]coreEdge, 0)
-	for _, rec := range s.state.edges {
-		if rec.ToType != nodeRef.Type || rec.ToNode != nodeID(nodeRef.ID) {
+	// Index lookup: O(in-degree of nodeRef), not a full O(total edges) scan.
+	to := nodeIdentity{typeName: nodeRef.Type, id: nodeID(nodeRef.ID)}
+	matches := make([]coreEdge, 0, len(s.state.inIndex[to]))
+	for eid := range s.state.inIndex[to] {
+		rec, ok := s.state.edges[eid]
+		if !ok {
 			continue
 		}
 		if relationValue != "" && rec.Relation != relation(relationValue) {
@@ -493,15 +497,15 @@ func (s *Store) putEdge(e coreEdge) (coreEdge, error) {
 
 func (s *Store) deleteNode(typeName string, id nodeID) error {
 	ident := nodeIdentity{typeName: typeName, id: id}
-	if _, ok := s.state.nodes[ident]; !ok {
+	rec, ok := s.state.nodes[ident]
+	if !ok {
 		return ErrNotFound
 	}
-	for _, edge := range s.state.edges {
-		if (edge.FromType == typeName && edge.FromNode == id) || (edge.ToType == typeName && edge.ToNode == id) {
-			return ErrInvalidInput
-		}
+	if s.state.hasIncidentEdges(ident) {
+		return ErrInvalidInput
 	}
 	delete(s.state.nodes, ident)
+	s.state.indexRemoveTags(ident, rec.Node.Tags)
 	payload, err := encodeNodeDeletePayload(nodeDelete{Type: typeName, ID: id})
 	if err != nil {
 		return err
@@ -517,6 +521,7 @@ func (s *Store) deleteEdge(fromType string, fromNode nodeID, rel relation, toTyp
 		return ErrNotFound
 	}
 	delete(s.state.edges, ident)
+	s.state.indexRemoveEdge(ident)
 	payload, err := encodeEdgeDeletePayload(edgeDelete{FromType: fromType, FromNode: fromNode, Relation: rel, ToType: toType, ToNode: toNode})
 	if err != nil {
 		return err
@@ -740,7 +745,11 @@ func inspectAndReplayWAL(state *storeState, payload []byte) ([]walRecord, walSeq
 			if err != nil {
 				return nil, 0, err
 			}
-			delete(state.nodes, nodeIdentity{typeName: d.Type, id: d.ID})
+			ident := nodeIdentity{typeName: d.Type, id: d.ID}
+			if existing, ok := state.nodes[ident]; ok {
+				state.indexRemoveTags(ident, existing.Node.Tags)
+			}
+			delete(state.nodes, ident)
 		case walOpPutEdge:
 			put, err := decodeEdgePutPayload(r.Payload)
 			if err != nil {
@@ -754,7 +763,9 @@ func inspectAndReplayWAL(state *storeState, payload []byte) ([]walRecord, walSeq
 			if err != nil {
 				return nil, 0, err
 			}
-			delete(state.edges, edgeIdentity{fromType: d.FromType, from: d.FromNode, relation: d.Relation, toType: d.ToType, to: d.ToNode})
+			eident := edgeIdentity{fromType: d.FromType, from: d.FromNode, relation: d.Relation, toType: d.ToType, to: d.ToNode}
+			delete(state.edges, eident)
+			state.indexRemoveEdge(eident)
 		}
 	}
 	return committed, next, nil
