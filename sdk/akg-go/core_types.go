@@ -159,7 +159,7 @@ type storeState struct {
 	// O(matches) lookups. They are pure derived state — rebuilt at load from the
 	// same primary records the persisted derived keys validate — so there is no
 	// format change. Every mutation path keeps them consistent.
-	tagIndex map[string]map[nodeIdentity]struct{} // tag -> node identities
+	tagIndex map[string]map[nodeIdentity]struct{}       // tag -> node identities
 	outIndex map[nodeIdentity]map[edgeIdentity]struct{} // from-node -> outbound edges
 	inIndex  map[nodeIdentity]map[edgeIdentity]struct{} // to-node -> inbound edges
 	now      func() timestampMicros

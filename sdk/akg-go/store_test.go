@@ -821,9 +821,9 @@ func TestOpenMalformedNodePayloadReturnsErrMissingRequiredField(t *testing.T) {
 	// Build a node data payload that is structurally valid msgpack but missing "title".
 	// msgpack fixmap with 1 key: {type: "note"}
 	badNodePayload := []byte{
-		0x81,                         // fixmap, 1 pair
-		0xa4, 't', 'y', 'p', 'e',    // key "type"
-		0xa4, 'n', 'o', 't', 'e',    // value "note"
+		0x81,                     // fixmap, 1 pair
+		0xa4, 't', 'y', 'p', 'e', // key "type"
+		0xa4, 'n', 'o', 't', 'e', // value "note"
 	}
 
 	nodeKey, err := buildNodeKey("note", "n1")

@@ -770,4 +770,3 @@ func inspectAndReplayWAL(state *storeState, payload []byte) ([]walRecord, walSeq
 	}
 	return committed, next, nil
 }
-

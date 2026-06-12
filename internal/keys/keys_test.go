@@ -112,9 +112,9 @@ func TestTemporalEdgeKeyBuildParse(t *testing.T) {
 }
 
 func TestBuildersRejectInvalidInputs(t *testing.T) {
-	over := record.NodeID(strings.Repeat("a", 65))          // 65 bytes, one over the cap
-	overType := strings.Repeat("a", 65)                     // 65 bytes
-	multibyteOver := strings.Repeat("é", 33)                // 33 codepoints, 66 bytes
+	over := record.NodeID(strings.Repeat("a", 65)) // 65 bytes, one over the cap
+	overType := strings.Repeat("a", 65)            // 65 bytes
+	multibyteOver := strings.Repeat("é", 33)       // 33 codepoints, 66 bytes
 	tests := []struct {
 		name string
 		fn   func() ([]byte, error)
@@ -150,7 +150,7 @@ func TestBuildersRejectInvalidInputs(t *testing.T) {
 // relation, and tag are any key-safe UTF-8 string (no snake_case rule), capped
 // at 64 bytes. Casing and non-ASCII values are accepted; the cap is on bytes.
 func TestBuildersAcceptUTF8AndByteCap(t *testing.T) {
-	atCap := strings.Repeat("a", 64)        // exactly 64 bytes
+	atCap := strings.Repeat("a", 64)          // exactly 64 bytes
 	multibyteAtCap := strings.Repeat("é", 32) // 32 codepoints, 64 bytes
 	tests := []struct {
 		name string
