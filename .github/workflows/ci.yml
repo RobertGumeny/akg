@@ -112,3 +112,32 @@ jobs:
       - name: Type check
         working-directory: sdk/akg-ts
         run: npx tsc --noEmit
+
+  # First-class gate for the correctness contract (testdata/conformance +
+  # testdata/behavior parity fixtures). These tests also run inside the broader
+  # Go/TypeScript jobs; this surfaces them as one named, required check.
+  conformance:
+    name: Conformance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+          cache: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: sdk/akg-ts/package-lock.json
+      - name: Root conformance + parity
+        run: go test -run "TestConformance|TestMilestone2|TestStoreOpenToleratesUnknownStructurallyValidSection|TestCommitAppendByteParity|TestCommitDoesNotRematerializeData" ./internal/format ./internal/store
+      - name: Go SDK conformance + parity
+        working-directory: sdk/akg-go
+        run: go test -run "^TestConformance$|^TestBehaviorParity$|^TestCommitAppendByteParity$|^TestCommitDoesNotRematerializeData$" .
+      - name: Install TS dependencies
+        working-directory: sdk/akg-ts
+        run: npm ci
+      - name: TypeScript conformance + parity
+        working-directory: sdk/akg-ts
+        run: npx vitest run test/conformance.test.ts test/behavior_parity.test.ts test/commit_parity.test.ts
