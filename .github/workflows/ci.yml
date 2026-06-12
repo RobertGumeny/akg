@@ -4,18 +4,57 @@ on:
   push:
   pull_request:
 
+# Cancel superseded runs on the same ref so a rapid push sequence doesn't
+# pile up redundant jobs.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
+  # Compatibility shim for the Node20->Node24 JS-action runtime transition.
+  # Kept deliberately; dropping it is a clean follow-up once we bump the
+  # actions/* majors to versions that declare node24 natively.
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  go:
-    name: Go
+  lint:
+    name: Lint (gofmt + vet)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
+          go-version: '1.26'
+          cache: false
+      - name: gofmt
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "These files are not gofmt-clean:"
+            echo "$unformatted"
+            exit 1
+          fi
+      - name: Vet root module
+        run: go vet ./...
+      - name: Vet Go SDK
+        working-directory: sdk/akg-go
+        run: go vet ./...
+
+  go:
+    name: Go (${{ matrix.go }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 1.22 = go.mod floor (consumer reach); 1.26 = current dev toolchain.
+        go: ['1.22', '1.26']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go }}
+          # Both modules are dependency-free (no go.sum), so module caching
+          # has nothing to cache; leaving it off avoids a spurious warning.
           cache: false
       - name: Test root package
         run: go test -count=1 ./...
@@ -26,11 +65,11 @@ jobs:
         working-directory: sdk/akg-go
         run: git diff --exit-code docs/
       - name: Build Go SDK
-        run: cd sdk/akg-go && go build ./...
+        working-directory: sdk/akg-go
+        run: go build ./...
       - name: Test Go SDK
-        run: cd sdk/akg-go && go test ./...
-      - name: Vet Go SDK
-        run: cd sdk/akg-go && go vet ./...
+        working-directory: sdk/akg-go
+        run: go test -count=1 ./...
 
   typescript:
     name: TypeScript
@@ -40,6 +79,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: npm
+          cache-dependency-path: sdk/akg-ts/package-lock.json
       - name: Install dependencies
         working-directory: sdk/akg-ts
         run: npm ci
