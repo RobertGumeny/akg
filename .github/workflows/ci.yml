@@ -71,7 +71,7 @@ jobs:
           # has nothing to cache; leaving it off avoids a spurious warning.
           cache: false
       - name: Test root package
-        run: go test -count=1 ./...
+        run: go test -count=1 -coverprofile=coverage-root.out ./...
       - name: Generate Go SDK docs graph
         working-directory: sdk/akg-go
         run: go run ./cmd/akg-go gen-docs
@@ -83,7 +83,17 @@ jobs:
         run: go build ./...
       - name: Test Go SDK
         working-directory: sdk/akg-go
-        run: go test -count=1 ./...
+        run: go test -count=1 -coverprofile=coverage-sdk.out ./...
+      - name: Upload Go coverage
+        if: matrix.go == '1.26'
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: go-coverage
+          path: |
+            coverage-root.out
+            sdk/akg-go/coverage-sdk.out
+          if-no-files-found: warn
 
   typescript:
     name: TypeScript
@@ -98,6 +108,10 @@ jobs:
       - name: Install dependencies
         working-directory: sdk/akg-ts
         run: npm ci
+      - name: npm audit (informational)
+        working-directory: sdk/akg-ts
+        continue-on-error: true
+        run: npm audit --audit-level=high
       - name: Build
         working-directory: sdk/akg-ts
         run: npm run build
@@ -108,7 +122,14 @@ jobs:
           git diff --exit-code docs/
       - name: Test
         working-directory: sdk/akg-ts
-        run: npm test
+        run: npm test -- --coverage --coverage.reporter=text --coverage.reporter=lcov
+      - name: Upload TS coverage
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: ts-coverage
+          path: sdk/akg-ts/coverage
+          if-no-files-found: warn
       - name: Type check
         working-directory: sdk/akg-ts
         run: npx tsc --noEmit

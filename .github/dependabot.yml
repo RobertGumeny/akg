@@ -1,0 +1,22 @@
+version: 2
+updates:
+  # Both Go modules are dependency-free today; these entries mostly track the
+  # `go` directive / toolchain, and exist so any future dependency is watched.
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: gomod
+    directory: /sdk/akg-go
+    schedule:
+      interval: weekly
+  - package-ecosystem: npm
+    directory: /sdk/akg-ts
+    schedule:
+      interval: weekly
+  # Surfaces actions/* major bumps — landing these is the prerequisite for
+  # dropping the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24 shim in the workflows.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

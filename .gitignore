@@ -14,6 +14,8 @@
 coverage.out
 coverage.html
 *.cover
+# Test-coverage output directory (vitest/istanbul, e.g. sdk/akg-ts/coverage)
+coverage/
 *.prof
 *.pprof
 cpu.out
