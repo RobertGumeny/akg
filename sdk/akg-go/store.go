@@ -466,7 +466,7 @@ func (s *Store) putNode(id nodeID, n coreNode) (nodeRecord, error) {
 	if err != nil {
 		return nodeRecord{}, err
 	}
-	payload, err := encodeNodePutPayload(nodePut{ID: rec.ID, Node: rec.Node})
+	payload, err := encodeNodePutPayload(nodePut(rec))
 	if err != nil {
 		return nodeRecord{}, err
 	}
@@ -737,7 +737,7 @@ func inspectAndReplayWAL(state *storeState, payload []byte) ([]walRecord, walSeq
 			if err != nil {
 				return nil, 0, err
 			}
-			if err := state.loadNodeRecord(nodeRecord{ID: put.ID, Node: put.Node}); err != nil {
+			if err := state.loadNodeRecord(nodeRecord(put)); err != nil {
 				return nil, 0, err
 			}
 		case walOpDeleteNode:

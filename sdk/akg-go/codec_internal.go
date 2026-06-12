@@ -35,10 +35,10 @@ func nodePayloadMap(n coreNode) (map[string]any, error) {
 	if n.Body != "" {
 		m["body"] = n.Body
 	}
-	if n.Meta != nil && len(n.Meta) > 0 {
+	if len(n.Meta) > 0 {
 		m["meta"] = n.Meta
 	}
-	if n.Tags != nil && len(n.Tags) > 0 {
+	if len(n.Tags) > 0 {
 		a := make([]any, len(n.Tags))
 		for i, v := range n.Tags {
 			a[i] = v
@@ -178,7 +178,7 @@ func edgePayloadMap(e coreEdge) (map[string]any, error) {
 	if e.Confidence != nil {
 		m["confidence"] = *e.Confidence
 	}
-	if e.Meta != nil && len(e.Meta) > 0 {
+	if len(e.Meta) > 0 {
 		m["meta"] = e.Meta
 	}
 	if e.Version != 0 && e.Version != 1 {

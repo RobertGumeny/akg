@@ -18,7 +18,7 @@ env:
 
 jobs:
   lint:
-    name: Lint (gofmt + vet)
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -39,6 +39,20 @@ jobs:
       - name: Vet Go SDK
         working-directory: sdk/akg-go
         run: go vet ./...
+      - name: Install Go analysis tools
+        run: |
+          go install honnef.co/go/tools/cmd/staticcheck@latest
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+      - name: Staticcheck root module
+        run: staticcheck ./...
+      - name: Staticcheck Go SDK
+        working-directory: sdk/akg-go
+        run: staticcheck ./...
+      - name: Govulncheck root module
+        run: govulncheck ./...
+      - name: Govulncheck Go SDK
+        working-directory: sdk/akg-go
+        run: govulncheck ./...
 
   go:
     name: Go (${{ matrix.go }})

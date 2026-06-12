@@ -1,7 +1,6 @@
 package akg
 
 import (
-	"bytes"
 	"fmt"
 	"strconv"
 	"strings"
@@ -236,5 +235,3 @@ func parseCanonicalTimestamp(value string) (timestampMicros, error) {
 	}
 	return timestampMicros(u), nil
 }
-
-func bytewiseLess(a, b []byte) bool { return bytes.Compare(a, b) < 0 }
