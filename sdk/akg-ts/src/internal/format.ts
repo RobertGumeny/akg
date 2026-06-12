@@ -288,7 +288,6 @@ export function encodeContainer(c: Container): Uint8Array {
 
   const header = encodeHeader(sections.length);
   const table = encodeSectionTable(sections);
-  const totalLen = HEADER_SIZE + tableSize + Number(off - BigInt(HEADER_SIZE + tableSize));
   const out = new Uint8Array(Number(off));
   out.set(header, 0);
   out.set(table, HEADER_SIZE);

@@ -20,7 +20,7 @@ import {
   decodeNodePayload, decodeNodePutPayload, encodeNodePayload, encodeNodePutPayload, encodeNodeDeletePayload, decodeNodeDeletePayload,
   decodeEdgePayload, decodeEdgePutPayload, encodeEdgePayload, encodeEdgeDeletePayload, decodeEdgeDeletePayload,
   validateWALPayload,
-  CoreNode, CoreEdge, NodePut, NodeDelete, EdgeDelete,
+  CoreNode, CoreEdge,
 } from './internal/codec.js';
 import {
   validateComponent, validateTag, validateNodeID,
@@ -565,7 +565,6 @@ export class Store {
       matches.push(e);
     }
 
-    const enc = new TextEncoder();
     matches.sort((a, b) => {
       const ua = Number(a.updatedAt), ub = Number(b.updatedAt);
       if (ua !== ub) return ub - ua;
@@ -601,7 +600,7 @@ export class Store {
     const desiredSet = new Set(desired.map(d => nodeKey({ type: d.type, id: d.id })));
 
     const existing = new Map<string, NodeRef>();
-    for (const [ek, e] of this.state.edges) {
+    for (const [, e] of this.state.edges) {
       if (e.fromType === source.type && e.fromNode === source.id && e.relation === relation) {
         existing.set(nodeKey({ type: e.toType, id: e.toNode }), { type: e.toType, id: e.toNode });
       }
@@ -829,7 +828,6 @@ export async function open(path: string): Promise<Store> {
 // ---- Hydration and materialization -----------------------------------------
 
 function hydrateDataEntries(entries: DataEntry[]): StoreState {
-  const enc = new TextEncoder();
   const dec = new TextDecoder('utf-8');
 
   const state = newStoreState();
@@ -884,7 +882,6 @@ function wrapDataPayloadError(e: unknown): Error {
 }
 
 function validateDerivedKeys(state: StoreState, entries: DataEntry[]): void {
-  const dec = new TextDecoder('utf-8');
   const expected = materializeDataEntries(state);
   if (expected.length !== entries.length) throw new InvalidInputError('derived index mismatch');
   for (let i = 0; i < expected.length; i++) {

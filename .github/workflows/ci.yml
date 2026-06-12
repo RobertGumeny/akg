@@ -108,6 +108,9 @@ jobs:
       - name: Install dependencies
         working-directory: sdk/akg-ts
         run: npm ci
+      - name: Lint
+        working-directory: sdk/akg-ts
+        run: npm run lint
       - name: npm audit (informational)
         working-directory: sdk/akg-ts
         continue-on-error: true

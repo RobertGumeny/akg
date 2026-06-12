@@ -37,12 +37,10 @@ async function main(): Promise<void> {
   await store.close();
 
   _setTestNow(null);
-  // eslint-disable-next-line no-console
   console.log(`wrote ${outPath}`);
 }
 
 main().catch((err) => {
-  // eslint-disable-next-line no-console
   console.error(err);
   process.exit(1);
 });

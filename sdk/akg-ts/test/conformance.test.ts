@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Store } from '../src/store.js';
-import { NotFoundError, InvalidInputError, MissingRequiredFieldError } from '../src/errors.js';
 
 const CONFORMANCE_DIR = join(import.meta.dirname ?? __dirname, '../../../testdata/conformance');
 const MANIFEST_PATH = join(CONFORMANCE_DIR, 'manifest.json');
