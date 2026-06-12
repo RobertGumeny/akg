@@ -1,0 +1,219 @@
+name: Release
+
+# Tag-triggered publish. Push a version tag and this builds, re-tests the
+# tagged commit, verifies version<->tag consistency, then publishes:
+#   sdk/akg-ts/vX.Y.Z -> npm (OIDC trusted publishing, with provenance)
+#   sdk/akg-go/vX.Y.Z -> warm the Go module proxy
+#   vX.Y.Z            -> warm the Go module proxy (root / reference SDK)
+# Every successful release also gets a GitHub Release with notes pulled from
+# the matching CHANGELOG section. Nothing here runs on a normal push.
+on:
+  push:
+    tags:
+      - 'v*'
+      - 'sdk/akg-go/v*'
+      - 'sdk/akg-ts/v*'
+
+# Don't cancel an in-flight release; let each tag's run finish. Different tags
+# get different groups and run concurrently.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  # Parse the tag once: which unit, what version, where its changelog lives.
+  meta:
+    name: Resolve tag
+    runs-on: ubuntu-latest
+    outputs:
+      unit: ${{ steps.parse.outputs.unit }}
+      version: ${{ steps.parse.outputs.version }}
+      display: ${{ steps.parse.outputs.display }}
+      changelog: ${{ steps.parse.outputs.changelog }}
+      go_module: ${{ steps.parse.outputs.go_module }}
+    steps:
+      - id: parse
+        run: |
+          ref="${GITHUB_REF_NAME}"
+          case "$ref" in
+            sdk/akg-ts/v*)
+              unit=akg-ts; version="${ref#sdk/akg-ts/v}"
+              display="akg-ts v${version}"; changelog="sdk/akg-ts/CHANGELOG.md"
+              go_module="" ;;
+            sdk/akg-go/v*)
+              unit=akg-go; version="${ref#sdk/akg-go/v}"
+              display="akg-go v${version}"; changelog="sdk/akg-go/CHANGELOG.md"
+              go_module="github.com/!robert!gumeny/akg/sdk/akg-go" ;;
+            v*)
+              unit=root; version="${ref#v}"
+              display="akg v${version}"; changelog="CHANGELOG.md"
+              go_module="github.com/!robert!gumeny/akg" ;;
+            *)
+              echo "::error::unrecognized release tag: $ref"; exit 1 ;;
+          esac
+          # Reject anything that isn't a clean X.Y.Z so a typo'd tag can't publish.
+          if ! echo "$version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::tag version '$version' is not X.Y.Z"; exit 1
+          fi
+          {
+            echo "unit=$unit"
+            echo "version=$version"
+            echo "display=$display"
+            echo "changelog=$changelog"
+            echo "go_module=$go_module"
+          } >> "$GITHUB_OUTPUT"
+          echo "Resolved $ref -> unit=$unit version=$version"
+
+  # The guardrail: re-run the affected unit's full suite on the *tagged* tree
+  # before anything is published. A red commit cannot be released.
+  test:
+    name: Re-test tagged commit
+    needs: meta
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+          cache: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: sdk/akg-ts/package-lock.json
+      - name: Test the released unit
+        run: |
+          case "${{ needs.meta.outputs.unit }}" in
+            akg-ts)
+              cd sdk/akg-ts
+              npm ci
+              npm run build
+              npm test
+              npx tsc --noEmit ;;
+            akg-go)
+              cd sdk/akg-go
+              go build ./...
+              go test -count=1 ./...
+              go vet ./... ;;
+            root)
+              go test -count=1 ./...
+              go vet ./... ;;
+          esac
+
+  # npm publish via OIDC trusted publishing — no NPM_TOKEN. Requires the
+  # one-time trusted-publisher registration on npmjs.com (workflow: release.yml)
+  # and npm >= 11.5.1 (installed below).
+  npm-publish:
+    name: Publish akg-ts to npm
+    needs: [meta, test]
+    if: needs.meta.outputs.unit == 'akg-ts'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        working-directory: sdk/akg-ts
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+          cache: npm
+          cache-dependency-path: sdk/akg-ts/package-lock.json
+      - name: Upgrade npm for OIDC trusted publishing
+        run: npm install -g npm@latest
+      - name: Verify package.json version matches the tag
+        run: |
+          pkg_ver="$(node -p "require('./package.json').version")"
+          tag_ver="${{ needs.meta.outputs.version }}"
+          if [ "$pkg_ver" != "$tag_ver" ]; then
+            echo "::error::package.json version ($pkg_ver) != tag version ($tag_ver)"
+            exit 1
+          fi
+          echo "version match: $pkg_ver"
+      - name: Guard against republishing an existing version
+        run: |
+          if npm view "akg-ts@${{ needs.meta.outputs.version }}" version >/dev/null 2>&1; then
+            echo "::error::akg-ts@${{ needs.meta.outputs.version }} is already on npm"
+            exit 1
+          fi
+      - run: npm ci
+      - name: Publish
+        # prepublishOnly runs the build; trusted publishing supplies auth + provenance.
+        run: npm publish --provenance --access public
+
+  # Go has no publish step — pushing the tag is the release. This nudges
+  # proxy.golang.org to fetch + index the version immediately instead of on a
+  # consumer's first `go get`. Best-effort: the proxy is eventually consistent.
+  go-release:
+    name: Warm Go proxy
+    needs: [meta, test]
+    if: needs.meta.outputs.unit == 'akg-go' || needs.meta.outputs.unit == 'root'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Request module@version from the proxy
+        run: |
+          module="${{ needs.meta.outputs.go_module }}"
+          version="v${{ needs.meta.outputs.version }}"
+          for attempt in 1 2 3 4 5 6; do
+            if curl -sfL "https://proxy.golang.org/${module}/@v/${version}.info"; then
+              echo ""
+              echo "indexed ${module}@${version}"
+              exit 0
+            fi
+            echo "proxy not ready (attempt ${attempt}); retrying in 20s..."
+            sleep 20
+          done
+          echo "::warning::proxy did not index ${module}@${version} in time; it will index on first 'go get'"
+
+  # One GitHub Release per tag, notes lifted from the matching CHANGELOG section.
+  # Runs only when the relevant publish step actually succeeded (or was N/A).
+  github-release:
+    name: GitHub Release
+    needs: [meta, test, npm-publish, go-release]
+    if: |
+      always() &&
+      needs.test.result == 'success' &&
+      (needs.npm-publish.result == 'success' || needs.npm-publish.result == 'skipped') &&
+      (needs.go-release.result == 'success' || needs.go-release.result == 'skipped')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract release notes from the changelog
+        run: |
+          ver="${{ needs.meta.outputs.version }}"
+          # Exact heading match (no regex, so no escaping pitfalls). The
+          # boundary check — exact line, or heading followed by a space —
+          # keeps "0.2.1" from also matching the "0.2.10" section.
+          case "${{ needs.meta.outputs.unit }}" in
+            root) h="## [${ver}]" ;;                 # root: "## [0.2.1] - date"
+            *)    h="## v${ver}" ;;                   # SDKs:  "## v0.2.1"
+          esac
+          awk -v h="$h" '
+            ($0 == h || substr($0, 1, length(h) + 1) == (h " ")) { capture=1; next }
+            capture && /^## / { exit }
+            capture { print }
+          ' "${{ needs.meta.outputs.changelog }}" > notes.md
+          if [ ! -s notes.md ]; then
+            echo "Release ${{ needs.meta.outputs.display }}." > notes.md
+            echo "::warning::no matching CHANGELOG section for $ver; used a placeholder"
+          fi
+          echo "--- notes ---"; cat notes.md
+      - name: Create the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "${{ needs.meta.outputs.display }}" \
+            --notes-file notes.md \
+            --verify-tag
