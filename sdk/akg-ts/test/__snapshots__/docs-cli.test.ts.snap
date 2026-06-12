@@ -15,7 +15,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "api",
@@ -37,7 +37,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "api",
@@ -59,7 +59,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "api",
@@ -81,7 +81,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "api",
@@ -103,7 +103,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "api",
@@ -125,7 +125,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "api",
@@ -147,7 +147,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "api",
@@ -169,7 +169,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "api",
@@ -191,7 +191,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "api",
@@ -213,7 +213,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "api",
@@ -235,7 +235,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "api",
@@ -257,7 +257,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "api",
@@ -279,7 +279,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "api",
@@ -301,7 +301,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "api",
@@ -323,7 +323,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "api",
@@ -346,7 +346,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "api",
@@ -369,7 +369,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "api",
@@ -392,7 +392,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "api",
@@ -414,7 +414,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "api",
@@ -436,7 +436,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "api",
@@ -458,7 +458,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "api",
@@ -480,7 +480,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "api",
@@ -502,7 +502,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "api",
@@ -524,7 +524,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "api",
@@ -546,7 +546,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "api",
@@ -568,7 +568,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "api",
@@ -590,7 +590,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "api",
@@ -612,7 +612,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "api",
@@ -635,7 +635,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "api",
@@ -657,7 +657,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "api",
@@ -679,7 +679,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "api",
@@ -701,7 +701,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "api",
@@ -723,7 +723,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "api",
@@ -745,7 +745,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "api",
@@ -767,7 +767,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "api",
@@ -789,7 +789,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "concept",
@@ -813,7 +813,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "concept",
@@ -836,7 +836,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "concept",
@@ -859,7 +859,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "concept",
@@ -883,7 +883,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "warning",
@@ -906,7 +906,7 @@ exports[`docs CLI > docs dump --format json 1`] = `
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.1.4"
+        "version": "0.2.0"
       },
       "tags": [
         "warning",

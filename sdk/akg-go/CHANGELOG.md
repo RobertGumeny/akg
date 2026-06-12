@@ -1,10 +1,17 @@
 # Changelog
 
-## Unreleased
+## v0.2.0
+
+### Changed
+
+- **Logical-append commit** — `Commit` now appends only the new mutation records (plus a `COMMIT` marker) to the WAL, writing the compaction-baseline `Data`/`Bloom` sections back unchanged and growing only the WAL. Previously every commit re-materialized the entire `Data` section from live state, rewriting the whole file and recording each mutation twice (once in `Data`, once in the WAL). `Compact` re-establishes the baseline. The Go SDK is now byte-identical to the TypeScript SDK and the Go Reference SDK on commit (proven by the `parity-commit-append.akg` golden).
+- **⚠️ Potentially breaking — unified key validation** — type, relation, and tag names are no longer restricted to snake_case (`[a-z0-9_]`); casing and word-separation are an application convention, not a format rule (spec `01`/`04`). All key components (type, relation, tag, node id) now share one rule: non-empty, valid UTF-8, no `:` delimiter, at most 64 UTF-8 bytes. The node-id length cap switches from runes to UTF-8 bytes, and the 64-byte cap is newly applied to type/relation/tag (previously uncapped). Oversize or otherwise invalid keys raise `ErrInvalidInput`. **Migration impact:** keys longer than 64 UTF-8 bytes that were accepted before v0.2.0 now error; the change only adds validation, so previously well-formed short keys are unaffected.
+- **Read-side secondary indexes** — `ListNodesByTag`, `OutboundEdges`, and `InboundEdges` are now O(matches) instead of O(total store size), backed by derived in-memory indexes (tag→nodes, from-node→edges, to-node→edges) rebuilt at load from the primary records. `DeleteNode`'s incident-edge check and `DeleteNodeCascade`'s collection are now O(degree). There is no format change — the persisted derived keys remain the load/validation source of truth.
 
 ### Fixed
 
 - **Crash-atomic commit** — `Commit` (and the auto-flush and initial-create paths it shares) now writes through the same atomic temp → fsync → rename → directory-fsync sequence that compaction already used, instead of rewriting the live file in place with `O_TRUNC`. A crash or power loss mid-commit can no longer tear a previously committed `.akg` store; the rename either fully lands or doesn't. The in-place `writeFileSync` writer has been removed. File permissions are preserved across writes (new files honor umask, matching the TypeScript SDK).
+- **Docs-graph version stamp** — the embedded documentation graph stamped a stale hard-coded version (`0.1.1`) into every node. The version is now sourced from the latest released `## vX.Y.Z` heading in this CHANGELOG — the single source of truth for the git-tag-versioned Go SDK — so `akg-go docs` reports the shipped version.
 
 ## v0.1.4
 

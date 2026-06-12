@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.2.0
+
+### Changed
+
+- **⚠️ Potentially breaking — unified key validation** — type, relation, and tag names are no longer restricted to snake_case (`[a-z0-9_]`); casing and word-separation are an application convention, not a format rule (spec `01`/`04`). All key components (type, relation, tag, node id) now share one rule: non-empty, valid UTF-8, no `:` delimiter, at most 64 UTF-8 bytes. The node-id length cap switches from code points to UTF-8 bytes, and the 64-byte cap is newly applied to type/relation/tag (previously uncapped). Oversize or otherwise invalid keys throw `InvalidInputError`. **Migration impact:** keys longer than 64 UTF-8 bytes that were accepted before v0.2.0 now error; the change only adds validation, so previously well-formed short keys are unaffected.
+- **Read-side secondary indexes** — `listNodesByTag`, `outboundEdges`, and `inboundEdges` are now O(matches) instead of O(total store size), backed by derived in-memory indexes (tag→nodes, from-node→edges, to-node→edges) rebuilt at load from the primary records. Incident-edge checks on delete and cascade collection are now O(degree). There is no format change — the persisted derived keys remain the load/validation source of truth.
+
+### Fixed
+
+- **Docs-graph version stamp** — the bundled documentation graph stamped a stale hard-coded version (`0.1.1`) into every node. The version is now sourced from `package.json` — the single source of truth for the shipped SDK version — so `akg-ts docs` reports the shipped version.
+
 ## v0.1.4
 
 ### Added
