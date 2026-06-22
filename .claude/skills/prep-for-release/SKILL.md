@@ -56,14 +56,23 @@ For `sdk/akg-ts/`, update `"version"` in `sdk/akg-ts/package.json` to match the 
 
 Go SDK has no version field — skip this step.
 
-## Phase 5: Commit and tag
+## Phase 5: Regenerate version-stamped artifacts
 
-Stage, commit, and tag **only** the SDK(s) you are releasing. Use the block that matches.
+The docs-graph artifacts (`docs/akg-*-docs.akg` and `.json`) embed the package version in every node, and they are committed to the repo. CI fails the **"docs graph freshness"** check — which regenerates the graph and runs `git diff --exit-code docs/` — if the committed copy is stale. So a version bump must regenerate them, or the release PR goes red. Run only the generator(s) for the SDK(s) you are releasing:
+
+- **akg-go:** `cd sdk/akg-go && go run ./cmd/akg-go gen-docs`
+- **akg-ts:** `cd sdk/akg-ts && npm run generate:docs`
+
+The golden/snapshot tests scrub the `version`/`generated_at` fields, so they do **not** need regeneration on a version bump (see `sdk/akg-go/cmd/akg-go/docs_test.go` and `sdk/akg-ts/test/docs-cli.test.ts`). Run `go test ./...` (root + `sdk/akg-go`) and `npm test` (in `sdk/akg-ts`) once to confirm green before committing — if a golden *does* change for a non-version reason, that is a real content change to review, not a release artifact.
+
+## Phase 6: Commit and tag
+
+Stage, commit, and tag **only** the SDK(s) you are releasing — including the regenerated `docs/` artifacts from Phase 5. Use the block that matches.
 
 **Releasing akg-go:**
 
 ```sh
-git add sdk/akg-go/CHANGELOG.md
+git add sdk/akg-go/CHANGELOG.md sdk/akg-go/docs/
 git commit -m "chore: release prep for akg-go vX.Y.Z"
 git tag sdk/akg-go/vX.Y.Z
 ```
@@ -71,7 +80,7 @@ git tag sdk/akg-go/vX.Y.Z
 **Releasing akg-ts** — also stage `package.json`, which carries the version bump from Phase 4:
 
 ```sh
-git add sdk/akg-ts/CHANGELOG.md sdk/akg-ts/package.json
+git add sdk/akg-ts/CHANGELOG.md sdk/akg-ts/package.json sdk/akg-ts/docs/
 git commit -m "chore: release prep for akg-ts vX.Y.Z"
 git tag sdk/akg-ts/vX.Y.Z
 ```
@@ -80,9 +89,9 @@ git tag sdk/akg-ts/vX.Y.Z
 
 Each tag must use its SDK's full prefix (`sdk/akg-go/` or `sdk/akg-ts/`), so the version matches that SDK's existing tag series.
 
-Do **not** push — pushing is the user's call (Phase 6).
+Do **not** push — pushing is the user's call (Phase 7).
 
-## Phase 6: Confirm
+## Phase 7: Confirm
 
 Tell the user:
 - Which SDK(s) were bumped and to what version

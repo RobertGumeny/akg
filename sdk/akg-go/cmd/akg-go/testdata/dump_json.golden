@@ -7,12 +7,12 @@
       "Body": "Result of DeleteNodeCascade: counts of deleted inbound edges, outbound edges, and the node.",
       "Meta": {
         "anchor": "cascade-delete",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Cascade delete",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -29,12 +29,12 @@
       "Body": "Commits outstanding mutations and closes the store; safe to call with no pending mutations.",
       "Meta": {
         "anchor": "committing-and-closing",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Committing and closing",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -52,12 +52,12 @@
       "Body": "Durably writes all pending in-memory mutations to the .akg file; no-op when nothing is pending.",
       "Meta": {
         "anchor": "committing-and-closing",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Committing and closing",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -75,12 +75,12 @@
       "Body": "Rewrites the .akg file with only live records, discarding WAL history and tombstones; always caller-triggered.",
       "Meta": {
         "anchor": "compaction",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Compaction",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -98,12 +98,12 @@
       "Body": "Deletes an edge; returns ErrNotFound if the edge does not exist.",
       "Meta": {
         "anchor": "deleting-nodes-and-edges",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Deleting nodes and edges",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -120,12 +120,12 @@
       "Body": "Deletes a node; returns ErrNotFound if missing, ErrInvalidInput if live edges remain.",
       "Meta": {
         "anchor": "deleting-nodes-and-edges",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Deleting nodes and edges",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -142,12 +142,12 @@
       "Body": "Deletes all inbound and outbound edges then deletes the node; returns a CascadeDeleteResult.",
       "Meta": {
         "anchor": "cascade-delete",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Cascade delete",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -164,12 +164,12 @@
       "Body": "An edge record returned by read operations; includes From, Relation, To, Strength, Confidence, Meta, and timestamps.",
       "Meta": {
         "anchor": "reading",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Reading",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -186,12 +186,12 @@
       "Body": "Input fields for PutEdge: Strength (*float64, default 0.5), Confidence (*float64, default nil), Meta (optional).",
       "Meta": {
         "anchor": "writing-edges",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Writing edges",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -208,12 +208,12 @@
       "Body": "Filter criteria for ListEdges: Relation and Meta.",
       "Meta": {
         "anchor": "listedges",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "ListEdges",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -230,12 +230,12 @@
       "Body": "Filter for RecentEdges: Relation, From, To, SinceUpdatedAt, UntilUpdatedAt, and Limit.",
       "Meta": {
         "anchor": "recency-helpers",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Recency helpers",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -252,12 +252,12 @@
       "Body": "Returned when a caller passes an argument that violates a format or semantic constraint.",
       "Meta": {
         "anchor": "error-handling",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Error handling",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -274,12 +274,12 @@
       "Body": "Returned when a required field is absent, such as omitting Title in PutNode.",
       "Meta": {
         "anchor": "error-handling",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Error handling",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -296,12 +296,12 @@
       "Body": "Returned when a DeleteNode or DeleteEdge target does not exist.",
       "Meta": {
         "anchor": "error-handling",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Error handling",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -318,12 +318,12 @@
       "Body": "Returns the node at (typeName, id), or (nil, nil) if it does not exist.",
       "Meta": {
         "anchor": "reading",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Reading",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -340,12 +340,12 @@
       "Body": "Batch-fetches nodes by NodeRef slice; returns nil at positions where a node does not exist.",
       "Meta": {
         "anchor": "getnodes",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "GetNodes",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -362,12 +362,12 @@
       "Body": "Returns all inbound edges to a node, optionally filtered by relation.",
       "Meta": {
         "anchor": "reading",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Reading",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -384,12 +384,12 @@
       "Body": "Returns all edges, optionally filtered by relation or metadata.",
       "Meta": {
         "anchor": "listedges",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "ListEdges",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -406,12 +406,12 @@
       "Body": "Returns all nodes, optionally filtered to a given type name, sorted by key.",
       "Meta": {
         "anchor": "reading",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Reading",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -428,12 +428,12 @@
       "Body": "Returns all nodes carrying the given tag, sorted by key.",
       "Meta": {
         "anchor": "reading",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Reading",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -450,12 +450,12 @@
       "Body": "Returns nodes matching a NodeFilter combining type, tag, and metadata criteria with AND semantics.",
       "Meta": {
         "anchor": "listnodesfiltered",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "ListNodesFiltered",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -472,12 +472,12 @@
       "Body": "A node record returned by read operations; includes Type, ID, Title, Body, Meta, Tags, and SDK-managed timestamps.",
       "Meta": {
         "anchor": "reading",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Reading",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -494,12 +494,12 @@
       "Body": "Input fields for PutNode: Title (required), Body (optional), Meta (optional).",
       "Meta": {
         "anchor": "writing-nodes",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Writing nodes",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -516,12 +516,12 @@
       "Body": "Filter criteria for ListNodesFiltered: Type, Tag, and Meta with AND semantics.",
       "Meta": {
         "anchor": "listnodesfiltered",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "ListNodesFiltered",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -538,12 +538,12 @@
       "Body": "Identifies a node by Type and ID; returned by PutNode and accepted by edge and query methods.",
       "Meta": {
         "anchor": "noderef",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "NodeRef",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -560,12 +560,12 @@
       "Body": "Opens an existing .akg file or creates a new empty one; returns a *Store.",
       "Meta": {
         "anchor": "opening-a-store",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Opening a store",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -583,12 +583,12 @@
       "Body": "Returns all outbound edges from a node, optionally filtered by relation.",
       "Meta": {
         "anchor": "reading",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Reading",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -605,12 +605,12 @@
       "Body": "Writes or replaces the edge at (fromRef, relation, toRef); both nodes must already exist.",
       "Meta": {
         "anchor": "writing-edges",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Writing edges",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -627,12 +627,12 @@
       "Body": "Writes or replaces the node at (typeName, id); returns a NodeRef.",
       "Meta": {
         "anchor": "writing-nodes",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Writing nodes",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -649,12 +649,12 @@
       "Body": "Filter for RecentNodes: Type, Tag, SinceUpdatedAt, UntilUpdatedAt, and Limit.",
       "Meta": {
         "anchor": "recency-helpers",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Recency helpers",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -671,12 +671,12 @@
       "Body": "Returns edges sorted newest-first by UpdatedAt, with optional source, relation, time-window, and Limit filters.",
       "Meta": {
         "anchor": "recency-helpers",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Recency helpers",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -693,12 +693,12 @@
       "Body": "Returns nodes sorted newest-first by UpdatedAt, with optional type, tag, time-window, and Limit filters.",
       "Meta": {
         "anchor": "recency-helpers",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Recency helpers",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -715,12 +715,12 @@
       "Body": "Synchronizes the outbound edges for a source node and relation to exactly the desired target set.",
       "Meta": {
         "anchor": "edge-reconciliation",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Edge reconciliation",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -737,12 +737,12 @@
       "Body": "Result of ReconcileOutboundEdges: counts of Added, Removed, and Unchanged edges.",
       "Meta": {
         "anchor": "edge-reconciliation",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Edge reconciliation",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -759,12 +759,12 @@
       "Body": "Returns a JSON-serializable Snapshot of all live nodes and edges in deterministic order.",
       "Meta": {
         "anchor": "snapshot",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Snapshot",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -781,12 +781,12 @@
       "Body": "JSON-serializable record of all live nodes and edges returned by store.Snapshot().",
       "Meta": {
         "anchor": "snapshot",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Snapshot",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -803,12 +803,12 @@
       "Body": "The main type for reading and writing an AKG knowledge graph, bound to one filesystem path.",
       "Meta": {
         "anchor": "api",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "API",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -825,12 +825,12 @@
       "Body": "Returns a *float64 pointer to the given value; idiomatic helper for supplying EdgeFields.Strength.",
       "Meta": {
         "anchor": "writing-edges",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Writing edges",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "api",
@@ -847,12 +847,12 @@
       "Body": "Rewrites the file to contain only live records, discarding WAL history; caller-triggered, never automatic.",
       "Meta": {
         "anchor": "compaction",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Compaction",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "concept",
@@ -871,12 +871,12 @@
       "Body": "Type names, relation names, and tags must be lowercase [a-z0-9_] with no leading, trailing, or consecutive underscores.",
       "Meta": {
         "anchor": "naming-rules",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Naming rules",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "concept",
@@ -894,12 +894,12 @@
       "Body": "Only one process should have a store open for writing at a time; concurrent access produces undefined behavior.",
       "Meta": {
         "anchor": "concurrency-and-single-writer-semantics",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Concurrency and single-writer semantics",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "concept",
@@ -917,12 +917,12 @@
       "Body": "Mutations are held in memory and appended to a WAL on Commit; not visible to other processes until committed.",
       "Meta": {
         "anchor": "committing-and-closing",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Committing and closing",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "concept",
@@ -941,12 +941,12 @@
       "Body": "You must delete all inbound and outbound edges before deleting a node; the graph does not cascade-delete automatically.",
       "Meta": {
         "anchor": "deleting-nodes-and-edges",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Deleting nodes and edges",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "warning",
@@ -964,12 +964,12 @@
       "Body": "Mutations held in memory are lost if the process exits without calling Commit or Close.",
       "Meta": {
         "anchor": "committing-and-closing",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Committing and closing",
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "Tags": [
         "warning",
