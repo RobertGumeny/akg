@@ -10,12 +10,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "Result of deleteNodeCascade: counts of deleted inbound edges, outbound edges, and node.",
       "meta": {
         "anchor": "cascade-delete",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Cascade delete",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "api",
@@ -32,12 +32,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "An edge record returned by read operations; includes from, relation, to, strength, confidence, meta, and timestamps.",
       "meta": {
         "anchor": "reading",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Reading",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "api",
@@ -54,12 +54,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "Input fields for putEdge: strength (default 0.5), confidence (default null), meta (optional).",
       "meta": {
         "anchor": "writing-edges",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Writing edges",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "api",
@@ -76,12 +76,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "Filter criteria for listEdges: relation and meta.",
       "meta": {
         "anchor": "listedges",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "listEdges",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "api",
@@ -98,12 +98,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "Thrown when a caller passes an argument that violates a format or semantic constraint.",
       "meta": {
         "anchor": "error-handling",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Error handling",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "api",
@@ -120,12 +120,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "Thrown when a required field is absent, such as omitting title in putNode.",
       "meta": {
         "anchor": "error-handling",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Error handling",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "api",
@@ -142,12 +142,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "A node record returned by read operations; includes id, type, title, body, meta, tags, and SDK-managed timestamps.",
       "meta": {
         "anchor": "reading",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Reading",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "api",
@@ -164,12 +164,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "Input fields for putNode: title (required), body (optional), meta (optional).",
       "meta": {
         "anchor": "writing-nodes",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Writing nodes",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "api",
@@ -186,12 +186,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "Filter criteria for listNodesFiltered: type, tag, and meta with AND semantics.",
       "meta": {
         "anchor": "listnodesfiltered",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "listNodesFiltered",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "api",
@@ -208,12 +208,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "Identifies a node by type and id; returned by putNode and accepted by edge and query methods.",
       "meta": {
         "anchor": "noderef",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "NodeRef",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "api",
@@ -230,12 +230,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "Thrown when a deleteNode or deleteEdge target does not exist.",
       "meta": {
         "anchor": "error-handling",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Error handling",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "api",
@@ -252,12 +252,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "Result of reconcileOutboundEdges: counts of added, removed, and unchanged edges.",
       "meta": {
         "anchor": "edge-reconciliation",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Edge reconciliation",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "api",
@@ -274,12 +274,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "JSON-serializable record of all live nodes and edges returned by store.snapshot().",
       "meta": {
         "anchor": "snapshot",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "snapshot",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "api",
@@ -296,12 +296,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "The main class for reading and writing an AKG knowledge graph.",
       "meta": {
         "anchor": "api",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "API",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "api",
@@ -318,12 +318,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "Commits outstanding mutations and closes the store; safe to call with no pending mutations.",
       "meta": {
         "anchor": "committing-and-closing",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Committing and closing",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "api",
@@ -341,12 +341,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "Durably writes all pending in-memory mutations to the .akg file.",
       "meta": {
         "anchor": "committing-and-closing",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Committing and closing",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "api",
@@ -364,12 +364,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "Rewrites the .akg file with only live records, discarding WAL history and tombstones.",
       "meta": {
         "anchor": "compaction",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Compaction",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "api",
@@ -387,12 +387,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "Deletes an edge; throws NotFoundError if the edge does not exist.",
       "meta": {
         "anchor": "deleting-nodes-and-edges",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Deleting nodes and edges",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "api",
@@ -409,12 +409,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "Deletes a node; throws NotFoundError if missing, InvalidInputError if live edges remain.",
       "meta": {
         "anchor": "deleting-nodes-and-edges",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Deleting nodes and edges",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "api",
@@ -431,12 +431,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "Deletes all inbound and outbound edges then deletes the node; returns a CascadeDeleteResult.",
       "meta": {
         "anchor": "cascade-delete",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Cascade delete",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "api",
@@ -453,12 +453,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "Returns the node at (typeName, id), or null if it does not exist.",
       "meta": {
         "anchor": "reading",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Reading",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "api",
@@ -475,12 +475,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "Batch-fetches nodes by NodeRef array; returns null at positions where a node does not exist.",
       "meta": {
         "anchor": "getnodes",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "getNodes",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "api",
@@ -497,12 +497,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "Returns all inbound edges to a node, optionally filtered by relation.",
       "meta": {
         "anchor": "reading",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Reading",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "api",
@@ -519,12 +519,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "Returns all edges, optionally filtered by relation or metadata.",
       "meta": {
         "anchor": "listedges",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "listEdges",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "api",
@@ -541,12 +541,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "Returns all nodes, optionally filtered to a given type name, sorted by key.",
       "meta": {
         "anchor": "reading",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Reading",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "api",
@@ -563,12 +563,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "Returns all nodes carrying the given tag, sorted by key.",
       "meta": {
         "anchor": "reading",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Reading",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "api",
@@ -585,12 +585,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "Returns nodes matching a NodeFilter combining type, tag, and metadata criteria.",
       "meta": {
         "anchor": "listnodesfiltered",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "listNodesFiltered",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "api",
@@ -607,12 +607,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "Opens an existing .akg file or creates a new empty one; returns a Store.",
       "meta": {
         "anchor": "opening-a-store",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Opening a store",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "api",
@@ -630,12 +630,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "Returns all outbound edges from a node, optionally filtered by relation.",
       "meta": {
         "anchor": "reading",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Reading",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "api",
@@ -652,12 +652,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "Writes or replaces an edge between two existing nodes.",
       "meta": {
         "anchor": "writing-edges",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Writing edges",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "api",
@@ -674,12 +674,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "Writes or replaces a node at (typeName, id); returns a NodeRef.",
       "meta": {
         "anchor": "writing-nodes",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Writing nodes",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "api",
@@ -696,12 +696,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "Returns edges sorted newest-first by updatedAt, with optional source, relation, and limit filters.",
       "meta": {
         "anchor": "recency-helpers",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Recency helpers",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "api",
@@ -718,12 +718,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "Returns nodes sorted newest-first by updatedAt, with optional type, tag, and limit filters.",
       "meta": {
         "anchor": "recency-helpers",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Recency helpers",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "api",
@@ -740,12 +740,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "Synchronizes the outbound edges for a source node and relation to exactly the desired target set.",
       "meta": {
         "anchor": "edge-reconciliation",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Edge reconciliation",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "api",
@@ -762,12 +762,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "Returns a JSON-serializable Snapshot of all live nodes and edges in deterministic order.",
       "meta": {
         "anchor": "snapshot",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "snapshot",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "api",
@@ -784,12 +784,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "Rewrites the file to contain only live records, discarding WAL history; caller-triggered, never automatic.",
       "meta": {
         "anchor": "compaction",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Compaction",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "concept",
@@ -808,12 +808,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "Type names, relation names, and tags must be lowercase [a-z0-9_] with no leading, trailing, or consecutive underscores.",
       "meta": {
         "anchor": "naming-rules",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Naming rules",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "concept",
@@ -831,12 +831,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "Only one process should have a store open for writing at a time; concurrent access produces undefined behavior.",
       "meta": {
         "anchor": "concurrency-and-single-writer-semantics",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Concurrency and single-writer semantics",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "concept",
@@ -854,12 +854,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "Mutations are held in memory and appended to a WAL on commit; not visible to other processes until committed.",
       "meta": {
         "anchor": "committing-and-closing",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Committing and closing",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "concept",
@@ -878,12 +878,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "You must delete all inbound and outbound edges before deleting a node; the graph does not cascade-delete automatically.",
       "meta": {
         "anchor": "deleting-nodes-and-edges",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Deleting nodes and edges",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "warning",
@@ -901,12 +901,12 @@ exports[`docs CLI > docs dump --format json 1`] = `
       "body": "Mutations held in memory are lost if the process exits without calling commit or close.",
       "meta": {
         "anchor": "committing-and-closing",
-        "generated_at": "2026-05-28T00:00:00Z",
+        "generated_at": "<scrubbed>",
         "heading": "Committing and closing",
         "language": "typescript",
         "package": "akg-ts",
         "source_path": "sdk/akg-ts/README.md",
-        "version": "0.3.0"
+        "version": "<scrubbed>"
       },
       "tags": [
         "warning",

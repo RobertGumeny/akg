@@ -5,10 +5,24 @@ import (
 	"flag"
 	"os"
 	"path/filepath"
+	"regexp"
 	"testing"
 )
 
 var updateGolden = flag.Bool("update", false, "update golden snapshot files")
+
+// Volatile fields that track the release, not the docs-graph structure. They
+// change on every version bump and would otherwise force a golden regeneration
+// for every release (see PR #11). We scrub the package semver and the
+// generation timestamp to a stable placeholder so the goldens assert structure,
+// not which release produced them. The binary `"Version": N` field (capital V)
+// is the on-disk format version and is deliberately NOT scrubbed — it is a real
+// correctness assertion.
+var volatileDocsFields = regexp.MustCompile(`"(version|generated_at)":(\s*)"[^"]*"`)
+
+func normalizeVolatile(s string) string {
+	return volatileDocsFields.ReplaceAllString(s, `"$1":$2"<scrubbed>"`)
+}
 
 func runDocsCmd(t *testing.T, args ...string) (stdout, stderr string, exitCode int) {
 	t.Helper()
@@ -19,6 +33,7 @@ func runDocsCmd(t *testing.T, args ...string) (stdout, stderr string, exitCode i
 
 func checkGolden(t *testing.T, goldenFile, got string) {
 	t.Helper()
+	got = normalizeVolatile(got)
 	path := filepath.Join("testdata", goldenFile)
 	if *updateGolden {
 		if err := os.MkdirAll("testdata", 0o755); err != nil {

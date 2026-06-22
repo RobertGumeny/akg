@@ -16,6 +16,16 @@ function runCli(...args: string[]): { stdout: string; stderr: string; exitCode: 
   };
 }
 
+// Scrub fields that track the release, not the docs-graph structure. The package
+// semver and generation timestamp change on every version bump and would
+// otherwise force a snapshot update for every release (see PR #11). Snapshots
+// assert structure, not which release produced them. The binary `"Version": N`
+// field (capital V) is the on-disk format version and is deliberately left
+// intact — it is a real correctness assertion.
+function scrubVolatile(s: string): string {
+  return s.replace(/"(version|generated_at)":(\s*)"[^"]*"/g, '"$1":$2"<scrubbed>"');
+}
+
 describe('docs CLI', () => {
   it('dist/cli.js must exist (run npm run build first)', () => {
     expect(existsSync(cli)).toBe(true);
@@ -24,13 +34,13 @@ describe('docs CLI', () => {
   it('docs overview', () => {
     const { stdout, exitCode } = runCli('docs', 'overview');
     expect(exitCode).toBe(0);
-    expect(stdout).toMatchSnapshot();
+    expect(scrubVolatile(stdout)).toMatchSnapshot();
   });
 
   it('docs explain putNode', () => {
     const { stdout, exitCode } = runCli('docs', 'explain', 'putNode');
     expect(exitCode).toBe(0);
-    expect(stdout).toMatchSnapshot();
+    expect(scrubVolatile(stdout)).toMatchSnapshot();
   });
 
   it('docs explain putNode output contains putNode and relation heading', () => {
@@ -42,7 +52,7 @@ describe('docs CLI', () => {
   it('docs search "commit"', () => {
     const { stdout, exitCode } = runCli('docs', 'search', 'commit');
     expect(exitCode).toBe(0);
-    expect(stdout).toMatchSnapshot();
+    expect(scrubVolatile(stdout)).toMatchSnapshot();
   });
 
   it('docs search "delete" contains deleteNode and deleteEdge', () => {
@@ -57,14 +67,14 @@ describe('docs CLI', () => {
     const parsed = JSON.parse(stdout);
     expect(parsed).toHaveProperty('nodes');
     expect(parsed).toHaveProperty('edges');
-    expect(stdout).toMatchSnapshot();
+    expect(scrubVolatile(stdout)).toMatchSnapshot();
   });
 
   it('docs dump --format markdown', () => {
     const { stdout, exitCode } = runCli('docs', 'dump', '--format', 'markdown');
     expect(exitCode).toBe(0);
     expect(stdout.length).toBeGreaterThan(0);
-    expect(stdout).toMatchSnapshot();
+    expect(scrubVolatile(stdout)).toMatchSnapshot();
   });
 
   it('docs explain unknownSymbol exits 1 with not found message', () => {
