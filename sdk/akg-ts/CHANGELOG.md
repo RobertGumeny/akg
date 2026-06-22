@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.3.0
+
+### Fixed
+
+- **Tag-index key collision** — two nodes sharing the same `id` across different types (e.g. a `counter` and a `tendency` node both with id `preflop__vpip`) plus a common tag collapsed to a single tag-index key. `compact()` then threw `duplicate data key` and the colliding nodes' tag membership was corrupted. Root cause: the tag-index key was `t:{tag}:{id}`, omitting the node type even though node identity is `(type, id)` — the same ambiguity the spec already type-qualifies for edges. The key is now type-qualified as `t:{tag}:{type}:{id}`, so colliding nodes stay distinct and both resolve from `listNodesByTag`.
+
+### Changed
+
+- **⚠️ Binary format major 1 → 2** — the type-qualified tag-index key is an on-disk format change, so the binary major is bumped to 2. **Read-compatible:** a v0.3.0 reader transparently reads existing major-1 files (3-part tag keys) as well as major-2 files (4-part), distinguished by component count. **Forward-breaking:** files written by v0.3.0 are major 2, which pre-v0.3.0 SDKs reject. **Auto-upgrade:** a major-1 file is rewritten as major 2 (with type-qualified tag keys) on its next `compact()`. No application code changes are required; the public API is unchanged.
+
 ## v0.2.0
 
 ### Changed
