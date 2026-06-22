@@ -1,3 +1,8 @@
+---
+title: AKG compaction
+status: v1 draft
+---
+
 # Compaction
 
 Compaction rewrites an AKG file into a new equivalent file containing only live records. Its purpose is to reclaim space consumed by tombstones and accumulated WAL state, and to rebuild derived structures such as the bloom filter from the current live key set.

@@ -1,3 +1,8 @@
+---
+title: AKG error handling and conformance
+status: v1 draft
+---
+
 # Error Handling and Conformance
 
 AKG defines a fail-closed reader model and a strict writer model.

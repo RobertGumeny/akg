@@ -1,3 +1,8 @@
+---
+title: AKG binary layout
+status: v1 draft
+---
+
 # Binary Layout
 
 An AKG file is a single binary container with three top-level parts:
@@ -44,6 +49,19 @@ A minor version increase denotes a backward-compatible change. Such changes may 
 A major version increase denotes a breaking change. A reader must reject any file whose major version is greater than the highest major version that reader implements.
 
 Unsupported-major-version rejection is mandatory. Silent best-effort parsing is not conformant.
+
+### Version History
+
+| Major | Change |
+| --- | --- |
+| 1 | Initial format. Tag index key was type-less: `t:{tag}:{node_id}`. |
+| 2 | Tag index key type-qualified: `t:{tag}:{type}:{id}` (Section 4). Breaking key-layout change. |
+
+The current major version is 2. A major-2 reader must also read major-1 files: the only
+breaking difference is the tag index key shape, and a major-2 reader resolves tag keys
+according to the file's major version (see Section 4, Tag key versioning). A major-2 writer
+always writes major 2; rewriting a major-1 file on compaction upgrades it in place. A
+major-1 reader must reject major-2 files, per the rule above.
 
 ## Checksum Algorithm Identifier
 

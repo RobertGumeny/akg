@@ -1,3 +1,8 @@
+---
+title: AKG encoding
+status: v1 draft
+---
+
 # Encoding
 
 This section defines the payload encoding used for AKG node and edge payloads. Unless otherwise stated, node and edge payloads are serialized as MessagePack values.
