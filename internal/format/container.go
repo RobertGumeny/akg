@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	HeaderSize        = 64
-	SectionEntrySize  = 17
+	HeaderSize       = 64
+	SectionEntrySize = 17
 	// CurrentMajor is 2: the tag-index key is type-qualified (t:{tag}:{type}:{id}).
 	// Readers still accept major 1 (the legacy t:{tag}:{id} shape) for read-compat
 	// — the `h.Major > CurrentMajor` gate below deliberately keeps major 1 readable

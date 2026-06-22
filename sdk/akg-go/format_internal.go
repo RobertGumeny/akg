@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	headerSize        = 64
-	sectionEntrySize  = 17
+	headerSize       = 64
+	sectionEntrySize = 17
 	// currentMajor is 2: the tag-index key is type-qualified (t:{tag}:{type}:{id}).
 	// Readers still accept major 1 (legacy t:{tag}:{id}) for read-compat — the
 	// `buf[4] > currentMajor` gate in decodeHeader keeps major 1 readable — but

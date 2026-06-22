@@ -12,7 +12,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -34,7 +34,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -57,7 +57,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -80,7 +80,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -103,7 +103,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -125,7 +125,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -147,7 +147,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -169,7 +169,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -191,7 +191,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -213,7 +213,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -235,7 +235,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -257,7 +257,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -279,7 +279,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -301,7 +301,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -323,7 +323,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -345,7 +345,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -367,7 +367,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -389,7 +389,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -411,7 +411,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -433,7 +433,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -455,7 +455,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -477,7 +477,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -499,7 +499,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -521,7 +521,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -543,7 +543,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -565,7 +565,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -588,7 +588,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -610,7 +610,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -632,7 +632,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -654,7 +654,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -676,7 +676,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -698,7 +698,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -720,7 +720,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -742,7 +742,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -764,7 +764,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -786,7 +786,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -808,7 +808,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -830,7 +830,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "api",
@@ -852,7 +852,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "concept",
@@ -876,7 +876,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "concept",
@@ -899,7 +899,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "concept",
@@ -922,7 +922,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "concept",
@@ -946,7 +946,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "warning",
@@ -969,7 +969,7 @@
         "language": "go",
         "package": "akg-go",
         "source_path": "sdk/akg-go/README.md",
-        "version": "0.2.0"
+        "version": "0.3.0"
       },
       "Tags": [
         "warning",
