@@ -10,7 +10,7 @@ import type {
 } from './types.js';
 import {
   decodeContainer, encodeContainer, decodeDataEntries, encodeDataEntries,
-  decodeBloom, encodeBloom, DataEntry, equalBytes, compareBytes,
+  decodeBloom, encodeBloom, DataEntry, equalBytes, compareBytes, CURRENT_MAJOR,
 } from './internal/format.js';
 import {
   decodeWALRecord, encodeWALRecords, WALRecord,
@@ -24,7 +24,7 @@ import {
 } from './internal/codec.js';
 import {
   validateComponent, validateTag, validateNodeID,
-  buildNodeKey, buildEdgeKey, buildEdgeIndexKey, buildTagKey, buildTemporalNodeKey, buildTemporalEdgeKey,
+  buildNodeKey, buildEdgeKey, buildEdgeIndexKey, buildTagKeyForMajor, buildTemporalNodeKey, buildTemporalEdgeKey,
   parseNodeKey, parseEdgeKey, parseEdgeIndexKey, parseTagKey, parseTemporalKey,
 } from './internal/keys.js';
 
@@ -270,7 +270,7 @@ export class Store {
       }
     }
 
-    const state = hydrateDataEntries(entries);
+    const state = hydrateDataEntries(entries, c.major);
     const info = inspectAndReplayWAL(state, c.wal);
     const walBytes = c.wal ? c.wal.length : 0;
     return new Store(path, state, info.next, info.appendBytes, info.appendEntries, info.entries, walBytes);
@@ -827,7 +827,10 @@ export async function open(path: string): Promise<Store> {
 
 // ---- Hydration and materialization -----------------------------------------
 
-function hydrateDataEntries(entries: DataEntry[]): StoreState {
+// hydrateDataEntries reconstructs live state from decoded Data entries. major is
+// the file's binary major: it selects which tag-key shape (v1 3-part / v2 4-part)
+// the derived-key validation re-derives, so a major-1 file validates against v1.
+function hydrateDataEntries(entries: DataEntry[], major: number): StoreState {
   const dec = new TextDecoder('utf-8');
 
   const state = newStoreState();
@@ -872,7 +875,7 @@ function hydrateDataEntries(entries: DataEntry[]): StoreState {
       throw new InvalidInputError(`unknown key prefix: ${key}`);
     }
   }
-  validateDerivedKeys(state, entries);
+  validateDerivedKeys(state, entries, major);
   return state;
 }
 
@@ -881,15 +884,24 @@ function wrapDataPayloadError(e: unknown): Error {
   return new InvalidInputError(`invalid data payload: ${e instanceof Error ? e.message : String(e)}`);
 }
 
-function validateDerivedKeys(state: StoreState, entries: DataEntry[]): void {
-  const expected = materializeDataEntries(state);
+function validateDerivedKeys(state: StoreState, entries: DataEntry[], major: number): void {
+  const expected = materializeDataEntriesForMajor(state, major);
   if (expected.length !== entries.length) throw new InvalidInputError('derived index mismatch');
   for (let i = 0; i < expected.length; i++) {
     if (!equalBytes(expected[i].key, entries[i].key)) throw new InvalidInputError('derived index mismatch');
   }
 }
 
+// materializeDataEntries derives the live Data key set at the current binary
+// major (writers always write major 2).
 export function materializeDataEntries(state: StoreState): DataEntry[] {
+  return materializeDataEntriesForMajor(state, CURRENT_MAJOR);
+}
+
+// materializeDataEntriesForMajor derives the live Data key set as it must appear
+// in a file of the given binary major. major selects the tag-key shape via
+// buildTagKeyForMajor; everything else is major-independent.
+function materializeDataEntriesForMajor(state: StoreState, major: number): DataEntry[] {
   const enc = new TextEncoder();
   const entries: DataEntry[] = [];
   const seen = new Set<string>();
@@ -906,7 +918,7 @@ export function materializeDataEntries(state: StoreState): DataEntry[] {
     add(key, value);
 
     for (const tag of rec.node.tags) {
-      add(buildTagKey(tag, rec.id), new Uint8Array(0));
+      add(buildTagKeyForMajor(major, tag, rec.node.type, rec.id), new Uint8Array(0));
     }
     add(buildTemporalNodeKey(rec.node.updatedAt, rec.node.type, rec.id), new Uint8Array(0));
   }
