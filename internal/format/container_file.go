@@ -4,8 +4,11 @@ import "errors"
 
 var ErrMissingSection = errors.New("missing section")
 
-// Container contains decoded known AKG v1 section payloads.
+// Container contains decoded known AKG section payloads plus the binary major
+// from the file header, which read-side validation needs to select the
+// version-correct tag-key shape (major 1 vs. major 2).
 type Container struct {
+	Major uint8
 	Data  []byte
 	Bloom []byte
 	WAL   []byte
@@ -73,7 +76,7 @@ func DecodeContainer(file []byte) (Container, []Section, error) {
 	if err := ValidateSections(sections, uint64(len(file)), h.ChecksumAlgorithm); err != nil {
 		return Container{}, nil, err
 	}
-	var c Container
+	c := Container{Major: h.Major}
 	for _, s := range sections {
 		if s.Type == SectionWAL && s.Length == 0 {
 			c.WAL = []byte{}

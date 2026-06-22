@@ -17,9 +17,20 @@ var (
 )
 
 // MaterializeDataEntries derives the complete live AKG Data key set from the
-// authoritative in-memory state. The returned entries are sorted by raw bytewise
-// key order and contain no mutable derived-index state from outside s.
+// authoritative in-memory state at the current binary major. The returned
+// entries are sorted by raw bytewise key order and contain no mutable
+// derived-index state from outside s. Writers always materialize at the current
+// major, so a compacted file's tag index is always type-qualified (major 2).
 func MaterializeDataEntries(s *state.State) ([]format.DataEntry, error) {
+	return materializeDataEntries(s, format.CurrentMajor)
+}
+
+// materializeDataEntries derives the live Data key set as it must appear in a
+// file of the given binary major. major selects the tag-key shape: major 1
+// emits legacy t:{tag}:{id} keys, major 2 the type-qualified t:{tag}:{type}:{id}.
+// Read-side validation passes the file's own major so a major-1 file's 3-part
+// tag keys validate against a major-1 materialization.
+func materializeDataEntries(s *state.State, major uint8) ([]format.DataEntry, error) {
 	if s == nil {
 		return nil, ErrInvalidState
 	}
@@ -51,7 +62,7 @@ func MaterializeDataEntries(s *state.State) ([]format.DataEntry, error) {
 			return nil, err
 		}
 		for _, tag := range node.Node.Tags {
-			tagKey, err := keys.BuildTagKey(tag, node.ID)
+			tagKey, err := buildTagKeyForMajor(major, tag, node.Node.Type, node.ID)
 			if err != nil {
 				return nil, err
 			}
@@ -100,4 +111,14 @@ func MaterializeDataEntries(s *state.State) ([]format.DataEntry, error) {
 		return bytes.Compare(entries[i].Key, entries[j].Key) < 0
 	})
 	return entries, nil
+}
+
+// buildTagKeyForMajor builds the tag-index key in the shape required by the
+// given binary major: legacy t:{tag}:{id} for major 1, type-qualified
+// t:{tag}:{type}:{id} for major 2 and later.
+func buildTagKeyForMajor(major uint8, tag, nodeType string, id record.NodeID) ([]byte, error) {
+	if major < 2 {
+		return keys.BuildTagKeyV1(tag, id)
+	}
+	return keys.BuildTagKey(tag, nodeType, id)
 }

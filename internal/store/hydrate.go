@@ -21,7 +21,10 @@ var (
 // HydrateDataEntries reconstructs authoritative live state from decoded AKG Data
 // entries. Primary node/edge records are authoritative; derived index entries
 // are validated against the regenerated key set and are not stored as state.
-func HydrateDataEntries(entries []format.DataEntry) (*state.State, error) {
+// major is the file's binary major; it selects the tag-key shape the derived
+// index is validated against, so a major-1 file (3-part tag keys) is checked
+// against a major-1 materialization while major-2 files are checked strictly.
+func HydrateDataEntries(entries []format.DataEntry, major uint8) (*state.State, error) {
 	if err := validateEntryOrder(entries); err != nil {
 		return nil, err
 	}
@@ -86,7 +89,7 @@ func HydrateDataEntries(entries []format.DataEntry) (*state.State, error) {
 		}
 	}
 
-	if err := validateDerivedKeys(s, entries); err != nil {
+	if err := validateDerivedKeys(s, entries, major); err != nil {
 		return nil, err
 	}
 	return s, nil
@@ -105,8 +108,8 @@ func validateEntryOrder(entries []format.DataEntry) error {
 	return nil
 }
 
-func validateDerivedKeys(s *state.State, entries []format.DataEntry) error {
-	expected, err := MaterializeDataEntries(s)
+func validateDerivedKeys(s *state.State, entries []format.DataEntry, major uint8) error {
+	expected, err := materializeDataEntries(s, major)
 	if err != nil {
 		return err
 	}

@@ -11,7 +11,11 @@ import (
 const (
 	HeaderSize        = 64
 	SectionEntrySize  = 17
-	CurrentMajor      = 1
+	// CurrentMajor is 2: the tag-index key is type-qualified (t:{tag}:{type}:{id}).
+	// Readers still accept major 1 (the legacy t:{tag}:{id} shape) for read-compat
+	// — the `h.Major > CurrentMajor` gate below deliberately keeps major 1 readable
+	// — but writers always emit major 2, so files self-upgrade on compaction.
+	CurrentMajor      = 2
 	CurrentMinor      = 0
 	headerChecksumOff = 55
 )

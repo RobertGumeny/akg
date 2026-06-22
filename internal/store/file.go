@@ -296,7 +296,7 @@ func openBytes(file []byte) (*Store, error) {
 	if err := validateBloom(container.Bloom, entries); err != nil {
 		return nil, err
 	}
-	st, err := HydrateDataEntries(entries)
+	st, err := HydrateDataEntries(entries, container.Major)
 	if err != nil {
 		return nil, err
 	}

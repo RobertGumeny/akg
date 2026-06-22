@@ -61,9 +61,29 @@ func TestEdgeIndexKeyBuildParse(t *testing.T) {
 }
 
 func TestTagKeyBuildParse(t *testing.T) {
-	key, err := BuildTagKey("multi_word2", "node1")
+	key, err := BuildTagKey("multi_word2", "note", "node1")
 	if err != nil {
 		t.Fatalf("BuildTagKey: %v", err)
+	}
+	if got, want := string(key), "t:multi_word2:note:node1"; got != want {
+		t.Fatalf("key = %q, want %q", got, want)
+	}
+	parsed, err := ParseTagKey(key)
+	if err != nil {
+		t.Fatalf("ParseTagKey: %v", err)
+	}
+	if parsed != (TagKey{Tag: "multi_word2", Type: "note", NodeID: "node1"}) {
+		t.Fatalf("parsed = %#v", parsed)
+	}
+}
+
+// TestTagKeyV1BuildParse pins the read-compat path: the legacy major-1 builder
+// emits the 3-part t:{tag}:{id} key, and ParseTagKey round-trips it with an
+// empty Type, disambiguated from the 4-part major-2 key by component count.
+func TestTagKeyV1BuildParse(t *testing.T) {
+	key, err := BuildTagKeyV1("multi_word2", "node1")
+	if err != nil {
+		t.Fatalf("BuildTagKeyV1: %v", err)
 	}
 	if got, want := string(key), "t:multi_word2:node1"; got != want {
 		t.Fatalf("key = %q, want %q", got, want)
@@ -130,10 +150,15 @@ func TestBuildersRejectInvalidInputs(t *testing.T) {
 		{"edge relation too long", func() ([]byte, error) { return BuildEdgeKey("note", "a", record.Relation(overType), "note", "b") }},
 		{"edge index empty to type", func() ([]byte, error) { return BuildEdgeIndexKey("", "b", "rel", "note", "a") }},
 		{"edge index empty to", func() ([]byte, error) { return BuildEdgeIndexKey("note", "", "rel", "note", "a") }},
-		{"tag colon", func() ([]byte, error) { return BuildTagKey("bad:tag", "id") }},
-		{"tag empty", func() ([]byte, error) { return BuildTagKey("", "id") }},
-		{"tag too long", func() ([]byte, error) { return BuildTagKey(overType, "id") }},
-		{"tag multibyte over cap", func() ([]byte, error) { return BuildTagKey(multibyteOver, "id") }},
+		{"tag colon", func() ([]byte, error) { return BuildTagKey("bad:tag", "note", "id") }},
+		{"tag empty", func() ([]byte, error) { return BuildTagKey("", "note", "id") }},
+		{"tag too long", func() ([]byte, error) { return BuildTagKey(overType, "note", "id") }},
+		{"tag multibyte over cap", func() ([]byte, error) { return BuildTagKey(multibyteOver, "note", "id") }},
+		{"tag type empty", func() ([]byte, error) { return BuildTagKey("active", "", "id") }},
+		{"tag type colon", func() ([]byte, error) { return BuildTagKey("active", "bad:type", "id") }},
+		{"tag id colon", func() ([]byte, error) { return BuildTagKey("active", "note", "bad:id") }},
+		{"tag v1 colon", func() ([]byte, error) { return BuildTagKeyV1("bad:tag", "id") }},
+		{"tag v1 id colon", func() ([]byte, error) { return BuildTagKeyV1("active", "bad:id") }},
 		{"temporal node bad id", func() ([]byte, error) { return BuildTemporalNodeKey(1, "note", "bad:id") }},
 	}
 	for _, tt := range tests {
@@ -160,13 +185,14 @@ func TestBuildersAcceptUTF8AndByteCap(t *testing.T) {
 		{"type non-ascii", func() ([]byte, error) { return BuildNodeKey("café", "id") }},
 		{"relation uppercase", func() ([]byte, error) { return BuildEdgeKey("Person", "a", "KNOWS", "Person", "b") }},
 		{"relation non-ascii", func() ([]byte, error) { return BuildEdgeKey("note", "a", "café", "note", "b") }},
-		{"tag uppercase", func() ([]byte, error) { return BuildTagKey("Active", "id") }},
-		{"tag non-ascii", func() ([]byte, error) { return BuildTagKey("café", "id") }},
-		{"tag with space", func() ([]byte, error) { return BuildTagKey("in progress", "id") }},
+		{"tag uppercase", func() ([]byte, error) { return BuildTagKey("Active", "note", "id") }},
+		{"tag non-ascii", func() ([]byte, error) { return BuildTagKey("café", "note", "id") }},
+		{"tag with space", func() ([]byte, error) { return BuildTagKey("in progress", "note", "id") }},
 		{"type at byte cap", func() ([]byte, error) { return BuildNodeKey(atCap, "id") }},
 		{"type multibyte at byte cap", func() ([]byte, error) { return BuildNodeKey(multibyteAtCap, "id") }},
 		{"id at byte cap", func() ([]byte, error) { return BuildNodeKey("note", record.NodeID(atCap)) }},
-		{"tag at byte cap", func() ([]byte, error) { return BuildTagKey(atCap, "id") }},
+		{"tag at byte cap", func() ([]byte, error) { return BuildTagKey(atCap, "note", "id") }},
+		{"tag type at byte cap", func() ([]byte, error) { return BuildTagKey("active", atCap, "id") }},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -190,6 +216,9 @@ func TestParsersRejectMalformedKeys(t *testing.T) {
 		{"edge empty component", []byte("e:note:a::note:b"), func(k []byte) error { _, err := ParseEdgeKey(k); return err }},
 		{"edge index wrong prefix", []byte("e:note:b:rel:note:a"), func(k []byte) error { _, err := ParseEdgeIndexKey(k); return err }},
 		{"tag over byte cap", []byte("t:" + strings.Repeat("a", 65) + ":id"), func(k []byte) error { _, err := ParseTagKey(k); return err }},
+		{"tag too few components", []byte("t:active"), func(k []byte) error { _, err := ParseTagKey(k); return err }},
+		{"tag too many components", []byte("t:active:note:id:extra"), func(k []byte) error { _, err := ParseTagKey(k); return err }},
+		{"tag v2 empty type", []byte("t:active::id"), func(k []byte) error { _, err := ParseTagKey(k); return err }},
 		{"temporal missing suffix", []byte("ts:123"), func(k []byte) error { _, err := ParseTemporalKey(k); return err }},
 		{"temporal unknown kind", []byte("ts:123:x:a:b"), func(k []byte) error { _, err := ParseTemporalKey(k); return err }},
 		{"temporal non numeric", []byte("ts:abc:n:note:id"), func(k []byte) error { _, err := ParseTemporalKey(k); return err }},
