@@ -150,9 +150,11 @@ For AKG v1, the parameters are fixed as follows so that all conformant implement
 - bit ordering within each byte is least-significant-bit first
 - `bit_count` is stored explicitly in the section payload
 
-The bloom filter supports fast negative lookups. A bloom-filter miss means the queried key is definitely absent from the indexed key set. A bloom-filter hit means the key may be present and the reader must continue with normal lookup.
+The bloom filter supports fast negative lookups over the key set it indexes. The persisted bloom filter indexes only the keys present in the Data section when it was built — that is, the last compacted baseline. It does not index keys that exist only in the WAL. A bloom-filter miss therefore means the queried key is definitely absent from the compacted baseline; it does not mean the key is absent from the file's current live state. A bloom-filter hit means the key may be present and the reader must continue with normal lookup.
 
-The bloom filter is rebuilt from live data during compaction. Between compactions, newly written keys are added and deleted keys may remain represented, which can increase the false-positive rate but does not create false negatives.
+A conformant reader must answer a key lookup from the file's live state — the compacted Data section as amended by replay of the committed WAL prefix (Section 5) — and must not treat a bloom-filter miss as evidence that a key is absent from that live state. The bloom filter is a negative pre-filter over the compacted baseline only. It must never be consulted as the authority for keys written to the WAL since the last compaction; doing so would report a freshly written key as absent. This rule is what prevents WAL-resident keys from producing false negatives.
+
+The bloom filter is rebuilt from the live key set during compaction (Section 6), at which point every live key resides in the Data section and is therefore indexed. Between compactions the persisted bloom filter is not updated: keys written to the WAL are not added to it, and keys removed by WAL tombstones may remain represented in it. Because lookups are resolved against replayed live state rather than the bloom alone, neither case yields a false negative — stale tombstoned keys only raise the false-positive rate, which is harmless. An implementation may additionally maintain an in-memory bloom filter that reflects WAL writes, but that is an optimization and is not part of the persisted format.
 
 ## Data Section
 
