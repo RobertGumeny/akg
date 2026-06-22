@@ -90,6 +90,21 @@ describe('behavioral parity (parity-graph.akg)', () => {
     expect(snap.edges).toHaveLength(a.snapshot_edge_count);
   });
 
+  it('tag-index key collision: same id across types stays distinct', () => {
+    const s = openFixture();
+    // Two nodes share id "preflop__vpip" across types (counter, tendency), both
+    // tagged "preflop". The major-2 type-qualified tag key keeps them distinct.
+    const byTag = s.listNodesFiltered({ tag: 'preflop' });
+    expect(byTag).toHaveLength(a.collision_tag_preflop_count);
+
+    const refs = a.collision_get_nodes_input as Array<{ type: string; id: string }>;
+    const results = s.getNodes(refs);
+    const expectedTitles = a.collision_get_nodes_titles as string[];
+    for (let i = 0; i < expectedTitles.length; i++) {
+      expect(results[i]?.title).toBe(expectedTitles[i]);
+    }
+  });
+
   it('getNodes: preserves input order and returns null for missing refs', () => {
     const s = openFixture();
     const refs = (a.get_nodes_input as Array<{ type: string; id: string }>);

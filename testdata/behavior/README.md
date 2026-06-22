@@ -53,8 +53,16 @@ A new SDK must pass ≥80% of its behavior parity test cases before official rel
 
 ## Updating the fixtures
 
-If you add a new feature that requires new assertions, update both files together:
+`parity-graph.akg` is built by a reproducible generator,
+`sdk/akg-go/gen_behavior_fixture_test.go` (`TestGenBehaviorParityGraph`), which runs through the
+akg-go SDK with a pinned clock. Because all first-party SDKs write byte-identically (the
+uniform-write-path rule), an akg-go-generated file is exactly what the other SDKs would produce,
+so it is a valid shared fixture.
 
-1. Modify `parity-graph.akg` to include any new nodes/edges needed
+To update, edit all three together:
+
+1. Edit the generator to add/modify nodes or edges, then regenerate:
+   `GEN_BEHAVIOR_GRAPH=1 go test -run TestGenBehaviorParityGraph .` (from `sdk/akg-go`)
 2. Add the corresponding expected values to `parity-spec.json`
-3. Update the behavior parity tests in all existing SDKs to cover the new assertions
+3. Update the `behavior_parity` tests in all SDKs to cover the new assertions, and re-run them in
+   every SDK to confirm they still agree
