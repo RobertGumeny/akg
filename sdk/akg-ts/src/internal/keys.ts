@@ -60,10 +60,32 @@ export function buildEdgeIndexKey(toType: string, toID: string, relation: string
   return `ei:${toType}:${toID}:${relation}:${fromType}:${fromID}`;
 }
 
-export function buildTagKey(tag: string, id: string): string {
+// buildTagKey emits the canonical major-2 type-qualified tag-index key
+// t:{tag}:{type}:{id}. Type qualification mirrors node identity (type, id):
+// without it, two nodes sharing an id across types collapse to one tag key (the
+// major-1 collision this binary major fixes). All writers use this.
+export function buildTagKey(tag: string, type: string, id: string): string {
+  validateTag(tag);
+  validateComponent(type);
+  validateNodeID(id);
+  return `t:${tag}:${type}:${id}`;
+}
+
+// buildTagKeyV1 emits the legacy major-1 tag-index key t:{tag}:{id}. It exists
+// only to re-derive and validate the tag index of a major-1 file on read
+// (read-compat); writers must never use it — they always emit major-2 keys via
+// buildTagKey, so a file self-upgrades to major 2 on its next compaction.
+export function buildTagKeyV1(tag: string, id: string): string {
   validateTag(tag);
   validateNodeID(id);
   return `t:${tag}:${id}`;
+}
+
+// buildTagKeyForMajor builds the tag-index key in the shape required by the given
+// binary major: legacy t:{tag}:{id} for major 1, type-qualified
+// t:{tag}:{type}:{id} for major 2 and later.
+export function buildTagKeyForMajor(major: number, tag: string, type: string, id: string): string {
+  return major < 2 ? buildTagKeyV1(tag, id) : buildTagKey(tag, type, id);
 }
 
 export function buildTemporalNodeKey(ts: bigint, type: string, id: string): string {
@@ -146,7 +168,22 @@ export function parseEdgeIndexKey(key: string): ParsedEdgeIndexKey {
   return { toType: parts[1], toID: parts[2], relation: parts[3], fromType: parts[4], fromID: parts[5] };
 }
 
-export function parseTagKey(key: string): [string, string] {
+// parseTagKey parses both major-2 (t:{tag}:{type}:{id}, 4 components) and major-1
+// (t:{tag}:{id}, 3 components) tag keys, disambiguated by component count. The
+// split is unambiguous because tag, type, and id all forbid the ':' delimiter.
+// For a major-1 key the returned type is empty. Returns [tag, type, id].
+export function parseTagKey(key: string): [string, string, string] {
+  const v2 = splitKey(key, 4);
+  if (v2 && v2[0] === 't') {
+    try {
+      validateTag(v2[1]);
+      validateComponent(v2[2]);
+      validateNodeID(v2[3]);
+    } catch {
+      throw new InvalidInputError(`malformed tag key: ${key}`);
+    }
+    return [v2[1], v2[2], v2[3]];
+  }
   const parts = splitKey(key, 3);
   if (!parts || parts[0] !== 't') throw new InvalidInputError(`malformed tag key: ${key}`);
   try {
@@ -155,7 +192,7 @@ export function parseTagKey(key: string): [string, string] {
   } catch {
     throw new InvalidInputError(`malformed tag key: ${key}`);
   }
-  return [parts[1], parts[2]];
+  return [parts[1], '', parts[2]];
 }
 
 export function parseTemporalKey(key: string): void {

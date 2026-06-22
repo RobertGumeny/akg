@@ -1,3 +1,8 @@
+---
+title: AKG appendix
+status: v1 draft
+---
+
 # Appendix
 
 This appendix collects AKG v1 reference tables and data structures in one place. It is informative in presentation, but each entry reflects normative rules defined in Sections 1 through 8.
@@ -27,7 +32,7 @@ A node's identifier is not part of the payload. The node-key identity is `n:{typ
 | `to_node` | `string` | yes | none; reader rejects if missing |
 | `relation` | `string` | yes | none; reader rejects if missing |
 | `strength` | `float` | no | `0.5` |
-| `confidence` | `float | null` | no | `null` |
+| `confidence` | `float \| null` | no | `null` |
 | `meta` | `map<string, any>` | no | `{}` |
 | `created_at` | `uint64` Unix microseconds | yes | `0` |
 | `updated_at` | `uint64` Unix microseconds | yes | `0` |
@@ -42,7 +47,7 @@ The identity of an edge is the tuple `(from_node_type, from_node, relation, to_n
 | `n:` | `n:{type}:{id}` | Node primary store, grouped by type |
 | `e:` | `e:{fromType}:{fromID}:{relation}:{toType}:{toID}` | Outbound edge lookup |
 | `ei:` | `ei:{toType}:{toID}:{relation}:{fromType}:{fromID}` | Inbound edge lookup |
-| `t:` | `t:{tag}:{node_id}` | Tag inverted index |
+| `t:` | `t:{tag}:{type}:{id}` | Tag inverted index (major 2; major 1 used type-less `t:{tag}:{node_id}`) |
 | `ts:` | `ts:{timestamp}:n:{type}:{id}` or `ts:{timestamp}:e:{fromType}:{fromID}:{relation}:{toType}:{toID}` | Temporal index keyed on `updated_at` |
 
 ## WAL Operation Codes
@@ -71,13 +76,15 @@ All fixed-width integer fields use little-endian encoding. The checksum is a CRC
 
 ## Checksum Algorithm Codes
 
-| Code | Algorithm |
-| --- | --- |
-| `0x01` | CRC32 |
-| `0x02` | SHA-256 |
-| `0x03` | BLAKE3 |
+| Code | Algorithm | Status in v1 |
+| --- | --- | --- |
+| `0x01` | CRC32 | required — the only valid v1 value |
+| `0x02` | SHA-256 | reserved; not valid in v1 |
+| `0x03` | BLAKE3 | reserved; not valid in v1 |
 
-CRC32 is the default algorithm for AKG v1.
+AKG v1 writers must write `0x01` (CRC32). Readers must reject any file that declares another
+value; `0x02` and `0x03` are reserved for future versions and are not valid in v1 (see
+Section 2, Checksum Algorithm Identifier).
 
 Each section's payload is followed immediately by that section's checksum bytes on disk. The checksum covers the payload bytes only, and the section-table `length` includes both payload and checksum bytes.
 

@@ -45,9 +45,9 @@ func TestMaterializeDataEntriesGeneratesPrimaryAndDerivedKeys(t *testing.T) {
 		"ei:person:n2:knows:person:n1",
 		"n:person:n1",
 		"n:person:n2",
-		"t:alpha:n1",
-		"t:beta:n2",
-		"t:graph:n2",
+		"t:alpha:person:n1",
+		"t:beta:person:n2",
+		"t:graph:person:n2",
 		"ts:1000:n:person:n2",
 		"ts:2000:n:person:n1",
 		"ts:3000:e:person:n1:knows:person:n2",
@@ -55,7 +55,7 @@ func TestMaterializeDataEntriesGeneratesPrimaryAndDerivedKeys(t *testing.T) {
 	if !reflect.DeepEqual(keysOf(entries), wantKeys) {
 		t.Fatalf("keys mismatch\ngot  %q\nwant %q", keysOf(entries), wantKeys)
 	}
-	for _, key := range []string{"ei:person:n2:knows:person:n1", "t:alpha:n1", "t:beta:n2", "t:graph:n2", "ts:1000:n:person:n2", "ts:2000:n:person:n1", "ts:3000:e:person:n1:knows:person:n2"} {
+	for _, key := range []string{"ei:person:n2:knows:person:n1", "t:alpha:person:n1", "t:beta:person:n2", "t:graph:person:n2", "ts:1000:n:person:n2", "ts:2000:n:person:n1", "ts:3000:e:person:n1:knows:person:n2"} {
 		if value := got[key]; len(value) != 0 {
 			t.Fatalf("derived key %q value len = %d, want 0", key, len(value))
 		}
@@ -120,7 +120,7 @@ func TestMaterializedEntriesAreAcceptedByDataSectionDecoderWithEmptyIndexValues(
 	}
 	for _, entry := range decoded {
 		key := string(entry.Key)
-		if key == "ei:note:n2:links:note:n1" || key == "t:topic:n1" || key == "ts:1:n:note:n1" || key == "ts:2:e:note:n1:links:note:n2" {
+		if key == "ei:note:n2:links:note:n1" || key == "t:topic:note:n1" || key == "ts:1:n:note:n1" || key == "ts:2:e:note:n1:links:note:n2" {
 			if len(entry.Value) != 0 {
 				t.Fatalf("%q decoded value len = %d, want 0", key, len(entry.Value))
 			}
@@ -128,7 +128,13 @@ func TestMaterializedEntriesAreAcceptedByDataSectionDecoderWithEmptyIndexValues(
 	}
 }
 
-func TestMaterializeDataEntriesRejectsDuplicateDerivedKeys(t *testing.T) {
+// TestMaterializeDataEntriesTypeQualifiesCollidingTags is the regression test for
+// the major-1 tag-index key collision: two nodes that share an id across types
+// and carry the same tag. Under the major-1 key shape (t:{tag}:{id}) both nodes
+// produced the identical tag key, collapsing to one duplicate and breaking
+// materialization. The major-2 type-qualified key (t:{tag}:{type}:{id}) keeps
+// them distinct, so materialization now succeeds and both tag keys appear.
+func TestMaterializeDataEntriesTypeQualifiesCollidingTags(t *testing.T) {
 	s := state.New(state.WithNow(fixedClock(1, 2)))
 	if _, err := s.PutNode("same", record.Node{Type: "person", Title: "A", Tags: []string{"shared"}}); err != nil {
 		t.Fatal(err)
@@ -136,9 +142,15 @@ func TestMaterializeDataEntriesRejectsDuplicateDerivedKeys(t *testing.T) {
 	if _, err := s.PutNode("same", record.Node{Type: "project", Title: "B", Tags: []string{"shared"}}); err != nil {
 		t.Fatal(err)
 	}
-	_, err := MaterializeDataEntries(s)
-	if !errors.Is(err, ErrDuplicateMaterializedKey) {
-		t.Fatalf("MaterializeDataEntries error = %v, want ErrDuplicateMaterializedKey", err)
+	entries, err := MaterializeDataEntries(s)
+	if err != nil {
+		t.Fatalf("MaterializeDataEntries: %v", err)
+	}
+	keys := keysOf(entries)
+	for _, want := range []string{"t:shared:person:same", "t:shared:project:same"} {
+		if !contains(keys, want) {
+			t.Fatalf("type-qualified tag key %q missing from %q", want, keys)
+		}
 	}
 }
 
@@ -161,12 +173,12 @@ func TestMaterializeDataEntriesOmitsDeletedAndSupersededRecords(t *testing.T) {
 		t.Fatal(err)
 	}
 	keys := keysOf(entries)
-	for _, absent := range []string{"t:old_tag:n1", "ts:1:n:note:n1", "n:note:gone", "t:gone_tag:gone"} {
+	for _, absent := range []string{"t:old_tag:note:n1", "ts:1:n:note:n1", "n:note:gone", "t:gone_tag:note:gone"} {
 		if contains(keys, absent) {
 			t.Fatalf("deleted or superseded key %q appeared in %q", absent, keys)
 		}
 	}
-	for _, present := range []string{"n:note:n1", "t:new_tag:n1", "ts:2:n:note:n1"} {
+	for _, present := range []string{"n:note:n1", "t:new_tag:note:n1", "ts:2:n:note:n1"} {
 		if !contains(keys, present) {
 			t.Fatalf("current key %q missing from %q", present, keys)
 		}
@@ -188,7 +200,7 @@ func TestHydrateDataEntriesRoundTripsMaterializedState(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	hydrated, err := HydrateDataEntries(entries)
+	hydrated, err := HydrateDataEntries(entries, format.CurrentMajor)
 	if err != nil {
 		t.Fatalf("HydrateDataEntries: %v", err)
 	}
@@ -212,13 +224,13 @@ func TestHydrateDataEntriesRejectsMalformedPrimaryAndIdentityMismatch(t *testing
 	}
 	badPayload := cloneEntries(entries)
 	badPayload[indexOfKey(t, badPayload, "n:note:n1")].Value = []byte{0x80}
-	if _, err := HydrateDataEntries(badPayload); err == nil {
+	if _, err := HydrateDataEntries(badPayload, format.CurrentMajor); err == nil {
 		t.Fatalf("expected malformed primary payload rejection")
 	}
 
 	mismatch := cloneEntries(entries)
 	mismatch[indexOfKey(t, mismatch, "n:note:n1")].Key = []byte("n:other:n1")
-	if _, err := HydrateDataEntries(mismatch); !errors.Is(err, ErrIdentityMismatch) {
+	if _, err := HydrateDataEntries(mismatch, format.CurrentMajor); !errors.Is(err, ErrIdentityMismatch) {
 		t.Fatalf("HydrateDataEntries mismatch error = %v, want ErrIdentityMismatch", err)
 	}
 }
@@ -235,18 +247,18 @@ func TestHydrateDataEntriesValidatesDerivedIndexes(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	missing := withoutKey(entries, "t:topic:n1")
-	if _, err := HydrateDataEntries(missing); !errors.Is(err, ErrDerivedIndexMismatch) {
+	missing := withoutKey(entries, "t:topic:note:n1")
+	if _, err := HydrateDataEntries(missing, format.CurrentMajor); !errors.Is(err, ErrDerivedIndexMismatch) {
 		t.Fatalf("missing derived error = %v, want ErrDerivedIndexMismatch", err)
 	}
 	wrong := cloneEntries(entries)
 	wrong[indexOfKey(t, wrong, "ei:note:n2:links:note:n1")].Key = []byte("ei:note:n2:wrong:note:n1")
-	if _, err := HydrateDataEntries(wrong); !errors.Is(err, ErrDerivedIndexMismatch) {
+	if _, err := HydrateDataEntries(wrong, format.CurrentMajor); !errors.Is(err, ErrDerivedIndexMismatch) {
 		t.Fatalf("wrong derived error = %v, want ErrDerivedIndexMismatch", err)
 	}
 	nonEmpty := cloneEntries(entries)
-	nonEmpty[indexOfKey(t, nonEmpty, "t:topic:n1")].Value = []byte("x")
-	if _, err := HydrateDataEntries(nonEmpty); !errors.Is(err, ErrNonEmptyDerivedValue) {
+	nonEmpty[indexOfKey(t, nonEmpty, "t:topic:note:n1")].Value = []byte("x")
+	if _, err := HydrateDataEntries(nonEmpty, format.CurrentMajor); !errors.Is(err, ErrNonEmptyDerivedValue) {
 		t.Fatalf("non-empty derived error = %v, want ErrNonEmptyDerivedValue", err)
 	}
 }
@@ -256,7 +268,7 @@ func TestHydrateDataEntriesDropsUnknownMessagePackFieldsAfterRewrite(t *testing.
 		{Key: []byte("n:note:n1"), Value: nodePayloadWithUnknownField()},
 		{Key: []byte("ts:7:n:note:n1")},
 	}
-	hydrated, err := HydrateDataEntries(entries)
+	hydrated, err := HydrateDataEntries(entries, format.CurrentMajor)
 	if err != nil {
 		t.Fatalf("HydrateDataEntries: %v", err)
 	}

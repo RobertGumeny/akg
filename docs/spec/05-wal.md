@@ -1,3 +1,8 @@
+---
+title: AKG write-ahead log
+status: v1 draft
+---
+
 # Write-Ahead Log
 
 AKG defines a write-ahead log (WAL) as a file section that records committed mutations. It serves two purposes: crash-safe recovery of committed state, and — for writers that choose it — cheap append-on-commit that avoids rewriting the whole file between compactions.

@@ -110,7 +110,10 @@ func writeTask3Rejections(dir string) error {
 	fixtures := map[string][]byte{}
 
 	fixtures["m3-reject-wrong-magic.akg"] = corrupt(copyBytes(empty), 0, 'X')
-	fixtures["m3-reject-unsupported-major-version.akg"] = mustHeaderContainer(2, []format.Section{{Type: format.SectionData, Offset: format.HeaderSize + format.SectionEntrySize, Length: 4}}, [][]byte{mustSection(nil)})
+	// Major 3 is one past the current supported major (2). A conformant reader
+	// MUST reject it via the `major > currentMajor` gate, while still accepting
+	// major 1 (read-compat) and major 2 (current).
+	fixtures["m3-reject-unsupported-major-version.akg"] = mustHeaderContainer(3, []format.Section{{Type: format.SectionData, Offset: format.HeaderSize + format.SectionEntrySize, Length: 4}}, [][]byte{mustSection(nil)})
 	fixtures["m3-reject-bad-header-checksum.akg"] = corrupt(copyBytes(empty), 55, 0xff)
 	fixtures["m3-reject-bad-section-checksum.akg"] = corrupt(copyBytes(empty), len(empty)-1, 0xff)
 	fixtures["m3-reject-duplicate-data-sections.akg"] = containerFromSections([]testSection{{typ: format.SectionData, payload: nil}, {typ: format.SectionData, payload: nil}})

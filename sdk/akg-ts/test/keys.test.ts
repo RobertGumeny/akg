@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   validateComponent, validateNodeID, buildNodeKey, buildEdgeKey, buildEdgeIndexKey, buildTagKey,
-  parseNodeKey, parseEdgeKey, parseEdgeIndexKey,
+  parseNodeKey, parseEdgeKey, parseEdgeIndexKey, parseTagKey,
 } from '../src/internal/keys.js';
 import { InvalidInputError } from '../src/errors.js';
 
@@ -96,8 +96,16 @@ describe('key builders and parsers', () => {
     expect(parsed.fromID).toBe('alice');
   });
 
-  it('builds tag key', () => {
-    const key = buildTagKey('active', 'alice');
-    expect(key).toBe('t:active:alice');
+  it('builds type-qualified (major-2) tag key', () => {
+    const key = buildTagKey('active', 'user', 'alice');
+    expect(key).toBe('t:active:user:alice');
+  });
+
+  it('parses a major-2 (4-part) tag key', () => {
+    expect(parseTagKey('t:active:user:alice')).toEqual(['active', 'user', 'alice']);
+  });
+
+  it('parses a major-1 (3-part) tag key with empty type (read-compat)', () => {
+    expect(parseTagKey('t:active:alice')).toEqual(['active', '', 'alice']);
   });
 });

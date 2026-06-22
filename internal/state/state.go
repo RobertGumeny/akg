@@ -98,7 +98,7 @@ func (s *State) PutNode(id record.NodeID, n record.Node) (NodeRecord, error) {
 		return NodeRecord{}, err
 	}
 	for _, tag := range n.Tags {
-		if _, err := keys.BuildTagKey(tag, id); err != nil {
+		if _, err := keys.BuildTagKey(tag, n.Type, id); err != nil {
 			return NodeRecord{}, err
 		}
 	}
@@ -200,7 +200,7 @@ func (s *State) LoadNodeRecord(rec NodeRecord) error {
 		return err
 	}
 	for _, tag := range rec.Node.Tags {
-		if _, err := keys.BuildTagKey(tag, rec.ID); err != nil {
+		if _, err := keys.BuildTagKey(tag, rec.Node.Type, rec.ID); err != nil {
 			return err
 		}
 	}
@@ -275,7 +275,7 @@ func validateTags(tags []string) error {
 			return ErrDuplicateTags
 		}
 		seen[tag] = struct{}{}
-		if _, err := keys.BuildTagKey(tag, "tag-validation-placeholder"); err != nil {
+		if _, err := keys.BuildTagKey(tag, "tag-validation-placeholder", "tag-validation-placeholder"); err != nil {
 			return err
 		}
 	}

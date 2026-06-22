@@ -100,6 +100,15 @@ Generated valid files should be stable across repeated local runs. Fixture gener
 
 - `m1-data-bloom-wal.akg` — a low-level container example with Data, Bloom, and WAL sections.
 
+## Binary major versions (read-compat)
+
+The binary major is **2**: the tag-index key is type-qualified (`t:{tag}:{type}:{id}`). A conformant major-2 reader **must also read major-1 files** (the legacy `t:{tag}:{id}` shape), distinguished by the tag key's component count, but **always writes major 2** — so a major-1 file self-upgrades to major 2 on its next compaction. The following accepted files are deliberately left at **major 1** to lock that read-compat contract; their bytes (and hashes) must not change to major 2:
+
+- `m2-empty-create.akg`, `m2-minimal-node.akg` — major-1 node/empty specimens.
+- `m2-compacted.akg` — a major-1 file that **carries tags**, so it exercises the major-1 (`t:{tag}:{id}`) tag-key read path under a major-2 reader.
+
+A major-2 reader must reject **major 3** (`m3-reject-unsupported-major-version.akg`).
+
 ### Milestone 2 accepted files
 
 These should open normally:
@@ -109,6 +118,7 @@ These should open normally:
 - `m2-full-node.akg` — one populated node with body, tags, and metadata.
 - `m2-single-edge.akg` — two nodes and one edge after compaction.
 - `m2-small-graph.akg` — a small graph with mixed node types, tags, and edges.
+- `m2-collision-type-qualified.akg` — the major-2 regression lock for the tag-index key collision: two nodes share the id `shared` across types (`person`, `project`) and both carry the tag `topic`. The type-qualified tag key keeps them distinct, so the file reads clean; under the major-1 key shape it could not exist.
 - `m2-committed-wal-replay.akg` — base Data plus committed WAL records that ordinary open must replay.
 - `m2-uncommitted-wal-tail.akg` — committed WAL followed by uncommitted trailing bytes that ordinary open must ignore.
 - `m2-compacted.akg` — live Data/Bloom after compaction, with no carried-forward WAL.
@@ -128,7 +138,7 @@ These are intentionally damaged and should not open normally:
 These expand fail-closed coverage for v1 format and validation errors:
 
 - `m3-reject-wrong-magic.akg` — wrong container magic bytes.
-- `m3-reject-unsupported-major-version.akg` — unsupported major version with a valid header checksum.
+- `m3-reject-unsupported-major-version.akg` — major 3 (one past the current supported major 2) with a valid header checksum. A reader must reject it via the `major > currentMajor` gate while still accepting major 1 (read-compat) and major 2 (current).
 - `m3-reject-bad-header-checksum.akg` — damaged header checksum.
 - `m3-reject-bad-section-checksum.akg` — damaged section checksum.
 - `m3-reject-duplicate-data-sections.akg` — duplicate Data sections where v1 requires exactly one.

@@ -10,9 +10,13 @@ import (
 )
 
 const (
-	headerSize        = 64
-	sectionEntrySize  = 17
-	currentMajor      = 1
+	headerSize       = 64
+	sectionEntrySize = 17
+	// currentMajor is 2: the tag-index key is type-qualified (t:{tag}:{type}:{id}).
+	// Readers still accept major 1 (legacy t:{tag}:{id}) for read-compat — the
+	// `buf[4] > currentMajor` gate in decodeHeader keeps major 1 readable — but
+	// writers always emit major 2, so files self-upgrade on compaction.
+	currentMajor      = 2
 	currentMinor      = 0
 	headerChecksumOff = 55
 	checksumCRC32     = 0x01
@@ -53,6 +57,9 @@ type dataEntry struct {
 }
 
 type container struct {
+	// Major is the binary major from the file header. Read-side validation needs
+	// it to select the version-correct tag-key shape (major 1 vs. major 2).
+	Major uint8
 	Data  []byte
 	Bloom []byte
 	WAL   []byte
@@ -401,7 +408,7 @@ func decodeContainer(file []byte) (container, error) {
 	if err := validateSections(sections, uint64(len(file))); err != nil {
 		return container{}, err
 	}
-	var c container
+	c := container{Major: h.Major}
 	for _, s := range sections {
 		if s.Type == sectionWAL && s.Length == 0 {
 			c.WAL = []byte{}

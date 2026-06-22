@@ -96,6 +96,31 @@ func TestBehaviorParity(t *testing.T) {
 			}
 		}
 	}
+
+	// Tag-index key-collision regression: two nodes share the id "preflop__vpip"
+	// across types (counter, tendency) and both carry the tag "preflop". The
+	// major-2 type-qualified tag key keeps them distinct, so the tag filter
+	// returns both and each resolves to its own node.
+	collisionByTag, _ := s.ListNodesFiltered(NodeFilter{Tag: "preflop"})
+	assertInt(t, "collision_tag_preflop_count", len(collisionByTag), int(a["collision_tag_preflop_count"].(float64)))
+
+	collInputRaw := a["collision_get_nodes_input"].([]any)
+	collRefs := make([]NodeRef, len(collInputRaw))
+	for i, r := range collInputRaw {
+		m := r.(map[string]any)
+		collRefs[i] = NodeRef{Type: m["type"].(string), ID: m["id"].(string)}
+	}
+	collResult, err := s.GetNodes(collRefs)
+	if err != nil {
+		t.Fatalf("GetNodes (collision): %v", err)
+	}
+	for i, expected := range a["collision_get_nodes_titles"].([]any) {
+		if collResult[i] == nil {
+			t.Errorf("collision GetNodes[%d]: expected %v, got nil", i, expected)
+		} else if collResult[i].Title != expected.(string) {
+			t.Errorf("collision GetNodes[%d]: expected title %q, got %q", i, expected, collResult[i].Title)
+		}
+	}
 }
 
 func assertInt(t *testing.T, name string, got, want int) {

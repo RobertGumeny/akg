@@ -3,6 +3,21 @@
     "alice_assigned_t1_strength": 0.5,
     "alice_knows_bob_strength": 0.7,
     "bob_knows_alice_strength": 0,
+    "collision_get_nodes_input": [
+      {
+        "id": "preflop__vpip",
+        "type": "counter"
+      },
+      {
+        "id": "preflop__vpip",
+        "type": "tendency"
+      }
+    ],
+    "collision_get_nodes_titles": [
+      "VPIP counter",
+      "VPIP tendency"
+    ],
+    "collision_tag_preflop_count": 2,
     "get_nodes_input": [
       {
         "id": "bob",
@@ -43,7 +58,7 @@
       "alice"
     ],
     "snapshot_edge_count": 4,
-    "snapshot_node_count": 4
+    "snapshot_node_count": 6
   },
   "description": "Cross-SDK behavioral parity fixture. Both SDKs must produce these results when opening parity-graph.akg.",
   "edge_count": 4,
@@ -89,8 +104,26 @@
       "to_type": "person"
     }
   ],
-  "node_count": 4,
+  "node_count": 6,
   "nodes": [
+    {
+      "id": "preflop__vpip",
+      "meta": {},
+      "tags": [
+        "preflop"
+      ],
+      "title": "VPIP counter",
+      "type": "counter"
+    },
+    {
+      "id": "preflop__vpip",
+      "meta": {},
+      "tags": [
+        "preflop"
+      ],
+      "title": "VPIP tendency",
+      "type": "tendency"
+    },
     {
       "id": "alice",
       "meta": {

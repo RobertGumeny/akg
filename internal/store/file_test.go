@@ -401,12 +401,12 @@ func TestCompactPreservesLiveStateDropsWALAndRegeneratesDerivedData(t *testing.T
 	assertHasKey(t, keys, "n:note:n2")
 	assertHasKey(t, keys, "e:note:n2:links:note:n3")
 	assertHasKey(t, keys, "ei:note:n3:links:note:n2")
-	assertHasKey(t, keys, "t:topic:n2")
+	assertHasKey(t, keys, "t:topic:note:n2")
 	assertHasPrefix(t, keys, "ts:")
 	assertNoKey(t, keys, "n:note:n1")
 	assertNoKey(t, keys, "e:note:n1:links:note:n2")
 	assertNoKey(t, keys, "ei:note:n2:links:note:n1")
-	assertNoKey(t, keys, "t:old:n1")
+	assertNoKey(t, keys, "t:old:note:n1")
 	if err := validateBloom(container.Bloom, entries); err != nil {
 		t.Fatalf("compacted Bloom was not regenerated from live keys: %v", err)
 	}

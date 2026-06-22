@@ -25,7 +25,8 @@ func TestGenEdgeConformanceFixtures(t *testing.T) {
 	}{
 		{"m2-single-edge.akg", genFixtureSingleEdge},
 		{"m2-small-graph.akg", genFixtureSmallGraph},
-		{"m1-data-bloom-wal.akg", genFixtureDataBloomWAL},
+		{"m2-full-node.akg", genFixtureFullNode},
+		{"m2-collision-type-qualified.akg", genFixtureCollisionTypeQualified},
 		{"m2-committed-wal-replay.akg", genFixtureCommittedWALReplay},
 		{"m2-uncommitted-wal-tail.akg", genFixtureUncommittedWALTail},
 		{"m2-deletes-before-compaction.akg", genFixtureDeletesBeforeCompaction},
@@ -70,6 +71,44 @@ func genFixtureSingleEdge(path string) error {
 	return writeCompactedStore(path, s)
 }
 
+// genFixtureFullNode: one compacted node populated with a body, tags, and
+// metadata. Exercises the full node payload plus the type-qualified tag index
+// (major 2: t:{tag}:{type}:{id}).
+func genFixtureFullNode(path string) error {
+	const ts = timestampMicros(6_000_000)
+	s := newStoreState()
+	s.now = func() timestampMicros { return ts }
+	if _, err := s.putNode("full1", coreNode{
+		Type:  "note",
+		Title: "Full Node",
+		Body:  "A populated node with a body, tags, and metadata.",
+		Tags:  []string{"alpha", "beta"},
+		Meta:  map[string]any{"author": "ada", "priority": 1},
+	}); err != nil {
+		return err
+	}
+	return writeCompactedStore(path, s)
+}
+
+// genFixtureCollisionTypeQualified: the major-2 regression lock for the tag-index
+// key collision. Two nodes share the id "shared" across types (person, project)
+// and both carry the tag "topic". Under the major-1 key shape (t:{tag}:{id}) both
+// collapsed to the identical tag key and broke compaction; the major-2
+// type-qualified key (t:{tag}:{type}:{id}) keeps them distinct, so this file
+// materializes and reads clean. A conformant reader MUST accept it.
+func genFixtureCollisionTypeQualified(path string) error {
+	const ts = timestampMicros(7_000_000)
+	s := newStoreState()
+	s.now = func() timestampMicros { return ts }
+	if _, err := s.putNode("shared", coreNode{Type: "person", Title: "Ada", Tags: []string{"topic"}}); err != nil {
+		return err
+	}
+	if _, err := s.putNode("shared", coreNode{Type: "project", Title: "Atlas", Tags: []string{"topic"}}); err != nil {
+		return err
+	}
+	return writeCompactedStore(path, s)
+}
+
 // genFixtureSmallGraph: compacted small graph with mixed node types, tags, and edges.
 func genFixtureSmallGraph(path string) error {
 	const ts = timestampMicros(2_000_000)
@@ -91,28 +130,6 @@ func genFixtureSmallGraph(path string) error {
 		return err
 	}
 	return writeCompactedStore(path, s)
-}
-
-// genFixtureDataBloomWAL: format-scope fixture with Data, Bloom, and WAL sections containing edges.
-func genFixtureDataBloomWAL(path string) error {
-	// Remove any existing file so Open creates fresh (old-format files would fail to open).
-	_ = os.Remove(path)
-	// Build the store via the public API so Data+Bloom+WAL are all present.
-	st, err := Open(path)
-	if err != nil {
-		return err
-	}
-	st.state.now = func() timestampMicros { return 3_000_000 }
-	if _, err := st.PutNode("note", "x1", NodeFields{Title: "X One"}, nil); err != nil {
-		return err
-	}
-	if _, err := st.PutNode("note", "x2", NodeFields{Title: "X Two"}, nil); err != nil {
-		return err
-	}
-	if err := st.PutEdge(NodeRef{Type: "note", ID: "x1"}, "links_to", NodeRef{Type: "note", ID: "x2"}, EdgeFields{}); err != nil {
-		return err
-	}
-	return st.Close()
 }
 
 // genFixtureCommittedWALReplay: base Data plus committed WAL. 2 nodes, 1 edge. nextWALSeq=10.

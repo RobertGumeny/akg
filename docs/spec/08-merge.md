@@ -1,3 +1,8 @@
+---
+title: AKG merge semantics
+status: v1 draft
+---
+
 # Merge Semantics
 
 AKG v1 does not define a complete on-disk merge protocol.

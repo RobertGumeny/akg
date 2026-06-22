@@ -1,3 +1,8 @@
+---
+title: AKG data model
+status: v1 draft
+---
+
 # Data Model
 
 AKG stores graph data as nodes and edges. Nodes are the primary units of knowledge. Edges express directed relationships between nodes. This section defines the logical schema for both record types and the identity rules that govern them.

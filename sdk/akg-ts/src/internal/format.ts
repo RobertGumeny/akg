@@ -4,7 +4,11 @@ import { murmur3x64_128 } from './murmur3.js';
 
 export const HEADER_SIZE = 64;
 export const SECTION_ENTRY_SIZE = 17;
-export const CURRENT_MAJOR = 1;
+// CURRENT_MAJOR is 2: the tag-index key is type-qualified (t:{tag}:{type}:{id}).
+// The `major > CURRENT_MAJOR` gate in decodeHeader deliberately keeps major 1
+// readable (read-compat) — its only job is to make an old reader reject a new
+// major-2 file. Writers always emit major 2, so files self-upgrade on compaction.
+export const CURRENT_MAJOR = 2;
 export const CURRENT_MINOR = 0;
 export const HEADER_CHECKSUM_OFF = 55;
 export const CHECKSUM_CRC32 = 0x01;
@@ -24,6 +28,9 @@ export interface Section {
 }
 
 export interface Container {
+  // major is the binary major from the file header. Read-side validation needs
+  // it to re-derive a major-1 file's legacy 3-part tag keys (read-compat).
+  major: number;
   data: Uint8Array;
   bloom: Uint8Array | null;
   wal: Uint8Array | null;
@@ -256,7 +263,9 @@ export function decodeBloom(payload: Uint8Array): void {
 
 // ---- Container -------------------------------------------------------------
 
-export function encodeContainer(c: Container): Uint8Array {
+// encodeContainer always writes CURRENT_MAJOR (the decoded `major` is read-only),
+// so callers need not supply it.
+export function encodeContainer(c: Omit<Container, 'major'>): Uint8Array {
   const sections: Section[] = [];
   const payloads: Uint8Array[] = [];
 
@@ -307,7 +316,7 @@ export function decodeContainer(file: Uint8Array): Container {
   const sections = decodeSectionTable(file.slice(tableStart, tableEnd), sectionCount);
   validateSections(sections, BigInt(file.length));
 
-  const c: Container = { data: new Uint8Array(0), bloom: null, wal: null };
+  const c: Container = { major: file[4], data: new Uint8Array(0), bloom: null, wal: null };
   for (const s of sections) {
     if (s.type === SECTION_WAL && s.length === 0n) {
       c.wal = new Uint8Array(0);

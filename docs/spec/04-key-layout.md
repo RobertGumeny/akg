@@ -1,3 +1,8 @@
+---
+title: AKG key layout and index design
+status: v1 draft
+---
+
 # Key Layout and Index Design
 
 AKG stores graph records in a sorted key space. In this model, lookup behavior is determined by key prefix and lexical order rather than by separate secondary index structures. A conformant writer produces the required keys for each logical record. A conformant reader performs lookups by prefix scan over those keys.
@@ -67,9 +72,34 @@ The primary edge entry and the inverted edge entry are a single logical update. 
 
 For each tag on a node, the writer must produce one tag index entry with the key:
 
-- `t:{tag}:{node_id}`
+- `t:{tag}:{type}:{id}`
+
+`tag` is the tag string. `type` and `id` are the node's type and identifier — the same two
+components that form node identity (`n:{type}:{id}`).
 
 A reader that needs all nodes carrying a given tag performs a prefix scan on `t:{tag}:`.
+
+The key includes the node `type` because node identity is the tuple `(type, id)`, not the
+bare `id` (Section 1). The same `id` string may identify distinct nodes under different
+types. A tag key that carried only `node_id` would collapse two such nodes — when they
+share a tag — to a single byte-identical key, which is not a valid distinct entry. This is
+the same ambiguity the edge key avoids by carrying both endpoint types. The `type` is placed
+after `tag` so that the `t:{tag}:` prefix scan above is preserved; `type` only disambiguates
+the suffix.
+
+### Tag key versioning (major 1 → 2)
+
+The major-2 form above replaces the major-1 form `t:{tag}:{node_id}`, which omitted `type`.
+This is a breaking key-layout change and is the reason the binary major version is 2
+(see Section 2, Version Semantics).
+
+A conformant major-2 reader must accept tag keys in both forms, selected by the file's major
+version: a three-component `t:{tag}:{node_id}` key in a major-1 file, and a four-component
+`t:{tag}:{type}:{id}` key in a major-2 file. Because `tag`, `type`, and `id` contain no `:`
+delimiter, the two forms are unambiguously distinguished by component count. A conformant
+writer must always write the four-component major-2 form; rewriting a major-1 file (for
+example on compaction) upgrades its tag keys to the major-2 form and stamps the file major
+version 2.
 
 Tag values are subject to the following format-level constraints, which exist for key safety and resource bounds:
 
@@ -111,7 +141,7 @@ The complete required key prefix set for AKG v1 is:
 | `n:` | `n:{type}:{id}` | Node primary store, grouped by type |
 | `e:` | `e:{fromType}:{fromID}:{relation}:{toType}:{toID}` | Outbound edge lookup |
 | `ei:` | `ei:{toType}:{toID}:{relation}:{fromType}:{fromID}` | Inbound edge lookup |
-| `t:` | `t:{tag}:{node_id}` | Tag inverted index |
+| `t:` | `t:{tag}:{type}:{id}` | Tag inverted index (major 2; major 1 used type-less `t:{tag}:{node_id}`) |
 | `ts:` | `ts:{timestamp}:n:{type}:{id}` or `ts:{timestamp}:e:{fromType}:{fromID}:{relation}:{toType}:{toID}` | Temporal index keyed on `updated_at` |
 
 ## Validation and Rejection Behavior

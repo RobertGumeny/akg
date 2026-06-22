@@ -125,7 +125,28 @@ func parseEdgeIndexKey(key []byte) (parsedEdgeIndexKey, error) {
 	return parsedEdgeIndexKey{ToType: toType, ToNode: to, Relation: rel, FromType: fromType, FromNode: from}, nil
 }
 
-func buildTagKey(tag string, id nodeID) ([]byte, error) {
+// buildTagKey emits the canonical major-2 type-qualified tag-index key
+// t:{tag}:{type}:{id}. Type qualification mirrors node identity (type, id):
+// without it, two nodes sharing an id across types collapse to one tag key (the
+// major-1 collision this binary major fixes). All writers use this.
+func buildTagKey(tag string, nodeType string, id nodeID) ([]byte, error) {
+	if err := validateTag(tag); err != nil {
+		return nil, err
+	}
+	if err := validateComponent(nodeType); err != nil {
+		return nil, err
+	}
+	if err := validateNodeID(id); err != nil {
+		return nil, err
+	}
+	return []byte("t:" + tag + ":" + nodeType + ":" + string(id)), nil
+}
+
+// buildTagKeyV1 emits the legacy major-1 tag-index key t:{tag}:{id}. It exists
+// only to re-derive and validate the tag index of a major-1 file on read
+// (read-compat); writers must never use it — they always emit major-2 keys via
+// buildTagKey, so a file self-upgrades to major 2 on its next compaction.
+func buildTagKeyV1(tag string, id nodeID) ([]byte, error) {
 	if err := validateTag(tag); err != nil {
 		return nil, err
 	}
@@ -135,19 +156,43 @@ func buildTagKey(tag string, id nodeID) ([]byte, error) {
 	return []byte("t:" + tag + ":" + string(id)), nil
 }
 
-func parseTagKey(key []byte) (string, nodeID, error) {
+// buildTagKeyForMajor builds the tag-index key in the shape required by the given
+// binary major: legacy t:{tag}:{id} for major 1, type-qualified
+// t:{tag}:{type}:{id} for major 2 and later.
+func buildTagKeyForMajor(major uint8, tag, nodeType string, id nodeID) ([]byte, error) {
+	if major < 2 {
+		return buildTagKeyV1(tag, id)
+	}
+	return buildTagKey(tag, nodeType, id)
+}
+
+// parseTagKey parses both major-2 (t:{tag}:{type}:{id}, 4 components) and major-1
+// (t:{tag}:{id}, 3 components) tag keys, disambiguated by component count. The
+// split is unambiguous because tag, type, and id all forbid the ':' delimiter.
+// For a major-1 key, the returned type is empty.
+func parseTagKey(key []byte) (string, string, nodeID, error) {
+	if parts := splitKey(key, 4); parts != nil && parts[0] == "t" {
+		if validateTag(parts[1]) != nil || validateComponent(parts[2]) != nil {
+			return "", "", "", errMalformedKey
+		}
+		id := nodeID(parts[3])
+		if validateNodeID(id) != nil {
+			return "", "", "", errMalformedKey
+		}
+		return parts[1], parts[2], id, nil
+	}
 	parts := splitKey(key, 3)
 	if parts == nil || parts[0] != "t" {
-		return "", "", errMalformedKey
+		return "", "", "", errMalformedKey
 	}
 	if validateTag(parts[1]) != nil {
-		return "", "", errMalformedKey
+		return "", "", "", errMalformedKey
 	}
 	id := nodeID(parts[2])
 	if validateNodeID(id) != nil {
-		return "", "", errMalformedKey
+		return "", "", "", errMalformedKey
 	}
-	return parts[1], id, nil
+	return parts[1], "", id, nil
 }
 
 func buildTemporalNodeKey(ts timestampMicros, nodeType string, id nodeID) ([]byte, error) {
