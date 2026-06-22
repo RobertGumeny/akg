@@ -202,7 +202,7 @@ func (s *storeState) putNode(id nodeID, n coreNode) (nodeRecord, error) {
 		return nodeRecord{}, err
 	}
 	for _, tag := range n.Tags {
-		if _, err := buildTagKey(tag, id); err != nil {
+		if _, err := buildTagKey(tag, n.Type, id); err != nil {
 			return nodeRecord{}, err
 		}
 	}
@@ -335,7 +335,7 @@ func validateTags(tags []string) error {
 			return errDuplicateTags
 		}
 		seen[tag] = struct{}{}
-		if _, err := buildTagKey(tag, "tag-validation-placeholder"); err != nil {
+		if _, err := buildTagKey(tag, "tag-validation-placeholder", "tag-validation-placeholder"); err != nil {
 			return err
 		}
 	}

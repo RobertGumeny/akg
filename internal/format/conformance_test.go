@@ -40,7 +40,7 @@ func TestConformanceFixtureLevel3Validation(t *testing.T) {
 		if got := binary.LittleEndian.Uint32(file[7:11]); got != 3 {
 			t.Fatalf("section count = %d, want 3", got)
 		}
-		assertHexBytes(t, "header bytes", file[:HeaderSize], "414b4700010001030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000d24492430000000000")
+		assertHexBytes(t, "header bytes", file[:HeaderSize], "414b470002000103000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002d197c70000000000")
 	})
 
 	container, sections, err := DecodeContainer(file)

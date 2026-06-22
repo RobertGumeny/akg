@@ -109,7 +109,7 @@ func openBytes(file []byte) (*Store, error) {
 			return nil, errInvalidBloomSection
 		}
 	}
-	state, err := hydrateDataEntries(entries)
+	state, err := hydrateDataEntries(entries, c.Major)
 	if err != nil {
 		return nil, err
 	}
@@ -531,7 +531,11 @@ func (s *Store) deleteEdge(fromType string, fromNode nodeID, rel relation, toTyp
 	return s.maybeAutoFlush()
 }
 
-func hydrateDataEntries(entries []dataEntry) (*storeState, error) {
+// hydrateDataEntries reconstructs live state from decoded Data entries. major is
+// the file's binary major; it selects the tag-key shape the derived index is
+// validated against, so a major-1 file (3-part tag keys) is checked against a
+// major-1 materialization while major-2 files are checked strictly.
+func hydrateDataEntries(entries []dataEntry, major uint8) (*storeState, error) {
 	for i := 1; i < len(entries); i++ {
 		cmp := bytes.Compare(entries[i-1].Key, entries[i].Key)
 		if cmp == 0 {
@@ -564,7 +568,7 @@ func hydrateDataEntries(entries []dataEntry) (*storeState, error) {
 			if len(entry.Value) != 0 {
 				return nil, ErrInvalidInput
 			}
-			if _, _, err := parseTagKey(key); err != nil {
+			if _, _, _, err := parseTagKey(key); err != nil {
 				return nil, err
 			}
 		case strings.HasPrefix(string(key), "ts:"):
@@ -600,14 +604,14 @@ func hydrateDataEntries(entries []dataEntry) (*storeState, error) {
 			return nil, ErrInvalidInput
 		}
 	}
-	if err := validateDerivedKeys(s, entries); err != nil {
+	if err := validateDerivedKeys(s, entries, major); err != nil {
 		return nil, err
 	}
 	return s, nil
 }
 
-func validateDerivedKeys(s *storeState, entries []dataEntry) error {
-	expected, err := materializeDataEntries(s)
+func validateDerivedKeys(s *storeState, entries []dataEntry, major uint8) error {
+	expected, err := materializeDataEntriesForMajor(s, major)
 	if err != nil {
 		return err
 	}
@@ -622,7 +626,19 @@ func validateDerivedKeys(s *storeState, entries []dataEntry) error {
 	return nil
 }
 
+// materializeDataEntries derives the live Data key set at the current binary
+// major (always major 2 — type-qualified tag keys). Writers use this, so a
+// compacted file's tag index is always type-qualified.
 func materializeDataEntries(s *storeState) ([]dataEntry, error) {
+	return materializeDataEntriesForMajor(s, currentMajor)
+}
+
+// materializeDataEntriesForMajor derives the live Data key set as it must appear
+// in a file of the given binary major. major selects the tag-key shape: major 1
+// emits legacy t:{tag}:{id} keys, major 2 the type-qualified t:{tag}:{type}:{id}.
+// Read-side validation passes the file's own major so a major-1 file's 3-part
+// tag keys validate against a major-1 materialization.
+func materializeDataEntriesForMajor(s *storeState, major uint8) ([]dataEntry, error) {
 	if s == nil {
 		return nil, ErrInvalidInput
 	}
@@ -650,7 +666,7 @@ func materializeDataEntries(s *storeState) ([]dataEntry, error) {
 			return nil, err
 		}
 		for _, tag := range node.Node.Tags {
-			tagKey, err := buildTagKey(tag, node.ID)
+			tagKey, err := buildTagKeyForMajor(major, tag, node.Node.Type, node.ID)
 			if err != nil {
 				return nil, err
 			}
