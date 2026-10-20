@@ -14,8 +14,11 @@ updates:
     directory: /sdk/akg-ts
     schedule:
       interval: weekly
-  # Surfaces actions/* major bumps — landing these is the prerequisite for
-  # dropping the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24 shim in the workflows.
+    ignore:
+      # @types/node tracks the engines floor (node >=22), not the latest Node,
+      # so the type checker rejects APIs newer than the oldest supported runtime.
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
   - package-ecosystem: github-actions
     directory: /
     schedule:

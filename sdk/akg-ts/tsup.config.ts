@@ -4,7 +4,8 @@ export default defineConfig([
   {
     entry: ['src/index.ts'],
     format: ['esm', 'cjs'],
-    dts: true,
+    // tsup 8.x injects the TS 6-deprecated `baseUrl` into its dts build.
+    dts: { compilerOptions: { ignoreDeprecations: '6.0' } },
     clean: true,
     target: 'es2022',
   },
